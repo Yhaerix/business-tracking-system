@@ -1,0 +1,23 @@
+/**
+ * Print Stylesheet (Thermal 80mm & A4 Invoices)
+ * Small Business Sales and Expense Tracking System
+ */
+
+@media print {
+    body { background: #ffffff !important; }
+    .app-sidebar, .app-header, .page-header, .doc-format-bar, .no-print {
+        display: none !important;
+    }
+    .app-container, .app-main, .page-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .invoice-a4, .receipt-80mm {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
