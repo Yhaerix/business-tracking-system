@@ -36,15 +36,15 @@ $error = $_GET['error'] ?? '';
 
     <style>
         :root {
-            --auth-bg: #ffffff;
+            --auth-bg: #eef2fa;
             --auth-card-bg: #ffffff;
-            --auth-border: #e4e7eb;
-            --auth-text-main: #09090b;
-            --auth-text-secondary: #52525b;
-            --auth-text-muted: #71717a;
-            --auth-primary: #09090b;
-            --auth-primary-hover: #18181b;
-            --auth-focus-ring: rgba(9, 9, 11, 0.12);
+            --auth-border: #e4e9f4;
+            --auth-text-main: #0f172a;
+            --auth-text-secondary: #64748b;
+            --auth-text-muted: #94a3b8;
+            --auth-primary: #2160cc;
+            --auth-primary-hover: #1a4fb0;
+            --auth-focus-ring: rgba(33, 96, 204, 0.16);
         }
 
         html, body {
@@ -53,6 +53,9 @@ $error = $_GET['error'] ?? '';
 
         body {
             background-color: var(--auth-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(33, 96, 204, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(33, 96, 204, 0.05) 0px, transparent 50%);
             color: var(--auth-text-main);
             display: flex;
             flex-direction: column;
@@ -74,20 +77,20 @@ $error = $_GET['error'] ?? '';
 
         .auth-brand-header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
 
         .auth-logo-badge {
             width: 48px;
             height: 48px;
             margin: 0 auto 16px;
-            background: #09090b;
-            border-radius: 12px;
+            background: #2160cc;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            box-shadow: 0 4px 12px rgba(9, 9, 11, 0.15), 0 1px 2px rgba(9, 9, 11, 0.1);
+            box-shadow: 0 8px 20px rgba(33, 96, 204, 0.25);
         }
 
         .auth-logo-badge svg {
@@ -96,9 +99,9 @@ $error = $_GET['error'] ?? '';
         }
 
         .auth-title {
-            font-size: 23px;
-            font-weight: 600;
-            letter-spacing: -0.025em;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             color: var(--auth-text-main);
             margin-bottom: 6px;
         }
@@ -114,9 +117,9 @@ $error = $_GET['error'] ?? '';
         .auth-card {
             background: var(--auth-card-bg);
             border: 1px solid var(--auth-border);
-            border-radius: 16px;
+            border-radius: 24px;
             padding: 36px 32px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 16px 36px -12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 14px 40px -10px rgba(33, 96, 204, 0.12), 0 2px 10px rgba(15, 23, 42, 0.04);
         }
 
         /* Inline Alert */
@@ -128,7 +131,7 @@ $error = $_GET['error'] ?? '';
             margin-bottom: 22px;
             background-color: #fef2f2;
             border: 1px solid #fee2e2;
-            border-radius: 8px;
+            border-radius: 12px;
             color: #991b1b;
             font-size: 13px;
             line-height: 1.45;
@@ -154,8 +157,8 @@ $error = $_GET['error'] ?? '';
         .auth-label {
             display: block;
             font-size: 13px;
-            font-weight: 500;
-            color: #27272a;
+            font-weight: 600;
+            color: #334155;
             margin-bottom: 7px;
         }
 
@@ -178,29 +181,29 @@ $error = $_GET['error'] ?? '';
 
         .auth-input {
             width: 100%;
-            height: 44px;
+            height: 46px;
             padding: 0 14px 0 42px;
             font-size: 14px;
-            color: #09090b;
+            color: #0f172a;
             background: #ffffff;
-            border: 1px solid #d4d4d8;
-            border-radius: 9px;
+            border: 1px solid #d8e1f0;
+            border-radius: 12px;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
             -webkit-appearance: none;
         }
 
         .auth-input::placeholder {
-            color: #a1a1aa;
+            color: #94a3b8;
         }
 
         .auth-input:focus {
             outline: none;
-            border-color: #09090b;
-            box-shadow: 0 0 0 3px var(--auth-focus-ring);
+            border-color: var(--auth-primary);
+            box-shadow: 0 0 0 3.5px var(--auth-focus-ring);
         }
 
         .auth-input-wrapper:focus-within .auth-input-icon {
-            color: #09090b;
+            color: var(--auth-primary);
         }
 
         /* Password Toggle */
@@ -219,54 +222,56 @@ $error = $_GET['error'] ?? '';
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: color 0.15s ease, background 0.15s ease;
         }
 
         .auth-password-toggle:hover {
-            color: #09090b;
-            background: #f4f4f5;
+            color: var(--auth-primary);
+            background: #eff6ff;
         }
 
         .auth-password-toggle:focus {
             outline: none;
-            color: #09090b;
+            color: var(--auth-primary);
         }
 
         /* Submit Button */
         .auth-submit-btn {
             width: 100%;
-            height: 44px;
+            height: 46px;
             background: var(--auth-primary);
             color: #ffffff;
-            border: 1px solid transparent;
-            border-radius: 9px;
-            font-size: 14px;
-            font-weight: 500;
+            border: none;
+            border-radius: 12px;
+            font-size: 14.5px;
+            font-weight: 600;
             letter-spacing: -0.01em;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 6px;
+            margin-top: 8px;
             transition: all 0.15s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 14px rgba(33, 96, 204, 0.32);
         }
 
         .auth-submit-btn:hover:not(:disabled) {
             background: var(--auth-primary-hover);
-            transform: translateY(-0.5px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(33, 96, 204, 0.38);
         }
 
         .auth-submit-btn:active:not(:disabled) {
             transform: translateY(0);
+            background: #153e8a;
         }
 
         .auth-submit-btn:disabled {
             opacity: 0.65;
             cursor: not-allowed;
+            transform: none;
         }
 
         /* Loading Spinner */
@@ -284,89 +289,47 @@ $error = $_GET['error'] ?? '';
             to { transform: rotate(360deg); }
         }
 
-        /* Sandbox / Demo Helper */
+        /* Auto-Fill Credential Helper */
         .demo-sandbox-card {
-            margin-top: 24px;
-            padding: 12px 14px;
-            background: #fafafa;
-            border: 1px solid #f4f4f5;
-            border-radius: 10px;
+            margin-top: 20px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
         }
 
-        .demo-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .demo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #71717a;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .demo-badge-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #10b981;
-        }
-
         .demo-credentials-text {
-            font-size: 12px;
-            color: #3f3f46;
+            font-size: 12.5px;
+            color: #64748b;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
 
         .demo-credentials-text strong {
-            color: #09090b;
-            font-weight: 600;
+            color: #0f172a;
+            font-weight: 700;
         }
 
         .btn-fill-demo {
             background: #ffffff;
-            border: 1px solid #e4e4e7;
-            color: #18181b;
-            padding: 6px 11px;
-            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            color: #2160cc;
+            padding: 6px 12px;
+            border-radius: 8px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
-            flex-shrink: 0;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .btn-fill-demo:hover {
-            background: #f4f4f5;
-            border-color: #d4d4d8;
-        }
-
-        /* Footer */
-        .auth-footer {
-            margin-top: 32px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--auth-text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .auth-footer svg {
-            width: 14px;
-            height: 14px;
-            color: #a1a1aa;
+            background: #eff6ff;
+            border-color: #2160cc;
+            color: #1a4fb0;
         }
     </style>
 </head>
@@ -464,30 +427,16 @@ $error = $_GET['error'] ?? '';
                 </button>
             </form>
 
-            <!-- Test Environment Credential Helper -->
+            <!-- Auto-fill Credential Helper -->
             <div class="demo-sandbox-card">
-                <div class="demo-info">
-                    <div class="demo-badge">
-                        <span class="demo-badge-dot"></span>
-                        Default Sandbox Account
-                    </div>
-                    <div class="demo-credentials-text">
-                        <strong>admin</strong> / <span>admin123</span>
-                    </div>
+                <div class="demo-credentials-text">
+                    <strong>admin</strong> / <span>admin123</span>
                 </div>
-                <button type="button" class="btn-fill-demo" id="fillDemoBtn" title="Fill test credentials">
+                <button type="button" class="btn-fill-demo" id="fillDemoBtn" title="Auto-fill credentials">
                     Auto-fill
                 </button>
             </div>
         </main>
-
-        <!-- Trust Footer -->
-        <footer class="auth-footer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-            </svg>
-            <span>256-bit encrypted authentication &bull; v<?= APP_VERSION ?></span>
-        </footer>
     </div>
 
     <script src="<?= BASE_URL ?>/assets/js/api.js"></script>
@@ -508,7 +457,7 @@ $error = $_GET['error'] ?? '';
             });
         }
 
-        // Auto-fill Demo Account Helper
+        // Auto-fill Credential Helper
         const fillDemoBtn = document.getElementById('fillDemoBtn');
         const usernameInput = document.getElementById('username');
 
@@ -517,12 +466,11 @@ $error = $_GET['error'] ?? '';
                 usernameInput.value = 'admin';
                 passwordInput.value = 'admin123';
                 usernameInput.focus();
-                
-                // Visual feedback on the fill button
+
                 const originalText = fillDemoBtn.textContent;
                 fillDemoBtn.textContent = 'Filled!';
-                fillDemoBtn.style.borderColor = '#10b981';
-                fillDemoBtn.style.color = '#059669';
+                fillDemoBtn.style.borderColor = '#2160cc';
+                fillDemoBtn.style.color = '#2160cc';
                 setTimeout(() => {
                     fillDemoBtn.textContent = originalText;
                     fillDemoBtn.style.borderColor = '';
