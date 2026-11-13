@@ -178,18 +178,23 @@ try {
             $quantity = abs((int) ($input['quantity'] ?? 0));
             $direction = strtoupper(trim((string) ($input['direction'] ?? '')));
             $notes = trim((string) ($input['notes'] ?? ''));
+            $newCount = isset($input['new_count']) && $input['new_count'] !== '' ? (int) $input['new_count'] : null;
 
             $errors = [];
             if ($productId <= 0) {
                 $errors['product_id'] = 'Valid product selection is required.';
             }
 
-            $allowedTypes = ['RESTOCK', 'DAMAGE', 'ADJUSTMENT', 'RETURN'];
+            $allowedTypes = ['RESTOCK', 'DAMAGE', 'ADJUSTMENT', 'RETURN', 'STOCK_IN', 'STOCK_OUT', 'FIX_COUNT'];
             if (!in_array($adjustmentType, $allowedTypes, true)) {
-                $errors['movement_type'] = 'Invalid adjustment type. Must be RESTOCK, DAMAGE, RETURN, or ADJUSTMENT.';
+                $errors['movement_type'] = 'Invalid adjustment type. Must be Stock In, Stock Out, or Fix Count.';
             }
 
-            if ($quantity <= 0) {
+            if ($adjustmentType === 'FIX_COUNT' && $newCount !== null) {
+                if ($newCount < 0) {
+                    $errors['quantity'] = 'Counted stock cannot be negative.';
+                }
+            } elseif ($quantity <= 0) {
                 $errors['quantity'] = 'Quantity must be a positive integer greater than zero.';
             }
 
@@ -197,13 +202,23 @@ try {
                 send_json(false, 'Validation failed', null, $errors, 422);
             }
 
-            // Determine stock delta based on business rules
-            if ($adjustmentType === 'RESTOCK' || $adjustmentType === 'RETURN') {
+            // Map frontend adjustment types to schema ENUM('INITIAL','RESTOCK','SALE','RETURN','DAMAGE','ADJUSTMENT')
+            $dbMovementType = match ($adjustmentType) {
+                'STOCK_IN' => 'RESTOCK',
+                'STOCK_OUT' => 'DAMAGE',
+                'FIX_COUNT' => 'ADJUSTMENT',
+                default => $adjustmentType
+            };
+
+            // Determine initial stock delta based on business rules
+            if ($adjustmentType === 'RESTOCK' || $adjustmentType === 'RETURN' || $adjustmentType === 'STOCK_IN') {
                 $delta = $quantity;
-            } elseif ($adjustmentType === 'DAMAGE') {
+            } elseif ($adjustmentType === 'DAMAGE' || $adjustmentType === 'STOCK_OUT') {
                 $delta = -$quantity;
-            } elseif ($adjustmentType === 'ADJUSTMENT') {
-                if ($direction === 'SUBTRACT') {
+            } elseif ($adjustmentType === 'ADJUSTMENT' || $adjustmentType === 'FIX_COUNT') {
+                if ($newCount !== null) {
+                    $delta = 0; // Computed after fetching current stock
+                } elseif ($direction === 'SUBTRACT') {
                     $delta = -$quantity;
                 } else {
                     $delta = $quantity;
@@ -231,6 +246,13 @@ try {
                 }
 
                 $stockBefore = (int) $product['current_stock'];
+
+                // If FIX_COUNT with explicit target count, compute delta directly
+                if ($adjustmentType === 'FIX_COUNT' && $newCount !== null) {
+                    $delta = $newCount - $stockBefore;
+                    $quantity = abs($delta);
+                }
+
                 $stockAfter = $stockBefore + $delta;
 
                 // 2. Strict Negative Stock Guard
@@ -258,10 +280,10 @@ try {
 
                 // 4. Record entry in inventory_movements
                 $defaultNote = match ($adjustmentType) {
-                    'RESTOCK' => 'Manual stock replenishment',
-                    'DAMAGE' => 'Damaged / expired inventory write-off',
+                    'RESTOCK', 'STOCK_IN' => 'Manual stock inflow (Stock In)',
+                    'DAMAGE', 'STOCK_OUT' => 'Manual stock outflow (Stock Out)',
                     'RETURN' => 'Customer return processed back to stock',
-                    'ADJUSTMENT' => 'Physical inventory count adjustment',
+                    'ADJUSTMENT', 'FIX_COUNT' => 'Physical inventory count reconciliation (Fix Count)',
                     default => 'Manual stock adjustment'
                 };
                 $finalNotes = $notes !== '' ? $notes : $defaultNote;
@@ -280,7 +302,7 @@ try {
                 $stmtMovement->execute([
                     ':product_id' => $productId,
                     ':user_id' => $currentUser['id'],
-                    ':movement_type' => $adjustmentType,
+                    ':movement_type' => $dbMovementType,
                     ':quantity' => abs($delta),
                     ':stock_before' => $stockBefore,
                     ':stock_after' => $stockAfter,

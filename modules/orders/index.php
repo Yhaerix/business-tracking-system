@@ -4,6 +4,7 @@
  * Small Business Sales and Expense Tracking System
  *
  * File: modules/orders/index.php
+ * Reference: new-design.html (View 3, Modals 1, 2, 3, 12)
  */
 
 declare(strict_types=1);
@@ -46,101 +47,10 @@ $initialKpi = $kpiStmt->fetch() ?: [
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<style>
-/* Drawer Modal Customizations */
-.order-drawer-card {
-    max-width: 860px;
-    width: 95%;
-}
-
-.order-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-    .order-detail-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.detail-info-block {
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 14px;
-}
-
-.detail-info-title {
-    font-size: 11.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
-}
-
-.detail-info-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 6px;
-}
-
-.detail-info-row:last-child {
-    margin-bottom: 0;
-}
-
-.detail-info-label {
-    color: var(--text-muted);
-}
-
-.detail-info-val {
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-/* Timeline Notes */
-.timeline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 240px;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-bottom: 12px;
-}
-
-.timeline-item {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-left: 3px solid var(--color-primary);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-}
-
-.timeline-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11.5px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-
-.timeline-text {
-    font-size: 13px;
-    color: var(--text-main);
-    line-height: 1.4;
-    word-break: break-word;
-}
-</style>
-
 <!-- Action Header -->
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div>
-        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Orders & Delivery Management</h1>
+        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Orders &amp; Delivery Management</h1>
         <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
             Manage Cash-on-Delivery (COD) lifecycles, dispatch couriers, track collected cash, and verify store remittance.
         </p>
@@ -148,7 +58,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <div>
         <?php if ($canCreate): ?>
-            <a href="create.php" class="btn btn-primary">
+            <a href="<?= BASE_URL ?>/modules/orders/create.php" class="btn btn-primary">
                 <span>+</span> New Order (POS)
             </a>
         <?php endif; ?>
@@ -162,7 +72,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <span class="stat-label">Pending / Confirmed</span>
             <div class="stat-icon icon-warning">⏳</div>
         </div>
-        <div class="stat-value" id="kpiPending"><?= number_format((int)$initialKpi['pending_count']) ?></div>
+        <div class="stat-value tabular-nums" id="kpiPending"><?= number_format((int)$initialKpi['pending_count']) ?></div>
         <div class="stat-subtext">Awaiting courier dispatch</div>
     </div>
 
@@ -171,7 +81,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <span class="stat-label">Dispatched / In Transit</span>
             <div class="stat-icon icon-primary">🚚</div>
         </div>
-        <div class="stat-value" id="kpiDispatched"><?= number_format((int)$initialKpi['dispatched_count']) ?></div>
+        <div class="stat-value tabular-nums" id="kpiDispatched"><?= number_format((int)$initialKpi['dispatched_count']) ?></div>
         <div class="stat-subtext">Out for COD delivery</div>
     </div>
 
@@ -180,7 +90,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <span class="stat-label">Delivered (Collected)</span>
             <div class="stat-icon icon-success">✅</div>
         </div>
-        <div class="stat-value" id="kpiDelivered"><?= number_format((int)$initialKpi['delivered_count']) ?></div>
+        <div class="stat-value tabular-nums" id="kpiDelivered"><?= number_format((int)$initialKpi['delivered_count']) ?></div>
         <div class="stat-subtext">Cash received by courier</div>
     </div>
 
@@ -189,8 +99,8 @@ require_once __DIR__ . '/../../includes/header.php';
             <span class="stat-label">Unremitted COD Cash</span>
             <div class="stat-icon icon-warning">💰</div>
         </div>
-        <div class="stat-value" id="kpiUnremitted" style="color: #b45309;">
-            <?= APP_CURRENCY . number_format((float)$initialKpi['unremitted_cod_cash'], 2) ?>
+        <div class="stat-value tabular-nums" id="kpiUnremitted" style="color: #b45309;">
+            <?= APP_CURRENCY ?><?= number_format((float)$initialKpi['unremitted_cod_cash'], 2) ?>
         </div>
         <div class="stat-subtext">Held by courier / pending store drawer</div>
     </div>
@@ -210,6 +120,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="filter-group" style="max-width: 170px;">
         <select id="filterOrderStatus" class="form-select">
             <option value="">All Order Statuses</option>
+            <option value="PENDING">PENDING</option>
             <option value="CONFIRMED">CONFIRMED</option>
             <option value="DISPATCHED">DISPATCHED</option>
             <option value="DELIVERED">DELIVERED</option>
@@ -237,147 +148,151 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 
     <div class="filter-group-fixed" style="display: flex; gap: 8px;">
-        <button type="button" id="applyFiltersBtn" class="btn btn-primary btn-sm">
-            Filter
-        </button>
-        <button type="button" id="resetFiltersBtn" class="btn btn-outline btn-sm">
-            Reset
-        </button>
+        <button type="button" id="applyFiltersBtn" class="btn btn-primary btn-sm">Filter</button>
+        <button type="button" id="resetFiltersBtn" class="btn btn-outline btn-sm">Reset</button>
     </div>
 </div>
 
-<!-- Orders Data Table -->
-<div class="table-responsive">
-    <table class="table" id="ordersTable">
-        <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Date & Staff</th>
-                <th>Customer Details</th>
-                <th>Line Items</th>
-                <th class="text-right">Total Due</th>
-                <th class="text-center">Order Status</th>
-                <th class="text-center">COD Payment</th>
-                <th class="text-center">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="ordersTableBody">
-            <tr>
-                <td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted);">
-                    Loading order records...
-                </td>
-            </tr>
-        </tbody>
-    </table>
+<!-- Orders Data Table Container -->
+<div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+    <div class="table-responsive">
+        <table class="table" id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date &amp; Staff</th>
+                    <th>Customer Details</th>
+                    <th>Line Items</th>
+                    <th class="text-right">Total Due</th>
+                    <th class="text-center">Order Status</th>
+                    <th class="text-center">COD Payment</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted);">
+                        Loading order records...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination Controls -->
-    <div class="pagination-container" id="paginationBar" style="display: none;">
+    <div class="pagination-container" id="paginationBar" style="display: none; padding: 14px 20px; border-top: 1px solid var(--border-color);">
         <div id="paginationInfo">Showing 0 of 0 orders</div>
         <div class="pagination-controls">
-            <button type="button" class="btn btn-outline btn-sm" id="prevPageBtn">Previous</button>
+            <button type="button" class="btn btn-outline btn-sm" id="prevPageBtn">&larr; Previous</button>
             <span id="pageIndicator" style="font-weight: 600; padding: 0 4px;">Page 1 of 1</span>
-            <button type="button" class="btn btn-outline btn-sm" id="nextPageBtn">Next</button>
+            <button type="button" class="btn btn-outline btn-sm" id="nextPageBtn">Next &rarr;</button>
         </div>
     </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Order Details & Workflow Drawer                                   -->
+<!-- 1. MODAL: Order Details & COD Lifecycle Drawer                            -->
 <!-- ========================================================================= -->
-<div class="modal-overlay" id="orderDetailModal">
+<div class="modal-overlay" id="orderDrawerModal">
     <div class="modal-card order-drawer-card">
         <div class="modal-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 class="modal-title" id="drawerOrderNumber">Order Details</h3>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h3 class="modal-title" id="drawerOrderNumber" style="margin: 0; font-size: 18px;">Order Details</h3>
                 <span id="drawerOrderStatusBadge" class="badge">STATUS</span>
                 <span id="drawerPaymentStatusBadge" class="badge">COD</span>
             </div>
-            <button type="button" class="modal-close" id="closeDetailModalBtn">&times;</button>
+            <button type="button" class="modal-close" onclick="window.closeModal('orderDrawerModal')">&times;</button>
         </div>
 
-        <div class="modal-body" id="drawerModalBody">
+        <div class="modal-body" id="drawerModalBody" style="padding: 24px;">
             <!-- Rendered dynamically -->
         </div>
 
-        <div class="modal-footer" id="drawerModalFooter">
+        <div class="modal-footer" id="drawerModalFooter" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <!-- Dynamic state machine buttons injected here -->
         </div>
     </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Mark as Delivered (Courier & Collected Amount Prompt)              -->
+<!-- 2. MODAL: Mark Delivered / Courier Prompt                                 -->
 <!-- ========================================================================= -->
 <div class="modal-overlay" id="deliverModal">
-    <div class="modal-card" style="max-width: 440px;">
+    <div class="modal-card" style="max-width: 480px;">
         <div class="modal-header">
-            <h3 class="modal-title">Mark Order as Delivered</h3>
-            <button type="button" class="modal-close" id="closeDeliverModalBtn">&times;</button>
+            <h3 class="modal-title">📦 Record Courier Delivery</h3>
+            <button type="button" class="modal-close" onclick="window.closeModal('deliverModal')">&times;</button>
         </div>
         <div class="modal-body">
-            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">
-                Confirm that the order has been handed to the recipient and Cash on Delivery has been collected.
-            </p>
-            <div class="form-group">
-                <label class="form-label" for="deliverCourierInput">Courier / Collector Name *</label>
-                <input type="text" id="deliverCourierInput" class="form-input" required placeholder="e.g. Courier Rider / Rider John">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="deliverAmountInput">Amount Collected (<?= APP_CURRENCY ?>) *</label>
-                <input type="number" id="deliverAmountInput" class="form-input" step="0.01" min="0" required>
-            </div>
+            <form id="markDeliveredForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label class="form-label" for="deliverCourierInput">Courier / Collector Name *</label>
+                    <input type="text" id="deliverCourierInput" class="form-input" required placeholder="e.g. Lalamove Rider J. Perez">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deliverAmountInput">Amount Collected (<?= APP_CURRENCY ?>) *</label>
+                    <input type="number" id="deliverAmountInput" class="form-input" step="0.01" min="0" required>
+                    <small style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px; display: block;">
+                        Verify that physical cash matches the COD Total Due before recording.
+                    </small>
+                </div>
+            </form>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline" id="cancelDeliverBtn">Cancel</button>
-            <button type="button" class="btn btn-success" id="confirmDeliverBtn">Confirm Delivery & Collection</button>
+            <button type="button" class="btn btn-outline" onclick="window.closeModal('deliverModal')">Cancel</button>
+            <button type="button" class="btn btn-success" id="confirmDeliverBtn">Confirm Delivery &amp; Collection</button>
         </div>
     </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Cancel Order / Return Order Reason Dialog                          -->
+<!-- 3. MODAL: Cancel Order / Void Prompt                                      -->
 <!-- ========================================================================= -->
 <div class="modal-overlay" id="reasonModal">
     <div class="modal-card" style="max-width: 460px;">
         <div class="modal-header">
-            <h3 class="modal-title" id="reasonModalTitle">Cancel Order</h3>
-            <button type="button" class="modal-close" id="closeReasonModalBtn">&times;</button>
+            <h3 class="modal-title" id="reasonModalTitle" style="color: var(--color-danger);">⚠️ Cancel COD Order</h3>
+            <button type="button" class="modal-close" onclick="window.closeModal('reasonModal')">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="alert alert-warning" id="reasonModalNotice">
-                Cancelling this order will immediately restore all reserved items to active inventory.
+            <div class="alert alert-warning" id="reasonModalNotice" style="margin-bottom: 14px;">
+                Cancelling will restore deducted product inventory back to stock and mark associated invoices as VOID.
             </div>
             <div class="form-group">
                 <label class="form-label" for="reasonTextInput">Reason *</label>
-                <textarea id="reasonTextInput" class="form-textarea" rows="3" required placeholder="Please state the reason..."></textarea>
+                <textarea id="reasonTextInput" class="form-textarea" rows="3" required placeholder="State reason for customer cancellation or failed delivery..."></textarea>
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline" id="cancelReasonBtn">Abort</button>
+            <button type="button" class="btn btn-outline" onclick="window.closeModal('reasonModal')">Abort</button>
             <button type="button" class="btn btn-danger" id="confirmReasonBtn">Confirm</button>
         </div>
     </div>
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Remit COD Cash to Store (Admin / Manager Only)                    -->
+<!-- 4. MODAL: Confirm Cash Remittance (Admin / Manager Only)                  -->
 <!-- ========================================================================= -->
 <div class="modal-overlay" id="remitModal">
-    <div class="modal-card" style="max-width: 440px;">
+    <div class="modal-card" style="max-width: 480px;">
         <div class="modal-header">
             <h3 class="modal-title">Confirm Cash Remittance</h3>
-            <button type="button" class="modal-close" id="closeRemitModalBtn">&times;</button>
+            <button type="button" class="modal-close" onclick="window.closeModal('remitModal')">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="alert alert-success" style="margin-bottom: 12px;">
+            <div class="alert alert-success" style="margin-bottom: 14px;">
                 You are acknowledging receipt of collected COD cash into the business physical drawer / account.
             </div>
-            <p style="font-size: 13.5px; color: var(--text-main);">
-                Confirm deposit of <strong id="remitAmountDisplay"><?= APP_CURRENCY ?>0.00</strong> for Order <strong id="remitOrderNumDisplay"></strong>?
+            <p style="font-size: 13.5px; color: var(--text-main); margin-bottom: 14px;">
+                Confirm deposit of <strong id="remitAmountDisplay" style="color: var(--color-primary);"><?= APP_CURRENCY ?>0.00</strong> for Order <strong id="remitOrderNumDisplay"></strong>?
             </p>
+            <div class="form-group">
+                <label class="form-label" for="remitNotesInput">Remittance Reference / Notes</label>
+                <textarea id="remitNotesInput" class="form-textarea" rows="2" placeholder="e.g. Courier turnover envelope #8812 verified by Manager"></textarea>
+            </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline" id="cancelRemitBtn">Cancel</button>
+            <button type="button" class="btn btn-outline" onclick="window.closeModal('remitModal')">Cancel</button>
             <button type="button" class="btn btn-primary" id="confirmRemitBtn">Confirm Cash Received</button>
         </div>
     </div>
@@ -387,6 +302,7 @@ require_once __DIR__ . '/../../includes/header.php';
 document.addEventListener('DOMContentLoaded', () => {
     const currency = '<?= APP_CURRENCY ?>';
     const canRemitRole = <?= $canRemit ? 'true' : 'false' ?>;
+    const canUpdateStatusRole = <?= $canUpdateStatus ? 'true' : 'false' ?>;
 
     // State
     let currentPage = 1;
@@ -417,21 +333,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiUnremitted = document.getElementById('kpiUnremitted');
 
     // Drawer Elements
-    const orderDetailModal = document.getElementById('orderDetailModal');
+    const orderDrawerModal = document.getElementById('orderDrawerModal');
     const drawerOrderNumber = document.getElementById('drawerOrderNumber');
     const drawerOrderStatusBadge = document.getElementById('drawerOrderStatusBadge');
     const drawerPaymentStatusBadge = document.getElementById('drawerPaymentStatusBadge');
     const drawerModalBody = document.getElementById('drawerModalBody');
     const drawerModalFooter = document.getElementById('drawerModalFooter');
-    const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
 
     // Deliver Modal Elements
     const deliverModal = document.getElementById('deliverModal');
     const deliverCourierInput = document.getElementById('deliverCourierInput');
     const deliverAmountInput = document.getElementById('deliverAmountInput');
     const confirmDeliverBtn = document.getElementById('confirmDeliverBtn');
-    const cancelDeliverBtn = document.getElementById('cancelDeliverBtn');
-    const closeDeliverModalBtn = document.getElementById('closeDeliverModalBtn');
 
     // Reason Modal Elements
     const reasonModal = document.getElementById('reasonModal');
@@ -439,16 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const reasonModalNotice = document.getElementById('reasonModalNotice');
     const reasonTextInput = document.getElementById('reasonTextInput');
     const confirmReasonBtn = document.getElementById('confirmReasonBtn');
-    const cancelReasonBtn = document.getElementById('cancelReasonBtn');
-    const closeReasonModalBtn = document.getElementById('closeReasonModalBtn');
 
     // Remit Modal Elements
     const remitModal = document.getElementById('remitModal');
     const remitAmountDisplay = document.getElementById('remitAmountDisplay');
     const remitOrderNumDisplay = document.getElementById('remitOrderNumDisplay');
+    const remitNotesInput = document.getElementById('remitNotesInput');
     const confirmRemitBtn = document.getElementById('confirmRemitBtn');
-    const cancelRemitBtn = document.getElementById('cancelRemitBtn');
-    const closeRemitModalBtn = document.getElementById('closeRemitModalBtn');
 
     // Utilities
     function escapeHtml(str) {
@@ -470,31 +380,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getStatusBadge(status) {
         switch (status) {
-            case 'CONFIRMED':  return '<span class="badge badge-confirmed">Confirmed</span>';
-            case 'DISPATCHED': return '<span class="badge badge-dispatched">Dispatched</span>';
-            case 'DELIVERED':  return '<span class="badge badge-delivered">Delivered</span>';
-            case 'CANCELLED':  return '<span class="badge badge-cancelled">Cancelled</span>';
-            case 'RETURNED':   return '<span class="badge badge-danger">Returned</span>';
+            case 'CONFIRMED':  return '<span class="badge badge-confirmed">CONFIRMED</span>';
+            case 'DISPATCHED': return '<span class="badge badge-dispatched">DISPATCHED</span>';
+            case 'DELIVERED':  return '<span class="badge badge-delivered">DELIVERED</span>';
+            case 'CANCELLED':  return '<span class="badge badge-cancelled">CANCELLED</span>';
+            case 'RETURNED':   return '<span class="badge badge-danger">RETURNED</span>';
             default:           return `<span class="badge badge-pending">${escapeHtml(status)}</span>`;
         }
     }
 
     function getPaymentBadge(status) {
         switch (status) {
-            case 'PENDING_COLLECTION': return '<span class="badge badge-pending">Pending Collection</span>';
-            case 'COLLECTED':          return '<span class="badge badge-success">Cash Collected</span>';
-            case 'REMITTED':           return '<span class="badge badge-remitted">Remitted</span>';
-            case 'FAILED':             return '<span class="badge badge-danger">Failed</span>';
+            case 'PENDING_COLLECTION': return '<span class="badge badge-warning">PENDING COLLECTION</span>';
+            case 'COLLECTED':          return '<span class="badge badge-primary">COLLECTED</span>';
+            case 'REMITTED':           return '<span class="badge badge-success">REMITTED</span>';
+            case 'FAILED':             return '<span class="badge badge-danger">FAILED</span>';
             default:                   return `<span class="badge">${escapeHtml(status)}</span>`;
         }
     }
 
-    function openModal(el) {
-        el.classList.add('active');
-    }
+    function renderCodStepper(orderStatus, paymentStatus) {
+        const isCancelled = (orderStatus === 'CANCELLED' || orderStatus === 'RETURNED');
+        
+        let stepPendingState = 'step-completed';
+        let stepConfirmedState = '';
+        let stepDispatchedState = '';
+        let stepDeliveredState = '';
+        let stepRemittedState = '';
 
-    function closeModal(el) {
-        el.classList.remove('active');
+        if (!isCancelled) {
+            if (orderStatus === 'PENDING') {
+                stepPendingState = 'step-active';
+            } else if (orderStatus === 'CONFIRMED') {
+                stepPendingState = 'step-completed';
+                stepConfirmedState = 'step-active';
+            } else if (orderStatus === 'DISPATCHED') {
+                stepPendingState = 'step-completed';
+                stepConfirmedState = 'step-completed';
+                stepDispatchedState = 'step-active';
+            } else if (orderStatus === 'DELIVERED') {
+                stepPendingState = 'step-completed';
+                stepConfirmedState = 'step-completed';
+                stepDispatchedState = 'step-completed';
+                if (paymentStatus === 'REMITTED') {
+                    stepDeliveredState = 'step-completed';
+                    stepRemittedState = 'step-completed step-active';
+                } else {
+                    stepDeliveredState = 'step-active';
+                }
+            }
+        }
+
+        return `
+            <div>
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.05em;">
+                    COD Lifecycle Pipeline
+                </div>
+                <div class="cod-stepper" id="drawerStepper">
+                    <div class="step-item ${stepPendingState}" id="step-PENDING">
+                        <div class="step-node">${stepPendingState.includes('completed') ? '✓' : '1'}</div>
+                        <div class="step-label">Placed</div>
+                    </div>
+                    <div class="step-item ${stepConfirmedState}" id="step-CONFIRMED">
+                        <div class="step-node">${stepConfirmedState.includes('completed') ? '✓' : '2'}</div>
+                        <div class="step-label">Confirmed</div>
+                    </div>
+                    <div class="step-item ${stepDispatchedState}" id="step-DISPATCHED">
+                        <div class="step-node">${stepDispatchedState.includes('completed') ? '✓' : (stepDispatchedState.includes('active') ? '🚚' : '3')}</div>
+                        <div class="step-label">Dispatched</div>
+                    </div>
+                    <div class="step-item ${stepDeliveredState}" id="step-DELIVERED">
+                        <div class="step-node">${stepDeliveredState.includes('completed') ? '✓' : '4'}</div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                    <div class="step-item ${stepRemittedState}" id="step-REMITTED">
+                        <div class="step-node">${stepRemittedState.includes('completed') ? '✓' : '5'}</div>
+                        <div class="step-label">Remitted</div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // 1. Fetch Orders List
@@ -546,11 +511,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (orders.length === 0) {
                 ordersTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center" style="padding: 48px 16px; color: var(--text-muted);">
-                            <div style="font-size: 28px; margin-bottom: 6px;">📦</div>
-                            <div style="font-weight: 600; color: var(--text-main);">No orders found</div>
-                            <div style="font-size: 12px; margin-top: 2px;">Try adjusting search keywords or active filters.</div>
+                    <tr class="empty-row">
+                        <td colspan="8" style="text-align: center !important; padding: 56px 16px !important; color: var(--text-muted);">
+                            <div style="font-size: 32px; margin-bottom: 8px; line-height: 1;">📦</div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 15px; margin-bottom: 4px;">No orders found</div>
+                            <div style="font-size: 12.5px; color: var(--text-muted);">Try adjusting search keywords or active filters.</div>
                         </td>
                     </tr>
                 `;
@@ -561,22 +526,56 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersTableBody.innerHTML = '';
             orders.forEach(o => {
                 const tr = document.createElement('tr');
+                
+                // Build contextual quick action buttons
+                let quickActionButtonsHtml = `
+                    <button type="button" class="btn btn-outline btn-sm view-details-btn" data-id="${o.id}">
+                        View Details
+                    </button>
+                `;
+
+                if (canUpdateStatusRole && o.order_status === 'CONFIRMED') {
+                    quickActionButtonsHtml += `
+                        <button type="button" class="btn btn-primary btn-sm quick-dispatch-btn" data-id="${o.id}" title="Hand to courier for delivery">
+                            Dispatch
+                        </button>
+                    `;
+                } else if (canUpdateStatusRole && o.order_status === 'DISPATCHED') {
+                    quickActionButtonsHtml += `
+                        <button type="button" class="btn btn-success btn-sm quick-deliver-btn" data-id="${o.id}" data-total="${o.total_amount}" title="Record Delivery & Collection">
+                            Delivered
+                        </button>
+                    `;
+                } else if (canRemitRole && o.order_status === 'DELIVERED' && o.payment_status === 'COLLECTED') {
+                    quickActionButtonsHtml += `
+                        <button type="button" class="btn btn-sm quick-remit-btn" data-id="${o.id}" data-num="${escapeHtml(o.order_number)}" data-total="${o.total_amount}" style="background: #047857; color: #ffffff; font-weight: 600;" title="Remit Cash to Drawer">
+                            Remit
+                        </button>
+                    `;
+                }
+
                 tr.innerHTML = `
-                    <td style="font-weight: 700; color: var(--color-primary);">${escapeHtml(o.order_number)}</td>
+                    <td>
+                        <a href="javascript:void(0)" class="view-details-link" data-id="${o.id}" style="font-family: monospace; font-weight: 700; color: var(--color-primary); text-decoration: none;">
+                            ${escapeHtml(o.order_number)}
+                        </a>
+                    </td>
                     <td>
                         <div style="font-size: 13px; font-weight: 500;">${escapeHtml(o.created_at)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">By: ${escapeHtml(o.creator_name || o.creator_username || 'Staff')}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);">Staff: ${escapeHtml(o.creator_name || o.creator_username || 'Staff')}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(o.customer_name)}</div>
+                        <div style="font-weight: 600; color: var(--text-main); font-size: 13px;">${escapeHtml(o.customer_name)}</div>
                         <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(o.customer_phone)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(o.delivery_address)}">${escapeHtml(o.delivery_address)}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(o.delivery_address)}">${escapeHtml(o.delivery_address)}</div>
                     </td>
                     <td>
-                        <div style="font-size: 12.5px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(o.items_summary || '')}">
-                            ${escapeHtml(o.items_summary || 'No items')}
+                        <span class="badge badge-outline" style="font-size: 11px;">
+                            ${o.items_count || 1} item(s)
+                        </span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px;" title="${escapeHtml(o.items_summary || '')}">
+                            ${escapeHtml(o.items_summary || '')}
                         </div>
-                        <div style="font-size: 11px; color: var(--text-muted);">${o.items_count || 1} line item(s)</div>
                     </td>
                     <td class="text-right tabular-nums" style="font-weight: 700; font-size: 14px;">
                         ${formatCurrency(o.total_amount)}
@@ -584,13 +583,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-center">${getStatusBadge(o.order_status)}</td>
                     <td class="text-center">${getPaymentBadge(o.payment_status)}</td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-outline btn-sm view-details-btn" data-id="${o.id}">
-                            View Details
-                        </button>
+                        <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                            ${quickActionButtonsHtml}
+                        </div>
                     </td>
                 `;
 
+                // Hook view details
+                tr.querySelector('.view-details-link').addEventListener('click', () => openOrderDetails(o.id));
                 tr.querySelector('.view-details-btn').addEventListener('click', () => openOrderDetails(o.id));
+
+                // Hook quick dispatch
+                const quickDispatchBtn = tr.querySelector('.quick-dispatch-btn');
+                if (quickDispatchBtn) {
+                    quickDispatchBtn.addEventListener('click', () => updateOrderStatus(o.id, 'DISPATCHED'));
+                }
+
+                // Hook quick deliver
+                const quickDeliverBtn = tr.querySelector('.quick-deliver-btn');
+                if (quickDeliverBtn) {
+                    quickDeliverBtn.addEventListener('click', () => {
+                        activeOrderData = { order: o };
+                        deliverCourierInput.value = '';
+                        deliverAmountInput.value = o.total_amount;
+                        window.openModal(deliverModal);
+                    });
+                }
+
+                // Hook quick remit
+                const quickRemitBtn = tr.querySelector('.quick-remit-btn');
+                if (quickRemitBtn) {
+                    quickRemitBtn.addEventListener('click', () => {
+                        activeOrderData = { order: o };
+                        remitOrderNumDisplay.textContent = o.order_number;
+                        remitAmountDisplay.textContent = formatCurrency(o.total_amount);
+                        remitNotesInput.value = '';
+                        window.openModal(remitModal);
+                    });
+                }
+
                 ordersTableBody.appendChild(tr);
             });
 
@@ -625,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         drawerModalFooter.innerHTML = '';
-        openModal(orderDetailModal);
+        window.openModal(orderDrawerModal);
 
         try {
             const res = await API.get(`handler.php?action=get_order_details&id=${orderId}`);
@@ -648,6 +679,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Title & Badges
             drawerOrderNumber.textContent = order.order_number;
+            drawerOrderStatusBadge.style.display = 'inline-block';
+            drawerPaymentStatusBadge.style.display = 'inline-block';
             drawerOrderStatusBadge.outerHTML = `<span id="drawerOrderStatusBadge">${getStatusBadge(order.order_status)}</span>`;
             drawerPaymentStatusBadge.outerHTML = `<span id="drawerPaymentStatusBadge">${getPaymentBadge(order.payment_status)}</span>`;
 
@@ -656,9 +689,9 @@ document.addEventListener('DOMContentLoaded', () => {
             items.forEach(itm => {
                 itemsRowsHtml += `
                     <tr>
-                        <td style="font-weight: 500;">
-                            <div>${escapeHtml(itm.product_name)}</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(itm.sku || '')}</div>
+                        <td>
+                            <div style="font-weight: 600;">${escapeHtml(itm.product_name)}</div>
+                            <div style="font-size: 11px; font-family: monospace; color: var(--color-primary);">${escapeHtml(itm.sku || '')}</div>
                         </td>
                         <td class="text-right tabular-nums">${formatCurrency(itm.unit_price)}</td>
                         <td class="text-center tabular-nums">${itm.quantity}</td>
@@ -669,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let notesListHtml = '';
             if (notes.length === 0) {
-                notesListHtml = '<div style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">No notes logged for this order.</div>';
+                notesListHtml = '<div style="font-size: 12px; color: var(--text-muted); padding: 8px 0;">No fulfillment notes recorded yet.</div>';
             } else {
                 notes.forEach(n => {
                     notesListHtml += `
@@ -685,83 +718,84 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             drawerModalBody.innerHTML = `
+                <!-- 5-Stage Visual COD Pipeline Stepper -->
+                ${renderCodStepper(order.order_status, cod.status || order.payment_status)}
+
                 <!-- Cancellation Banner if Cancelled or Returned -->
                 ${(order.order_status === 'CANCELLED' || order.order_status === 'RETURNED') ? `
-                    <div class="alert alert-danger" style="margin-bottom: 16px;">
+                    <div class="alert alert-danger" style="margin-bottom: 20px;">
                         <strong>Order ${order.order_status}:</strong> ${escapeHtml(order.cancellation_reason || 'No specific reason given')}
                     </div>
                 ` : ''}
 
-                <!-- Customer Details & COD Summary -->
+                <!-- Customer Details & Financial Grid -->
                 <div class="order-detail-grid">
                     <div class="detail-info-block">
-                        <div class="detail-info-title">Recipient & Delivery Info</div>
+                        <div class="detail-info-title">Customer &amp; Delivery Details</div>
                         <div class="detail-info-row">
                             <span class="detail-info-label">Customer Name:</span>
                             <span class="detail-info-val">${escapeHtml(order.customer_name)}</span>
                         </div>
                         <div class="detail-info-row">
-                            <span class="detail-info-label">Phone Number:</span>
+                            <span class="detail-info-label">Mobile Phone:</span>
                             <span class="detail-info-val">${escapeHtml(order.customer_phone)}</span>
                         </div>
                         <div class="detail-info-row" style="align-items: flex-start;">
-                            <span class="detail-info-label">Address:</span>
+                            <span class="detail-info-label">Delivery Address:</span>
                             <span class="detail-info-val" style="text-align: right; max-width: 65%;">${escapeHtml(order.delivery_address)}</span>
                         </div>
                         ${order.delivery_notes ? `
                             <div class="detail-info-row">
-                                <span class="detail-info-label">Notes:</span>
+                                <span class="detail-info-label">Delivery Notes:</span>
                                 <span class="detail-info-val" style="text-align: right; font-style: italic;">${escapeHtml(order.delivery_notes)}</span>
                             </div>
                         ` : ''}
                         <div class="detail-info-row" style="margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 6px;">
-                            <span class="detail-info-label">Created By:</span>
-                            <span class="detail-info-val">${escapeHtml(order.creator_name || order.creator_username || 'Staff')} on ${escapeHtml(order.created_at)}</span>
+                            <span class="detail-info-label">Date Placed:</span>
+                            <span class="detail-info-val">${escapeHtml(order.created_at)}</span>
                         </div>
                     </div>
 
                     <div class="detail-info-block">
-                        <div class="detail-info-title">Cash on Delivery (COD) Tracking</div>
+                        <div class="detail-info-title">Financial &amp; COD Dispatch</div>
                         <div class="detail-info-row">
-                            <span class="detail-info-label">COD Status:</span>
-                            <span class="detail-info-val">${escapeHtml(cod.status || order.payment_status)}</span>
-                        </div>
-                        <div class="detail-info-row">
-                            <span class="detail-info-label">Amount Due:</span>
+                            <span class="detail-info-label">Order Total Due:</span>
                             <span class="detail-info-val" style="font-size: 15px; color: var(--color-primary);">${formatCurrency(order.total_amount)}</span>
                         </div>
                         <div class="detail-info-row">
                             <span class="detail-info-label">Amount Collected:</span>
-                            <span class="detail-info-val" style="color: var(--color-success);">${formatCurrency(cod.amount_collected || 0)}</span>
+                            <span class="detail-info-val" style="color: var(--color-success); font-weight: 700;">${formatCurrency(cod.amount_collected || 0)}</span>
                         </div>
-                        ${cod.collected_by ? `
-                            <div class="detail-info-row">
-                                <span class="detail-info-label">Collected By:</span>
-                                <span class="detail-info-val">${escapeHtml(cod.collected_by)} (${escapeHtml(cod.collected_at || '')})</span>
-                            </div>
-                        ` : ''}
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Assigned Courier:</span>
+                            <span class="detail-info-val">${escapeHtml(cod.collected_by || 'Awaiting Courier')}</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Payment Status:</span>
+                            <span class="detail-info-val">${escapeHtml(cod.status || order.payment_status)}</span>
+                        </div>
                         ${cod.status === 'REMITTED' ? `
-                            <div class="detail-info-row">
+                            <div class="detail-info-row" style="margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 6px;">
                                 <span class="detail-info-label">Store Remittance:</span>
-                                <span class="detail-info-val" style="color: #047857;">Remitted to ${escapeHtml(cod.remitted_to_user_name || 'Store')} on ${escapeHtml(cod.remitted_at || '')}</span>
+                                <span class="detail-info-val" style="color: #047857; font-weight: 700;">Remitted on ${escapeHtml(cod.remitted_at || '')}</span>
                             </div>
                         ` : ''}
                     </div>
                 </div>
 
                 <!-- Line Items Table -->
-                <div style="margin-bottom: 20px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em;">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.04em;">
                         Order Line Items (${items.length})
                     </div>
                     <div class="table-responsive">
-                        <table class="table" style="font-size: 13px;">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>Product</th>
-                                    <th class="text-right">Unit Price</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-right">Line Total</th>
+                                    <th class="text-right" style="width: 120px;">Unit Price</th>
+                                    <th class="text-center" style="width: 80px;">Qty</th>
+                                    <th class="text-right" style="width: 130px;">Line Total</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -771,47 +805,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <!-- Pricing Summary -->
-                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-                        <div style="width: 260px; font-size: 13px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <span style="color: var(--text-muted);">Subtotal:</span>
-                                <span class="tabular-nums" style="font-weight: 600;">${formatCurrency(order.subtotal)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                <span style="color: var(--text-muted);">Discount:</span>
-                                <span class="tabular-nums" style="color: var(--color-danger);">- ${formatCurrency(order.discount_amount)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                                <span style="color: var(--text-muted);">Delivery Fee:</span>
-                                <span class="tabular-nums" style="font-weight: 600;">+ ${formatCurrency(order.delivery_fee)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; border-top: 2px solid var(--border-color); padding-top: 6px; font-size: 15px; font-weight: 700; color: var(--color-primary);">
-                                <span>COD Total Due:</span>
-                                <span class="tabular-nums">${formatCurrency(order.total_amount)}</span>
-                            </div>
+                    <div style="margin-top: 14px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Subtotal:</span>
+                            <span class="detail-info-val tabular-nums">${formatCurrency(order.subtotal)}</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Discount:</span>
+                            <span class="detail-info-val tabular-nums" style="color: var(--color-danger);">- ${formatCurrency(order.discount_amount)}</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Delivery Fee:</span>
+                            <span class="detail-info-val tabular-nums">+ ${formatCurrency(order.delivery_fee)}</span>
+                        </div>
+                        <div class="detail-info-row" style="border-top: 2px solid var(--border-color); padding-top: 8px; margin-top: 6px; font-size: 15px; font-weight: 700;">
+                            <span style="color: var(--color-primary);">COD Total Due:</span>
+                            <span class="detail-info-val tabular-nums" style="color: var(--color-primary);">${formatCurrency(order.total_amount)}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Notes & Communication Timeline -->
-                <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
-                    <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.03em;">
-                        Order Activity & Delivery Timeline
+                <!-- Notes & Fulfillment History Timeline -->
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.04em;">
+                        Fulfillment History &amp; Activity
                     </div>
                     <div class="timeline-list" id="drawerTimelineList">
                         ${notesListHtml}
                     </div>
 
                     <!-- Quick Add Note Form -->
-                    <div style="display: flex; gap: 8px; align-items: flex-start; margin-top: 8px;">
-                        <textarea 
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 14px;">
+                        <input 
+                            type="text" 
                             id="quickNoteInput" 
-                            class="form-textarea" 
-                            rows="1" 
+                            class="form-input" 
                             placeholder="Add communication or courier note..." 
-                            style="flex: 1; resize: none; font-size: 13px; padding: 7px 10px;"
-                        ></textarea>
-                        <button type="button" class="btn btn-outline btn-sm" id="addNoteBtn" style="padding: 7px 14px;">
+                            style="flex: 1; font-size: 13px; height: 38px;"
+                        >
+                        <button type="button" class="btn btn-primary btn-sm" id="addNoteBtn" style="height: 38px; padding: 0 16px;">
                             + Add Note
                         </button>
                     </div>
@@ -824,7 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addNoteBtn.addEventListener('click', async () => {
                 const noteText = quickNoteInput.value.trim();
                 if (!noteText) {
-                    API.toast('Please write note text before submitting.', 'warning');
+                    window.showToast('Please write note text before submitting.', 'warning');
                     return;
                 }
 
@@ -841,96 +873,99 @@ document.addEventListener('DOMContentLoaded', () => {
                 addNoteBtn.textContent = '+ Add Note';
 
                 if (noteRes && noteRes.success) {
-                    API.toast('Note added to order.', 'success');
+                    window.showToast('Note added to order history.', 'success');
                     quickNoteInput.value = '';
                     openOrderDetails(order.id); // Refresh drawer
                 } else {
-                    API.toast(noteRes?.message || 'Failed to add note.', 'error');
+                    window.showToast(noteRes?.message || 'Failed to add note.', 'danger');
                 }
             });
 
             // Build Footer Actions based on RBAC & Permitted Actions
             drawerModalFooter.innerHTML = '';
 
-            // Printable Invoice / Receipt Link
-            const printReceiptBtn = document.createElement('a');
-            printReceiptBtn.href = `<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}`;
-            printReceiptBtn.target = '_blank';
-            printReceiptBtn.className = 'btn btn-outline';
-            printReceiptBtn.innerHTML = '🖨️ View Receipt';
-            drawerModalFooter.appendChild(printReceiptBtn);
+            // Left Group: Document Links
+            const leftActionWrap = document.createElement('div');
+            leftActionWrap.style.display = 'flex';
+            leftActionWrap.style.gap = '8px';
+            leftActionWrap.style.flexWrap = 'wrap';
+
+            leftActionWrap.innerHTML = `
+                <a href="<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}" target="_blank" class="btn btn-outline btn-sm">
+                    📄 View Invoice
+                </a>
+                <a href="<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}&format=thermal" target="_blank" class="btn btn-outline btn-sm">
+                    🧾 Print Thermal Receipt
+                </a>
+            `;
+            drawerModalFooter.appendChild(leftActionWrap);
+
+            // Right Group: Contextual Transition Buttons
+            const rightActionWrap = document.createElement('div');
+            rightActionWrap.style.display = 'flex';
+            rightActionWrap.style.gap = '8px';
+            rightActionWrap.style.flexWrap = 'wrap';
 
             // Workflow: CONFIRMED -> DISPATCHED
             if (actions.includes('dispatch')) {
                 const dispatchBtn = document.createElement('button');
                 dispatchBtn.type = 'button';
-                dispatchBtn.className = 'btn btn-primary';
+                dispatchBtn.className = 'btn btn-primary btn-sm';
                 dispatchBtn.innerHTML = '🚚 Mark as Dispatched';
                 dispatchBtn.addEventListener('click', () => updateOrderStatus(order.id, 'DISPATCHED'));
-                drawerModalFooter.appendChild(dispatchBtn);
+                rightActionWrap.appendChild(dispatchBtn);
             }
 
             // Workflow: DISPATCHED -> DELIVERED
             if (actions.includes('deliver')) {
                 const deliverBtn = document.createElement('button');
                 deliverBtn.type = 'button';
-                deliverBtn.className = 'btn btn-success';
-                deliverBtn.innerHTML = '✅ Mark as Delivered';
+                deliverBtn.className = 'btn btn-success btn-sm';
+                deliverBtn.innerHTML = '✅ Mark Delivered & Cash Collected';
                 deliverBtn.addEventListener('click', () => {
                     deliverCourierInput.value = '';
                     deliverAmountInput.value = order.total_amount;
-                    openModal(deliverModal);
+                    window.openModal(deliverModal);
                 });
-                drawerModalFooter.appendChild(deliverBtn);
-            }
-
-            // Workflow: DISPATCHED -> RETURNED
-            if (actions.includes('return')) {
-                const returnBtn = document.createElement('button');
-                returnBtn.type = 'button';
-                returnBtn.className = 'btn btn-outline';
-                returnBtn.style.color = 'var(--color-danger)';
-                returnBtn.innerHTML = '↩ Mark as Returned';
-                returnBtn.addEventListener('click', () => {
-                    pendingAction = 'RETURNED';
-                    reasonModalTitle.textContent = 'Mark Order as Returned';
-                    reasonModalNotice.textContent = 'Returned packages will immediately restore items to inventory with an official movement log.';
-                    reasonTextInput.value = '';
-                    openModal(reasonModal);
-                });
-                drawerModalFooter.appendChild(returnBtn);
+                rightActionWrap.appendChild(deliverBtn);
             }
 
             // Workflow: DELIVERED -> REMITTED (Strict Manager/Admin only!)
             if (actions.includes('remit') && canRemitRole) {
                 const remitBtn = document.createElement('button');
                 remitBtn.type = 'button';
-                remitBtn.className = 'btn btn-primary';
+                remitBtn.className = 'btn btn-sm';
                 remitBtn.style.background = '#047857';
+                remitBtn.style.color = '#ffffff';
+                remitBtn.style.fontWeight = '600';
                 remitBtn.innerHTML = '💰 Remit Cash to Store';
                 remitBtn.addEventListener('click', () => {
                     remitOrderNumDisplay.textContent = order.order_number;
                     remitAmountDisplay.textContent = formatCurrency(order.total_amount);
-                    openModal(remitModal);
+                    remitNotesInput.value = '';
+                    window.openModal(remitModal);
                 });
-                drawerModalFooter.appendChild(remitBtn);
+                rightActionWrap.appendChild(remitBtn);
             }
 
             // Workflow: Cancel (Pre-dispatch)
             if (actions.includes('cancel')) {
                 const cancelBtn = document.createElement('button');
                 cancelBtn.type = 'button';
-                cancelBtn.className = 'btn btn-danger';
+                cancelBtn.className = 'btn btn-outline btn-sm';
+                cancelBtn.style.color = 'var(--color-danger)';
                 cancelBtn.innerHTML = '✕ Cancel Order';
                 cancelBtn.addEventListener('click', () => {
                     pendingAction = 'CANCELLED';
-                    reasonModalTitle.textContent = 'Cancel Order';
+                    reasonModalTitle.textContent = 'Cancel COD Order';
                     reasonModalNotice.textContent = 'Cancelling will mark the order void and restore reserved items back to active stock.';
                     reasonTextInput.value = '';
-                    openModal(reasonModal);
+                    window.openModal(reasonModal);
                 });
-                drawerModalFooter.appendChild(cancelBtn);
+                rightActionWrap.appendChild(cancelBtn);
             }
+
+            drawerModalFooter.appendChild(rightActionWrap);
 
         } catch (err) {
             drawerModalBody.innerHTML = `
@@ -952,11 +987,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const res = await API.post('handler.php', payload);
         if (res && res.success) {
-            API.toast(res.message || 'Status updated successfully.', 'success');
-            closeModal(orderDetailModal);
+            window.showToast(res.message || 'Status updated successfully.', 'success');
+            window.closeModal('orderDrawerModal');
             loadOrders(currentPage);
         } else {
-            API.toast(res?.message || 'Failed to update order status.', 'error');
+            window.showToast(res?.message || 'Failed to update order status.', 'danger');
         }
     }
 
@@ -968,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = parseFloat(deliverAmountInput.value) || 0;
 
         if (!courier) {
-            API.toast('Please input the courier / collector name.', 'warning');
+            window.showToast('Please input the courier / collector name.', 'warning');
             deliverCourierInput.focus();
             return;
         }
@@ -983,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         confirmDeliverBtn.disabled = false;
         confirmDeliverBtn.textContent = 'Confirm Delivery & Collection';
-        closeModal(deliverModal);
+        window.closeModal('deliverModal');
     });
 
     // Reason Confirm (Cancel or Return)
@@ -992,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reason = reasonTextInput.value.trim();
 
         if (!reason) {
-            API.toast('Please provide a reason.', 'warning');
+            window.showToast('Please provide a reason.', 'warning');
             reasonTextInput.focus();
             return;
         }
@@ -1006,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         confirmReasonBtn.disabled = false;
         confirmReasonBtn.textContent = 'Confirm';
-        closeModal(reasonModal);
+        window.closeModal('reasonModal');
         pendingAction = null;
     });
 
@@ -1017,21 +1052,15 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmRemitBtn.disabled = true;
         confirmRemitBtn.textContent = 'Remitting...';
 
-        await updateOrderStatus(activeOrderData.order.id, 'REMITTED');
+        const notes = remitNotesInput.value.trim();
+        await updateOrderStatus(activeOrderData.order.id, 'REMITTED', {
+            notes: notes
+        });
 
         confirmRemitBtn.disabled = false;
         confirmRemitBtn.textContent = 'Confirm Cash Received';
-        closeModal(remitModal);
+        window.closeModal('remitModal');
     });
-
-    // Close Modals
-    closeDetailModalBtn.addEventListener('click', () => closeModal(orderDetailModal));
-    closeDeliverModalBtn.addEventListener('click', () => closeModal(deliverModal));
-    cancelDeliverBtn.addEventListener('click', () => closeModal(deliverModal));
-    closeReasonModalBtn.addEventListener('click', () => closeModal(reasonModal));
-    cancelReasonBtn.addEventListener('click', () => closeModal(reasonModal));
-    closeRemitModalBtn.addEventListener('click', () => closeModal(remitModal));
-    cancelRemitBtn.addEventListener('click', () => closeModal(remitModal));
 
     // Filter Controls
     applyFiltersBtn.addEventListener('click', () => loadOrders(1));

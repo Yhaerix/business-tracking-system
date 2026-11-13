@@ -878,10 +878,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Close modals on backdrop click
+    // Close modals on backdrop click (only if mousedown started on backdrop)
+    let userMouseDownTarget = null;
+    document.addEventListener('mousedown', (e) => {
+        userMouseDownTarget = e.target;
+    });
     [createUserModal, editUserModal, resetPasswordModal].forEach(modal => {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            if (e.target === modal && userMouseDownTarget === modal) {
                 closeModal(modal);
             }
         });

@@ -236,6 +236,27 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
     INDEX `idx_audit_module_action` (`module`, `action`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ------------------------------------------------------------------------------
+-- 7. Internal Team Communication (Chat & Messages)
+-- ------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `chat_messages` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `sender_id` INT UNSIGNED NOT NULL,
+    `recipient_id` INT UNSIGNED NULL COMMENT 'NULL indicates public store-wide #team channel',
+    `message` TEXT NOT NULL,
+    `order_id` BIGINT UNSIGNED NULL COMMENT 'Optional order attachment for quick review',
+    `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+    `read_at` TIMESTAMP NULL DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_chat_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_chat_recipient` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `fk_chat_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON UPDATE CASCADE ON DELETE SET NULL,
+    INDEX `idx_chat_participants` (`sender_id`, `recipient_id`, `created_at`),
+    INDEX `idx_chat_channel` (`recipient_id`, `created_at`),
+    INDEX `idx_chat_unread` (`recipient_id`, `is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ==============================================================================
@@ -244,15 +265,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Roles
 INSERT INTO `roles` (`id`, `name`, `label`, `description`) VALUES
-(1, 'admin', 'Business Owner / Admin', 'Full system access and settings control'),
+(1, 'admin', 'Business Owner', 'Full system ownership, financial authority, and settings control'),
 (2, 'manager', 'Store Manager', 'Daily operations, stock adjustments, and expense approvals'),
 (3, 'cashier', 'Cashier / Sales Clerk', 'Point of sale, COD order creation, and delivery updates')
-ON DUPLICATE KEY UPDATE `label` = VALUES(`label`);
+ON DUPLICATE KEY UPDATE `label` = VALUES(`label`), `description` = VALUES(`description`);
 
--- 2. Default Admin User: admin / admin123
+-- 2. Default Owner User: admin / admin123
 -- Bcrypt Hash of 'admin123' with cost 12
 INSERT INTO `users` (`id`, `role_id`, `username`, `full_name`, `password_hash`, `is_active`) VALUES
-(1, 1, 'admin', 'System Administrator', '$2y$12$4z8XgJp/EiHOxgr.IWc1N.Wc01sRVTSB5tkepGsntq8yOa3.dmFaS', 1)
+(1, 1, 'admin', 'Business Owner', '$2y$12$4z8XgJp/EiHOxgr.IWc1N.Wc01sRVTSB5tkepGsntq8yOa3.dmFaS', 1)
 ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`), `password_hash` = VALUES(`password_hash`);
 
 -- 3. Default Product Category

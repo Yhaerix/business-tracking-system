@@ -26,6 +26,11 @@ $error = $_GET['error'] ?? '';
     <meta name="csrf-token" content="<?= htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Sign In — <?= APP_NAME ?></title>
     
+    <!-- Google Fonts: Inter (400, 500, 600, 700, 800) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/components.css">
 
@@ -55,7 +60,7 @@ $error = $_GET['error'] ?? '';
             justify-content: center;
             min-height: 100vh;
             padding: 32px 20px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -369,14 +374,8 @@ $error = $_GET['error'] ?? '';
     <div class="auth-wrapper">
         <!-- Brand Header -->
         <header class="auth-brand-header">
-            <div class="auth-logo-badge" aria-hidden="true">
-                <!-- Precision Geometric Vector Mark -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="4" />
-                    <path d="M7 16h10" />
-                    <path d="M7 12h6" />
-                    <path d="M7 8h3" />
-                </svg>
+            <div style="margin-bottom: 20px;">
+                <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Business Tracker System Logo" width="104" height="104" style="display: block; margin: 0 auto; filter: drop-shadow(0 10px 24px rgba(37, 99, 235, 0.28));">
             </div>
             <h1 class="auth-title">Sign in to your account</h1>
             <p class="auth-subtitle"><?= APP_NAME ?> &bull; Financial & Sales Operations</p>

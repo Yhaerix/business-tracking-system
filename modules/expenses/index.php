@@ -64,7 +64,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- Page Action Header -->
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div>
-        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Expenses & Disbursements</h1>
+        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Expenses &amp; Disbursements</h1>
         <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
             Track operational expenditures, petty cash disbursements, and receipt records.
         </p>
@@ -170,24 +170,25 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <!-- Expense Ledger Table Container -->
 <div class="card" style="padding: 0; overflow: hidden;">
-    <div class="table-responsive">
+    <div class="table-responsive" style="border: none; border-radius: 0; box-shadow: none;">
         <table class="table" id="expensesTable">
             <thead>
                 <tr>
-                    <th style="width: 110px;">Date</th>
-                    <th>Expense Title & Notes</th>
-                    <th style="width: 160px;">Category</th>
-                    <th style="width: 130px;">Recorded By</th>
-                    <th style="width: 120px; text-align: center;">Receipt</th>
-                    <th style="width: 140px; text-align: right;">Amount</th>
+                    <th style="width: 120px; white-space: nowrap;">Date</th>
+                    <th style="min-width: 240px;">Expense Title</th>
+                    <th style="width: 180px; min-width: 160px; white-space: nowrap;">Category</th>
+                    <th style="width: 150px; min-width: 140px; white-space: nowrap;">Recorded By</th>
+                    <th style="width: 130px; text-align: center; white-space: nowrap;">Receipt</th>
+                    <th style="width: 140px; text-align: right; white-space: nowrap;">Amount</th>
                     <?php if ($canManage || $canDelete): ?>
-                        <th style="width: 130px; text-align: right;">Actions</th>
+                        <th style="width: 160px; text-align: right; white-space: nowrap;">Actions</th>
                     <?php endif; ?>
                 </tr>
             </thead>
             <tbody id="expensesTableBody">
                 <tr>
                     <td colspan="<?= ($canManage || $canDelete) ? '7' : '6' ?>" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                        <div style="display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-color); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
                         Loading expenses...
                     </td>
                 </tr>
@@ -207,14 +208,14 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL: Record / Edit Expense Dialog                                       -->
+<!-- MODAL: Record / Edit Expense Drawer Dialog                                -->
 <!-- ========================================================================= -->
 <?php if ($canManage): ?>
-<div class="modal-overlay" id="expenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
-    <div class="modal-card">
+<div class="modal-overlay" id="addExpenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+    <div class="modal-card" style="max-width: 520px;">
         <div class="modal-header">
             <h3 class="modal-title" id="expenseModalTitle">Record Expense</h3>
-            <button type="button" class="modal-close" id="closeExpenseModal">&times;</button>
+            <button type="button" class="modal-close" id="closeExpenseModal" aria-label="Close dialog">&times;</button>
         </div>
         <form id="expenseForm" autocomplete="off" enctype="multipart/form-data">
             <input type="hidden" name="id" id="expenseId" value="0">
@@ -223,10 +224,10 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <div class="form-group">
                     <label class="form-label" for="expenseTitle">Expense Title <span style="color: var(--color-danger);">*</span></label>
-                    <input type="text" class="form-input" id="expenseTitle" name="title" required maxlength="150" placeholder="e.g. Meralco Utility Bill, Office Supplies, Packaging Boxes">
+                    <input type="text" class="form-input" id="expenseTitle" name="title" required maxlength="150" placeholder="e.g. Delivery Rider Fuel Allowance">
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
                     <div class="form-group">
                         <label class="form-label" for="expenseCategory">Category <span style="color: var(--color-danger);">*</span></label>
                         <select class="form-select" id="expenseCategory" name="category_id" required>
@@ -277,9 +278,9 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="modal-card" style="max-width: 680px;">
         <div class="modal-header">
             <h3 class="modal-title" id="receiptModalTitle">Receipt Preview</h3>
-            <button type="button" class="modal-close" id="closeReceiptModal">&times;</button>
+            <button type="button" class="modal-close" id="closeReceiptModal" aria-label="Close dialog">&times;</button>
         </div>
-        <div class="modal-body" style="text-align: center; padding: 20px;">
+        <div class="modal-body" style="text-align: center; padding: 24px;">
             <div id="receiptImageWrapper" style="display: none;">
                 <img id="receiptModalImg" src="" alt="Receipt Preview" style="max-width: 100%; max-height: 65vh; border-radius: var(--radius-md); object-fit: contain; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
             </div>
@@ -311,7 +312,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="modal-card" style="max-width: 460px;">
         <div class="modal-header">
             <h3 class="modal-title" id="deleteModalTitle" style="color: var(--color-danger);">Void Expense Record</h3>
-            <button type="button" class="modal-close" id="closeDeleteModal">&times;</button>
+            <button type="button" class="modal-close" id="closeDeleteModal" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body">
             <div id="deleteExpenseAlert" style="display: none;" class="alert alert-danger"></div>
@@ -386,8 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiptExternalViewBtn = document.getElementById('receiptExternalViewBtn');
     const receiptModalTitle = document.getElementById('receiptModalTitle');
 
-    // Record / Edit Modal elements
-    const expenseModal = document.getElementById('expenseModal');
+    // Record / Edit Modal elements (using addExpenseModal for slide-out drawer)
+    const expenseModal = document.getElementById('addExpenseModal');
     const openAddExpenseBtn = document.getElementById('openAddExpenseBtn');
     const closeExpenseModal = document.getElementById('closeExpenseModal');
     const cancelExpenseBtn = document.getElementById('cancelExpenseBtn');
@@ -465,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="${(canManage || canDelete) ? '7' : '6'}" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                    <div style="display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-color); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
                     Loading expenses...
                 </td>
             </tr>`;
@@ -515,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : '—';
 
                 // Receipt badge/button
-                let receiptCol = '<span class="badge badge-inactive" style="opacity: 0.6;">None</span>';
+                let receiptCol = '<span class="badge badge-inactive" style="opacity: 0.6; font-size: 11px;">None</span>';
                 if (item.receipt_path) {
                     const fullUrl = `${BASE_URL}/${item.receipt_path}`;
                     if (item.receipt_type === 'pdf') {
@@ -524,8 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     data-url="${escapeHtml(fullUrl)}"
                                     data-type="pdf"
                                     data-title="${escapeHtml(item.title)}"
+                                    style="padding: 2px 8px; font-size: 11px;"
                                     title="View PDF receipt">
-                                📄 PDF
+                                📄 View PDF
                             </button>
                         `;
                     } else {
@@ -534,8 +537,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     data-url="${escapeHtml(fullUrl)}"
                                     data-type="image"
                                     data-title="${escapeHtml(item.title)}"
+                                    style="padding: 2px 8px; font-size: 11px;"
                                     title="View receipt image">
-                                🖼️ Image
+                                📎 View Image
                             </button>
                         `;
                     }
@@ -547,43 +551,44 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${dateStr}
                         </td>
                         <td>
-                            <strong>${escapeHtml(item.title)}</strong>
-                            ${item.notes ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(item.notes)}</div>` : ''}
+                            <strong style="color: var(--text-main); font-size: 14px; font-weight: 600;">${escapeHtml(item.title)}</strong>
                         </td>
-                        <td>
-                            <span class="badge badge-confirmed" style="font-size: 11px;">
+                        <td style="white-space: nowrap;">
+                            <span class="badge badge-outline" style="font-size: 11.5px; font-weight: 500;">
                                 ${escapeHtml(item.category_name)}
                             </span>
                         </td>
-                        <td style="font-size: 12.5px; color: var(--text-muted);">
+                        <td style="font-size: 13px; color: var(--text-muted); white-space: nowrap;">
                             ${escapeHtml(item.user_name)}
                         </td>
-                        <td style="text-align: center;">
+                        <td style="text-align: center; white-space: nowrap;">
                             ${receiptCol}
                         </td>
-                        <td style="text-align: right; font-weight: 600; color: var(--color-danger);" class="tabular-nums">
+                        <td style="text-align: right; font-weight: 700; color: var(--color-danger); white-space: nowrap;" class="tabular-nums">
                             ${formatMoney(item.amount)}
                         </td>
                         ${(canManage || canDelete) ? `
                             <td style="text-align: right; white-space: nowrap;">
-                                ${canManage ? `
-                                    <button type="button" class="btn btn-outline btn-sm edit-expense-btn"
-                                            data-id="${item.id}"
-                                            title="Edit expense">
-                                        Edit
-                                    </button>
-                                ` : ''}
-                                ${canDelete ? `
-                                    <button type="button" class="btn btn-outline btn-sm delete-expense-btn"
-                                            style="color: var(--color-danger); border-color: var(--color-danger-border);"
-                                            data-id="${item.id}"
-                                            data-title="${escapeHtml(item.title)}"
-                                            data-amount="${item.amount}"
-                                            data-date="${dateStr}"
-                                            title="Void expense record">
-                                        Void
-                                    </button>
-                                ` : ''}
+                                <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                                    ${canManage ? `
+                                        <button type="button" class="btn btn-outline btn-sm edit-expense-btn"
+                                                data-id="${item.id}"
+                                                title="Edit expense">
+                                            <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px; vertical-align: -1px;"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>Edit
+                                        </button>
+                                    ` : ''}
+                                    ${canDelete ? `
+                                        <button type="button" class="btn btn-outline btn-sm delete-expense-btn"
+                                                style="color: var(--color-danger); border-color: var(--color-danger-border);"
+                                                data-id="${item.id}"
+                                                data-title="${escapeHtml(item.title)}"
+                                                data-amount="${item.amount}"
+                                                data-date="${dateStr}"
+                                                title="Void expense record">
+                                            <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px; vertical-align: -1px;"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>Void
+                                        </button>
+                                    ` : ''}
+                                </div>
                             </td>
                         ` : ''}
                     </tr>
@@ -842,6 +847,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Overlay backdrop clicks to close (only if click originated on backdrop)
+    let expenseMouseDownTarget = null;
+    document.addEventListener('mousedown', (e) => {
+        expenseMouseDownTarget = e.target;
+    });
+    [expenseModal, receiptModal, deleteExpenseModal].forEach(modal => {
+        if (!modal) return;
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal && expenseMouseDownTarget === modal) {
+                closeModal(modal);
+            }
+        });
+    });
 
     // Global ESC key listener for open modals
     document.addEventListener('keydown', (e) => {

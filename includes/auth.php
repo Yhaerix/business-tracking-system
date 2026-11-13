@@ -56,12 +56,12 @@ function current_user(): ?array {
     }
 
     return [
-        'id'        => (int)$_SESSION['user_id'],
-        'username'  => $_SESSION['username'],
-        'full_name' => $_SESSION['full_name'],
-        'role_id'   => (int)$_SESSION['role_id'],
-        'role_name' => $_SESSION['role_name'],
-        'role_label'=> $_SESSION['role_label']
+        'id'        => (int)($_SESSION['user_id'] ?? 0),
+        'username'  => $_SESSION['username'] ?? '',
+        'full_name' => $_SESSION['full_name'] ?? ($_SESSION['username'] ?? ''),
+        'role_id'   => (int)($_SESSION['role_id'] ?? 0),
+        'role_name' => $_SESSION['role_name'] ?? '',
+        'role_label'=> $_SESSION['role_label'] ?? ''
     ];
 }
 

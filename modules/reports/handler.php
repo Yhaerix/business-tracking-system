@@ -218,9 +218,35 @@ try {
                 $dailyExpMap[$row['date']] = (float) $row['expense_amount'];
             }
 
-            // Merge unique dates
-            $allDates = array_unique(array_merge(array_keys($dailySalesMap), array_keys($dailyExpMap)));
-            sort($allDates);
+            // Build continuous daily sequence for periods up to 35 days (e.g. This Month, Last 30 Days, This Week)
+            $startTs = strtotime($dateFrom);
+            $endTs = strtotime($dateTo);
+            $daysDiff = (int) round(($endTs - $startTs) / 86400);
+
+            $todayTs = strtotime(date('Y-m-d'));
+            $maxTs = min($endTs, $todayTs);
+            if ($maxTs < $startTs) $maxTs = $startTs;
+
+            if ($daysDiff <= 35) {
+                $allDates = [];
+                $curr = $startTs;
+                while ($curr <= $maxTs) {
+                    $allDates[] = date('Y-m-d', $curr);
+                    $curr = strtotime('+1 day', $curr);
+                }
+                // Ensure at least 2 points so ApexCharts can always draw continuous lines
+                if (count($allDates) === 1) {
+                    $prev = date('Y-m-d', strtotime('-1 day', strtotime($allDates[0])));
+                    array_unshift($allDates, $prev);
+                }
+            } else {
+                $allDates = array_unique(array_merge(array_keys($dailySalesMap), array_keys($dailyExpMap)));
+                sort($allDates);
+                if (count($allDates) === 1) {
+                    $prev = date('Y-m-d', strtotime('-1 day', strtotime($allDates[0])));
+                    array_unshift($allDates, $prev);
+                }
+            }
 
             $cashFlowTimeline = [];
             foreach ($allDates as $dt) {

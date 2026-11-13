@@ -2,7 +2,7 @@
 /**
  * Invoice & Receipt Printable Document View
  * Small Business Sales and Expense Tracking System
- * Reference: docs/UI_DESIGN_SPEC.md
+ * Reference: View 10 (view-invoice-doc) in new-design.html
  */
 
 declare(strict_types=1);
@@ -39,11 +39,11 @@ include __DIR__ . '/../../includes/header.php';
 .stamp-badge {
     position: absolute;
     top: 48px;
-    right: 260px;
+    right: 240px;
     padding: 8px 18px;
     text-transform: uppercase;
     font-weight: 800;
-    font-size: 20px;
+    font-size: 18px;
     letter-spacing: 2px;
     border-radius: 6px;
     transform: rotate(-10deg);
@@ -54,14 +54,45 @@ include __DIR__ . '/../../includes/header.php';
 .stamp-paid {
     border: 3.5px dashed #16a34a;
     color: #16a34a;
-    background: rgba(240, 253, 244, 0.85);
+    background: rgba(240, 253, 244, 0.88);
 }
 .stamp-void {
     border: 3.5px dashed #dc2626;
     color: #dc2626;
-    background: rgba(254, 242, 242, 0.85);
+    background: rgba(254, 242, 242, 0.88);
 }
+
+.invoice-a4-sheet {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    position: relative;
+}
+
+.thermal-receipt {
+    background: #fffef9;
+    width: 350px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    box-shadow: var(--shadow-md);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12.5px;
+    color: #1e293b;
+    position: relative;
+}
+
 @media (max-width: 900px) {
+    .invoice-a4-sheet {
+        padding: 24px 20px;
+    }
     .stamp-badge {
         position: static;
         transform: none;
@@ -71,20 +102,20 @@ include __DIR__ . '/../../includes/header.php';
 }
 </style>
 
-<div class="page-content" style="padding-top: 16px;">
+<div class="page-content" style="max-width: 920px; margin: 0 auto; padding-top: 16px;">
     <!-- Document Control Toolbar (Hidden in Print) -->
-    <div class="document-control-bar no-print" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: var(--shadow-sm);">
+    <div class="document-control-bar no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 14px 20px; box-shadow: var(--shadow-sm);">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <a href="<?= BASE_URL ?>/modules/invoices/" class="btn btn-outline btn-sm">
-                ← Back to Invoices
+                &larr; Back to Invoices Ledger
             </a>
             <span style="color: var(--border-color);">|</span>
             <!-- Format Switcher -->
-            <div class="btn-group" role="group" aria-label="Format Selector" style="display: inline-flex; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color);">
-                <button type="button" id="btnModeA4" class="btn btn-sm btn-primary" style="border-radius: 0;">
-                    📄 Formal A4 Invoice
+            <div style="display: inline-flex; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface);">
+                <button type="button" id="tabA4Btn" class="btn btn-sm btn-primary" style="border-radius: 0; border: none;">
+                    📄 A4 Customer Invoice
                 </button>
-                <button type="button" id="btnModeReceipt" class="btn btn-sm btn-outline" style="border-radius: 0; border-left: none;">
+                <button type="button" id="tabThermalBtn" class="btn btn-sm btn-outline" style="border-radius: 0; border: none;">
                     🧾 80mm Thermal Receipt
                 </button>
             </div>
@@ -129,243 +160,203 @@ include __DIR__ . '/../../includes/header.php';
 
         <div class="document-preview-wrapper">
             <!-- ========================================================== -->
-            <!-- Layout 1: Formal A4 Invoice Container                       -->
+            <!-- 1. Formal A4 Invoice Container                             -->
             <!-- ========================================================== -->
-            <div id="invoiceA4Container" class="document-card invoice-a4">
+            <div id="docContainerA4" class="invoice-a4 invoice-a4-sheet">
                 <!-- Watermark Stamp for PAID or VOID -->
                 <div id="a4Stamp" class="stamp-badge"></div>
 
-                <!-- Brand & Header -->
-                <div class="doc-brand">
+                <!-- Invoice Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 2px solid var(--color-primary); margin-bottom: 24px;">
                     <div>
-                        <div class="doc-brand-title" id="a4StoreName"><?= APP_NAME ?></div>
-                        <div class="doc-brand-meta">
+                        <div style="font-size: 24px; font-weight: 800; color: var(--color-primary); letter-spacing: -0.02em;" id="a4StoreName">
+                            <?= APP_NAME ?>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
                             <span id="a4StoreTagline">Small Business Sales &amp; Inventory Hub</span><br>
-                            <span id="a4StoreAddress">123 Commerce Avenue, Business District, Metro Manila</span><br>
-                            Phone: <span id="a4StorePhone">+63 (02) 8123-4567</span> | Email: <span id="a4StoreEmail">billing@businesstracking.local</span>
+                            <span id="a4StoreAddress">123 Commercial Avenue, Business District, Metro Manila</span><br>
+                            Phone: <span id="a4StorePhone">+63 (02) 8123-4567</span> &bull; VAT Reg. TIN: <span id="a4StoreTin">123-456-789-000</span>
                         </div>
                     </div>
-                    <div class="doc-heading">
-                        <div class="doc-title-badge" id="a4DocTitle">INVOICE</div>
-                        <div id="a4StatusBadge" style="margin-top: 4px; display: inline-block;"></div>
-                        <table class="doc-meta-table">
-                            <tr>
-                                <td class="label">Invoice No:</td>
-                                <td class="value" id="a4InvoiceNo">—</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Receipt No:</td>
-                                <td class="value" id="a4ReceiptNo">—</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Date:</td>
-                                <td class="value" id="a4Date">—</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Order Ref:</td>
-                                <td class="value" id="a4OrderRef">—</td>
-                            </tr>
-                        </table>
+                    <div style="text-align: right;">
+                        <div style="font-size: 26px; font-weight: 800; color: var(--text-main); text-transform: uppercase;" id="a4DocTitle">
+                            SALES INVOICE
+                        </div>
+                        <div style="font-family: monospace; font-size: 16px; font-weight: 700; color: var(--color-primary); margin-top: 4px;" id="a4InvoiceNo">
+                            INV-2026-0000
+                        </div>
+                        <div style="margin-top: 8px;" id="a4StatusBadge">
+                            <span class="badge badge-warning">ISSUED (PENDING COD)</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Parties Grid: Sold To & Shipping / COD Details -->
-                <div class="parties-grid">
-                    <div class="party-box">
-                        <h4>Customer &amp; Delivery Destination</h4>
-                        <p>
-                            <strong id="a4CustomerName" style="font-size: 14.5px; color: #0f172a;">—</strong><br>
-                            Phone: <span id="a4CustomerPhone">—</span><br>
-                            <span id="a4CustomerEmail" style="display: none;">Email: <span id="a4CustomerEmailVal"></span><br></span>
+                <!-- Bill To & Order Info Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+                    <div>
+                        <div style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+                            Billed / Shipped To:
+                        </div>
+                        <div style="font-size: 15px; font-weight: 700; color: var(--text-main);" id="a4CustomerName">
+                            —
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
+                            Mobile: <span id="a4CustomerPhone">—</span><br>
+                            <span id="a4CustomerEmailBox" style="display: none;">Email: <span id="a4CustomerEmail"></span><br></span>
                             Address: <span id="a4DeliveryAddress">—</span>
-                        </p>
+                        </div>
                     </div>
-
-                    <div class="party-box">
-                        <h4>Payment &amp; Terms</h4>
-                        <p>
-                            <strong>Payment Method:</strong> <span id="a4PaymentMethod">CASH ON DELIVERY (COD)</span><br>
-                            <strong>Payment Status:</strong> <span id="a4PaymentStatus">—</span><br>
-                            <strong>Amount Settled:</strong> <span id="a4AmountPaid" style="font-weight: 700;">—</span><br>
-                            <span id="a4OrderNotesBox" style="display: none; margin-top: 6px; font-size: 12px; color: #64748b;">
-                                <em>Notes: <span id="a4OrderNotes"></span></em>
-                            </span>
-                        </p>
+                    <div style="text-align: right;">
+                        <div style="font-size: 13px; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Issue Date:</span>
+                            <strong style="color: var(--text-main); margin-left: 8px;" id="a4IssueDate">—</strong>
+                        </div>
+                        <div style="font-size: 13px; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Order Reference:</span>
+                            <strong style="font-family: monospace; color: var(--color-primary); margin-left: 8px;" id="a4OrderRef">ORD-2026-0000</strong>
+                        </div>
+                        <div style="font-size: 13px; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Receipt No:</span>
+                            <strong style="font-family: monospace; color: var(--text-muted); margin-left: 8px;" id="a4ReceiptNo">—</strong>
+                        </div>
+                        <div style="font-size: 13px;">
+                            <span style="color: var(--text-muted);">Payment Method:</span>
+                            <strong style="color: var(--text-main); margin-left: 8px;" id="a4PaymentMethod">Cash on Delivery (COD)</strong>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Line Items Table -->
-                <table class="items-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th style="width: 140px;">SKU</th>
-                            <th>Description</th>
-                            <th style="width: 90px; text-align: center;">Qty</th>
-                            <th style="width: 120px; text-align: right;">Unit Price</th>
-                            <th style="width: 130px; text-align: right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="a4ItemsBody">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-
-                <!-- Calculation Section: Zero Tax Notice & Financial Totals -->
-                <div class="calculation-section">
-                    <div class="tax-exemption-note">
-                        <strong>🛡️ Zero Tax / Tax-Exempt Transaction</strong>
-                        <p style="margin: 0; line-height: 1.4;">
-                            In accordance with small business regulations, this transaction is strictly non-vatable / tax-exempt (0.00% Tax).<br>
-                            <strong>Total Amount Due = Subtotal - Discount + Delivery Fee.</strong>
-                        </p>
-                    </div>
-
-                    <table class="summary-table">
-                        <tr>
-                            <td class="label">Items Subtotal:</td>
-                            <td class="value" id="a4Subtotal">—</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Discount:</td>
-                            <td class="value" id="a4Discount" style="color: #dc2626;">—</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Delivery Fee:</td>
-                            <td class="value" id="a4DeliveryFee">—</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Tax (0.00%):</td>
-                            <td class="value" style="color: #16a34a; font-weight: 700;"><?= APP_CURRENCY ?>0.00</td>
-                        </tr>
-                        <tr class="grand-total">
-                            <td class="label" style="font-weight: 800; color: #0f172a;">Total Due (COD):</td>
-                            <td class="value" id="a4GrandTotal">—</td>
-                        </tr>
+                <div class="table-responsive" style="margin-bottom: 24px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 120px;">SKU</th>
+                                <th>Description</th>
+                                <th class="text-right" style="width: 80px;">Qty</th>
+                                <th class="text-right" style="width: 120px;">Unit Price</th>
+                                <th class="text-right" style="width: 130px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="a4ItemsBody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
                     </table>
                 </div>
 
-                <!-- Footer & Authorization -->
-                <div class="doc-footer">
-                    <div>
-                        <p style="margin: 0 0 4px 0; font-weight: 600; color: #334155;">Thank you for your business!</p>
-                        <p style="margin: 0; font-size: 11.5px; color: #94a3b8;">
-                            Official receipt issued upon full remittance of COD payment. Please keep for return or exchange claims.
-                        </p>
+                <!-- Totals & Calculations Block -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 260px; max-width: 440px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">🛡️ Non-VAT / Small Business Tax-Exempt</strong>
+                        This transaction is strictly non-vatable / tax-exempt (0.00% Tax) pursuant to small business tax regulations.<br>
+                        <strong>Total Amount Due = Subtotal - Discount + Delivery Fee.</strong>
                     </div>
-                    <div class="signature-box">
-                        Authorized Signature
+
+                    <div style="width: 320px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+                            <span style="color: var(--text-muted);">Item Subtotal</span>
+                            <span class="tabular-nums" style="font-weight: 600;" id="a4Subtotal">—</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;" id="a4DiscountRow">
+                            <span style="color: var(--text-muted);">Discount</span>
+                            <span class="tabular-nums" style="color: var(--color-danger);" id="a4Discount">&minus; <?= APP_CURRENCY ?>0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 12px;">
+                            <span style="color: var(--text-muted);">Delivery Fee</span>
+                            <span class="tabular-nums" style="font-weight: 600;" id="a4DeliveryFee">—</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; padding-top: 12px; border-top: 2px solid var(--border-color); color: var(--color-primary);">
+                            <span>Total Amount Due</span>
+                            <span class="tabular-nums" id="a4GrandTotal">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer & Authorization -->
+                <div style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed var(--border-color); display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap;">
+                    <div style="font-size: 12px; color: var(--text-muted); max-width: 480px;">
+                        <div style="font-weight: 600; color: var(--text-main); margin-bottom: 2px;">This serves as an official sales invoice.</div>
+                        Official receipt issued upon full collection of payment. Thank you for your business!
+                    </div>
+                    <div style="text-align: center; min-width: 180px;">
+                        <div style="border-bottom: 1px solid var(--text-main); width: 180px; height: 32px; margin-bottom: 6px;"></div>
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">
+                            Authorized Signature
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- ========================================================== -->
-            <!-- Layout 2: 80mm POS Thermal Receipt Container                -->
+            <!-- 2. Authentic 80mm Scalloped Thermal Receipt Container       -->
             <!-- ========================================================== -->
-            <div id="receiptThermalContainer" class="document-card receipt-80mm" style="display: none;">
-                <div class="r-center">
-                    <div class="r-title" id="tStoreName"><?= APP_NAME ?></div>
-                    <div style="font-size: 11.5px; color: #4b5563;" id="tStoreTagline">Sales &amp; Tracking Hub</div>
-                    <div style="font-size: 11.5px; color: #4b5563;" id="tStoreAddress">Metro Manila, Philippines</div>
-                    <div style="font-size: 11.5px; color: #4b5563;">Tel: <span id="tStorePhone">+63 2 8123-4567</span></div>
+            <div id="docContainerThermal" class="receipt-80mm thermal-receipt" style="display: none;">
+                <!-- Scalloped top edge indicator -->
+                <div style="text-align: center; border-bottom: 1px dashed #94a3b8; padding-bottom: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 16px; font-weight: 800; letter-spacing: 0.04em;" id="tStoreName"><?= APP_NAME ?></div>
+                    <div style="font-size: 11px; margin-top: 4px; color: #64748b;" id="tStoreAddress">123 Commercial Ave, Pasig City</div>
+                    <div style="font-size: 11px; color: #64748b;">TIN: <span id="tStoreTin">123-456-789-000</span></div>
+                    <div style="font-weight: 700; margin-top: 8px;">OFFICIAL RECEIPT</div>
+                    <div style="font-size: 13px; font-weight: 700; color: #0f172a;" id="tReceiptNo">RCP-2026-0000</div>
                 </div>
 
-                <div class="r-double-divider"></div>
-
-                <div class="r-center r-bold" style="font-size: 13.5px; margin-bottom: 6px;">
-                    OFFICIAL POS RECEIPT
+                <!-- Meta info -->
+                <div style="font-size: 11px; margin-bottom: 12px; line-height: 1.5; color: #475569;">
+                    <div>Date: <span id="tDate">—</span></div>
+                    <div>Order Ref: <span id="tOrderNo" style="font-weight: 600;">—</span></div>
+                    <div>Invoice Ref: <span id="tInvoiceNo">—</span></div>
+                    <div>Customer: <span id="tCustomerName" style="font-weight: 600;">—</span></div>
+                    <div>Cashier: <span id="tCashier">Store POS</span></div>
                 </div>
 
-                <div class="r-meta-row">
-                    <span>Receipt No:</span>
-                    <strong id="tReceiptNo">—</strong>
-                </div>
-                <div class="r-meta-row">
-                    <span>Invoice Ref:</span>
-                    <span id="tInvoiceNo">—</span>
-                </div>
-                <div class="r-meta-row">
-                    <span>Order No:</span>
-                    <span id="tOrderNo">—</span>
-                </div>
-                <div class="r-meta-row">
-                    <span>Date:</span>
-                    <span id="tDate">—</span>
-                </div>
-                <div class="r-meta-row">
-                    <span>Cashier/Staff:</span>
-                    <span id="tCashier">Store POS</span>
-                </div>
-
-                <div class="r-divider"></div>
-
-                <div style="font-size: 12px; margin-bottom: 6px;">
-                    <div><strong>Customer:</strong> <span id="tCustomerName">—</span></div>
-                    <div><strong>Phone:</strong> <span id="tCustomerPhone">—</span></div>
-                    <div><strong>Address:</strong> <span id="tDeliveryAddress">—</span></div>
-                </div>
-
-                <div class="r-divider"></div>
-
-                <!-- Items -->
-                <table class="r-items-table">
+                <!-- Items Table -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11.5px;">
                     <thead>
-                        <tr>
-                            <th style="width: 55%;">Item</th>
-                            <th style="width: 15%; text-align: center;">Qty</th>
-                            <th style="width: 30%; text-align: right;">Amount</th>
+                        <tr style="border-top: 1px dashed #94a3b8; border-bottom: 1px dashed #94a3b8;">
+                            <th style="text-align: left; padding: 4px 0;">Item</th>
+                            <th style="text-align: center; padding: 4px 0; width: 40px;">Qty</th>
+                            <th style="text-align: right; padding: 4px 0; width: 75px;">Amount</th>
                         </tr>
                     </thead>
                     <tbody id="tItemsBody">
-                        <!-- Populated by JS -->
+                        <!-- Populated dynamically via JS -->
                     </tbody>
                 </table>
 
-                <div class="r-divider"></div>
-
-                <div class="r-total-row">
-                    <span>Subtotal:</span>
-                    <span id="tSubtotal">—</span>
-                </div>
-                <div class="r-total-row" id="tDiscountRow" style="display: none;">
-                    <span>Discount:</span>
-                    <span id="tDiscount" style="color: #dc2626;">—</span>
-                </div>
-                <div class="r-total-row">
-                    <span>Delivery Fee:</span>
-                    <span id="tDeliveryFee">—</span>
-                </div>
-                <div class="r-total-row">
-                    <span>Tax (Zero-Rated):</span>
-                    <span><?= APP_CURRENCY ?>0.00</span>
-                </div>
-
-                <div class="r-divider"></div>
-
-                <div class="r-grand-total">
-                    <span>TOTAL DUE (COD):</span>
-                    <span id="tGrandTotal">—</span>
-                </div>
-
-                <div class="r-double-divider"></div>
-
-                <div class="r-meta-row">
-                    <span>Payment Method:</span>
-                    <strong>CASH ON DELIVERY</strong>
-                </div>
-                <div class="r-meta-row">
-                    <span>Collection Status:</span>
-                    <strong id="tCollectionStatus">—</strong>
+                <!-- Calculation lines -->
+                <div style="border-top: 1px dashed #94a3b8; padding-top: 8px; font-size: 12px; line-height: 1.6;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span id="tSubtotal">—</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;" id="tDiscountRow">
+                        <span>Discount:</span>
+                        <span id="tDiscount" style="color: #dc2626;">&minus; <?= APP_CURRENCY ?>0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Delivery Fee:</span>
+                        <span id="tDeliveryFee">—</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; border-top: 1px solid #1e293b; padding-top: 4px; margin-top: 4px;">
+                        <span>TOTAL:</span>
+                        <span id="tGrandTotal">—</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                        <span>Payment Method:</span>
+                        <span>COD</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                        <span>Status:</span>
+                        <span id="tCollectionStatus">ISSUED</span>
+                    </div>
                 </div>
 
-                <div class="r-barcode" id="tBarcode">
-                    *INV-0000-0000*
-                </div>
-
-                <div class="r-center" style="font-size: 11px; color: #4b5563; margin-top: 10px;">
-                    Thank you for your purchase!<br>
-                    Goods sold in good condition.<br>
-                    Zero-Rated Small Business Sales
+                <!-- Barcode simulation & footer -->
+                <div style="text-align: center; margin-top: 18px; padding-top: 12px; border-top: 1px dashed #94a3b8;">
+                    <div style="font-family: monospace; letter-spacing: 4px; font-size: 14px; margin-bottom: 4px;" id="tBarcode">|| | | ||| || ||| | |||</div>
+                    <div style="font-size: 10px; color: #64748b;" id="tBarcodeLabel">* ORD-2026-0000 *</div>
+                    <div style="font-size: 10px; color: #64748b; margin-top: 6px;">Thank you for shopping with us!</div>
                 </div>
             </div>
         </div>
@@ -434,13 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusBanner = document.getElementById('statusBanner');
     const orderDetailLink = document.getElementById('orderDetailLink');
 
-    const btnModeA4 = document.getElementById('btnModeA4');
-    const btnModeReceipt = document.getElementById('btnModeReceipt');
+    const tabA4Btn = document.getElementById('tabA4Btn');
+    const tabThermalBtn = document.getElementById('tabThermalBtn');
     const btnPrintDocument = document.getElementById('btnPrintDocument');
     const btnOpenVoidModal = document.getElementById('btnOpenVoidModal');
 
-    const invoiceA4Container = document.getElementById('invoiceA4Container');
-    const receiptThermalContainer = document.getElementById('receiptThermalContainer');
+    const docContainerA4 = document.getElementById('docContainerA4');
+    const docContainerThermal = document.getElementById('docContainerThermal');
     const a4Stamp = document.getElementById('a4Stamp');
 
     let currentInvoiceData = null;
@@ -463,35 +454,29 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#039;');
     }
 
-    function switchMode(mode) {
-        activeMode = mode;
-        if (mode === 'a4') {
-            btnModeA4.classList.remove('btn-outline');
-            btnModeA4.classList.add('btn-primary');
-            btnModeReceipt.classList.remove('btn-primary');
-            btnModeReceipt.classList.add('btn-outline');
-
-            invoiceA4Container.style.display = 'block';
-            receiptThermalContainer.style.display = 'none';
-
-            document.body.classList.remove('print-mode-receipt');
-            document.body.classList.add('print-mode-a4');
-        } else {
-            btnModeReceipt.classList.remove('btn-outline');
-            btnModeReceipt.classList.add('btn-primary');
-            btnModeA4.classList.remove('btn-primary');
-            btnModeA4.classList.add('btn-outline');
-
-            invoiceA4Container.style.display = 'none';
-            receiptThermalContainer.style.display = 'block';
+    function switchDocTab(type) {
+        activeMode = type;
+        if (type === 'thermal') {
+            docContainerA4.style.display = 'none';
+            docContainerThermal.style.display = 'block';
+            tabA4Btn.className = 'btn btn-sm btn-outline';
+            tabThermalBtn.className = 'btn btn-sm btn-primary';
 
             document.body.classList.remove('print-mode-a4');
             document.body.classList.add('print-mode-receipt');
+        } else {
+            docContainerA4.style.display = 'block';
+            docContainerThermal.style.display = 'none';
+            tabA4Btn.className = 'btn btn-sm btn-primary';
+            tabThermalBtn.className = 'btn btn-sm btn-outline';
+
+            document.body.classList.remove('print-mode-receipt');
+            document.body.classList.add('print-mode-a4');
         }
     }
 
-    btnModeA4.addEventListener('click', () => switchMode('a4'));
-    btnModeReceipt.addEventListener('click', () => switchMode('receipt'));
+    tabA4Btn.addEventListener('click', () => switchDocTab('a4'));
+    tabThermalBtn.addEventListener('click', () => switchDocTab('thermal'));
 
     btnPrintDocument.addEventListener('click', () => {
         if (activeMode === 'a4') {
@@ -528,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             documentLoading.style.display = 'none';
             documentContent.style.display = 'block';
-            switchMode(activeMode);
+            switchDocTab(activeMode);
 
         } catch (err) {
             console.error('Failed to load document:', err);
@@ -593,39 +578,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // -------------------------------------------------------------
         document.getElementById('a4InvoiceNo').textContent = invoice.invoice_number;
         document.getElementById('a4ReceiptNo').textContent = invoice.receipt_number;
-        document.getElementById('a4Date').textContent = invoice.issued_date;
+        document.getElementById('a4IssueDate').textContent = invoice.issued_date;
         document.getElementById('a4OrderRef').textContent = order.order_number;
 
         let badgeHtml = '';
         if (invoice.status === 'PAID') {
-            badgeHtml = '<span class="badge badge-delivered" style="font-size: 12px; padding: 4px 10px;">PAID</span>';
+            badgeHtml = '<span class="badge badge-delivered">PAID</span>';
         } else if (invoice.status === 'ISSUED') {
-            badgeHtml = '<span class="badge badge-pending" style="font-size: 12px; padding: 4px 10px;">ISSUED (PENDING COD)</span>';
+            badgeHtml = '<span class="badge badge-pending">ISSUED (PENDING COD)</span>';
         } else if (invoice.status === 'VOID') {
-            badgeHtml = '<span class="badge badge-cancelled" style="font-size: 12px; padding: 4px 10px;">VOID</span>';
+            badgeHtml = '<span class="badge badge-cancelled">VOID</span>';
         }
         document.getElementById('a4StatusBadge').innerHTML = badgeHtml;
 
         document.getElementById('a4CustomerName').textContent = order.customer_name;
-        document.getElementById('a4CustomerPhone').textContent = order.customer_phone;
+        document.getElementById('a4CustomerPhone').textContent = order.customer_phone || '—';
         if (order.customer_email) {
-            document.getElementById('a4CustomerEmail').style.display = 'inline';
-            document.getElementById('a4CustomerEmailVal').textContent = order.customer_email;
+            document.getElementById('a4CustomerEmailBox').style.display = 'inline';
+            document.getElementById('a4CustomerEmail').textContent = order.customer_email;
         } else {
-            document.getElementById('a4CustomerEmail').style.display = 'none';
+            document.getElementById('a4CustomerEmailBox').style.display = 'none';
         }
-        document.getElementById('a4DeliveryAddress').textContent = order.delivery_address;
-
-        document.getElementById('a4PaymentMethod').textContent = order.payment_method + ' (Cash on Delivery)';
-        document.getElementById('a4PaymentStatus').textContent = invoice.status === 'PAID' ? 'Collected / Paid' : (invoice.status === 'VOID' ? 'Voided' : 'Pending Delivery Collection');
-        document.getElementById('a4AmountPaid').textContent = formatCurrency(invoice.amount_paid);
-
-        if (order.notes) {
-            document.getElementById('a4OrderNotesBox').style.display = 'block';
-            document.getElementById('a4OrderNotes').textContent = order.notes;
-        } else {
-            document.getElementById('a4OrderNotesBox').style.display = 'none';
-        }
+        document.getElementById('a4DeliveryAddress').textContent = order.delivery_address || '—';
+        document.getElementById('a4PaymentMethod').textContent = (order.payment_method || 'CASH') + ' (Cash on Delivery)';
 
         // Items Table A4
         const a4ItemsBody = document.getElementById('a4ItemsBody');
@@ -634,11 +609,14 @@ document.addEventListener('DOMContentLoaded', () => {
             a4Rows += `
                 <tr>
                     <td style="color: #64748b; font-size: 12px;">${idx + 1}</td>
-                    <td style="font-family: monospace; font-size: 12.5px; color: #475569;">${escapeHtml(itm.sku || '—')}</td>
-                    <td style="font-weight: 600; color: #0f172a;">${escapeHtml(itm.product_name)}</td>
-                    <td style="text-align: center; font-weight: 600;">${itm.quantity}</td>
-                    <td style="text-align: right;" class="tabular-nums">${formatCurrency(itm.unit_price)}</td>
-                    <td style="text-align: right; font-weight: 700;" class="tabular-nums">${formatCurrency(itm.subtotal)}</td>
+                    <td style="font-family: monospace; font-weight: 600; color: var(--color-primary);">${escapeHtml(itm.sku || '—')}</td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(itm.product_name)}</div>
+                        ${itm.category_name ? `<div style="font-size: 11px; color: var(--text-muted);">Category: ${escapeHtml(itm.category_name)}</div>` : ''}
+                    </td>
+                    <td class="text-right tabular-nums">${itm.quantity}</td>
+                    <td class="text-right tabular-nums">${formatCurrency(itm.unit_price)}</td>
+                    <td class="text-right tabular-nums" style="font-weight: 600;">${formatCurrency(itm.subtotal)}</td>
                 </tr>
             `;
         });
@@ -646,7 +624,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // A4 Summary
         document.getElementById('a4Subtotal').textContent = formatCurrency(order.subtotal);
-        document.getElementById('a4Discount').textContent = order.discount_amount > 0 ? '-' + formatCurrency(order.discount_amount) : '₱0.00';
+        if (order.discount_amount > 0) {
+            document.getElementById('a4DiscountRow').style.display = 'flex';
+            document.getElementById('a4Discount').textContent = '− ' + formatCurrency(order.discount_amount);
+        } else {
+            document.getElementById('a4DiscountRow').style.display = 'none';
+        }
         document.getElementById('a4DeliveryFee').textContent = formatCurrency(order.delivery_fee);
         document.getElementById('a4GrandTotal').textContent = formatCurrency(order.total_amount);
 
@@ -658,22 +641,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tOrderNo').textContent = order.order_number;
         document.getElementById('tDate').textContent = invoice.issued_date;
         document.getElementById('tCustomerName').textContent = order.customer_name;
-        document.getElementById('tCustomerPhone').textContent = order.customer_phone;
-        document.getElementById('tDeliveryAddress').textContent = order.delivery_address;
         document.getElementById('tCollectionStatus').textContent = invoice.status;
-        document.getElementById('tBarcode').textContent = `*${invoice.invoice_number}*`;
+        document.getElementById('tBarcodeLabel').textContent = `* ${order.order_number} *`;
 
         const tItemsBody = document.getElementById('tItemsBody');
         let tRows = '';
         items.forEach(itm => {
             tRows += `
                 <tr>
-                    <td>
+                    <td style="padding: 4px 0;">
                         <div style="font-weight: bold;">${escapeHtml(itm.product_name)}</div>
-                        <div style="font-size: 11px; color: #4b5563;">@ ${formatCurrency(itm.unit_price)}</div>
+                        <div style="font-size: 11px; color: #475569;">@ ${formatCurrency(itm.unit_price)}</div>
                     </td>
-                    <td style="text-align: center; vertical-align: top;">${itm.quantity}</td>
-                    <td style="text-align: right; vertical-align: top; font-weight: bold;">${formatCurrency(itm.subtotal)}</td>
+                    <td style="text-align: center; vertical-align: top; padding: 4px 0;">${itm.quantity}</td>
+                    <td style="text-align: right; vertical-align: top; padding: 4px 0; font-weight: bold;">${formatCurrency(itm.subtotal)}</td>
                 </tr>
             `;
         });
@@ -682,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tSubtotal').textContent = formatCurrency(order.subtotal);
         if (order.discount_amount > 0) {
             document.getElementById('tDiscountRow').style.display = 'flex';
-            document.getElementById('tDiscount').textContent = '-' + formatCurrency(order.discount_amount);
+            document.getElementById('tDiscount').textContent = '− ' + formatCurrency(order.discount_amount);
         } else {
             document.getElementById('tDiscountRow').style.display = 'none';
         }

@@ -23,7 +23,6 @@ $db = get_db();
 include __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="page-content">
     <!-- Header with Export Action -->
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
         <div>
@@ -77,12 +76,9 @@ include __DIR__ . '/../../includes/header.php';
     </div>
 
     <!-- Active Filter Display Banner -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <div style="margin-bottom: 16px;">
         <div style="font-size: 14px; font-weight: 600; color: var(--text-main);" id="activePeriodLabel">
             Reporting Period: <span style="color: var(--color-primary);">Loading...</span>
-        </div>
-        <div style="font-size: 12px; color: var(--color-success); font-weight: 600; background: var(--color-success-bg); padding: 4px 10px; border-radius: var(--radius-full); border: 1px solid var(--color-success-border);">
-            🛡️ Strictly Zero-Tax Applied (0% Tax)
         </div>
     </div>
 
@@ -145,22 +141,60 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 
-    <!-- Report Breakdown Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-bottom: 24px;">
-        <!-- Left Pane: Operating Expense Breakdown by Category -->
-        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 0;">
-            <div class="card-header" style="padding: 16px 20px; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
-                <div class="card-title" style="font-size: 15px;">📂 Operating Expenses by Category</div>
+    <!-- Financial Analytics Grid: Performance Trajectory + Expense Mix Donut -->
+    <div class="financial-analytics-grid">
+        <!-- Left: Financial Performance Trajectory Line Chart -->
+        <div class="card" id="financeReportChartCard" style="margin-bottom: 0; padding: 22px 24px 20px; display: flex; flex-direction: column;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+                <div>
+                    <h3 class="card-title" style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">📈 Financial Performance Trajectory</h3>
+                    <p style="margin: 3px 0 0 0; font-size: 12.5px; color: var(--text-muted);">Realized revenue, operational costs, and net margin timeline</p>
+                </div>
             </div>
 
-            <div class="table-responsive" style="border: none; border-radius: 0;">
-                <table class="table">
-                    <thead>
+            <div id="financeReportChart" style="min-height: 280px; flex: 1;">
+                <div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13.5px;">
+                    <div style="display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-color); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
+                    Rendering financial performance chart...
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Expense Mix Donut Chart (Matching User Reference Image) -->
+        <div class="card" id="expenseMixCard" style="margin-bottom: 0; padding: 22px 24px 20px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b; letter-spacing: -0.01em;">Expense Mix</h3>
+            </div>
+
+            <!-- Donut Chart Container -->
+            <div id="expenseMixDonutChart" style="min-height: 235px; display: flex; align-items: center; justify-content: center;">
+                <div style="padding: 30px 10px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    Loading expense mix...
+                </div>
+            </div>
+
+            <!-- Category Mix Rows with Dashed Separators -->
+            <div id="expenseMixList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Breakdown Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 24px; margin-bottom: 24px;">
+        <!-- Left Pane: Operating Expense Breakdown by Category -->
+        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 0; border-radius: 16px;">
+            <div class="card-header" style="padding: 12px 18px; margin-bottom: 0; border-bottom: 1px solid var(--border-color); background: #ffffff;">
+                <div class="card-title" style="font-size: 14.5px; font-weight: 700; color: #1e293b;">📂 Operating Expenses by Category</div>
+            </div>
+
+            <div class="table-responsive" style="border: none; border-radius: 0; max-height: 250px; overflow-y: auto;">
+                <table class="table" style="margin-bottom: 0;">
+                    <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
                         <tr>
-                            <th>Category</th>
-                            <th class="text-center" style="width: 80px;">Entries</th>
-                            <th class="text-right" style="width: 130px;">Amount</th>
-                            <th style="width: 140px;">Proportion</th>
+                            <th style="padding: 9px 16px; font-size: 11.5px;">Category</th>
+                            <th class="text-center" style="width: 80px; padding: 9px 16px; font-size: 11.5px;">Entries</th>
+                            <th class="text-right" style="width: 130px; padding: 9px 16px; font-size: 11.5px;">Amount</th>
+                            <th style="width: 140px; padding: 9px 16px; font-size: 11.5px;">Proportion</th>
                         </tr>
                     </thead>
                     <tbody id="categoryTableBody">
@@ -175,19 +209,19 @@ include __DIR__ . '/../../includes/header.php';
         </div>
 
         <!-- Right Pane: Daily Net Income & Cash Flow Timeline -->
-        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 0;">
-            <div class="card-header" style="padding: 16px 20px; margin-bottom: 0; border-bottom: 1px solid var(--border-color);">
-                <div class="card-title" style="font-size: 15px;">📅 Daily Cash Flow &amp; Net Margin</div>
+        <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 0; border-radius: 16px;">
+            <div class="card-header" style="padding: 12px 18px; margin-bottom: 0; border-bottom: 1px solid var(--border-color); background: #ffffff;">
+                <div class="card-title" style="font-size: 14.5px; font-weight: 700; color: #1e293b;">📅 Daily Cash Flow &amp; Net Margin</div>
             </div>
 
-            <div class="table-responsive" style="border: none; border-radius: 0;">
-                <table class="table">
-                    <thead>
+            <div class="table-responsive" style="border: none; border-radius: 0; max-height: 250px; overflow-y: auto;">
+                <table class="table" style="margin-bottom: 0;">
+                    <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
                         <tr>
-                            <th>Date</th>
-                            <th class="text-right" style="color: var(--color-success);">Sales</th>
-                            <th class="text-right" style="color: var(--color-danger);">Expenses</th>
-                            <th class="text-right">Net Income</th>
+                            <th style="padding: 9px 16px; font-size: 11.5px;">Date</th>
+                            <th class="text-right" style="color: var(--color-success); padding: 9px 16px; font-size: 11.5px;">Sales</th>
+                            <th class="text-right" style="color: var(--color-danger); padding: 9px 16px; font-size: 11.5px;">Expenses</th>
+                            <th class="text-right" style="padding: 9px 16px; font-size: 11.5px;">Net Income</th>
                         </tr>
                     </thead>
                     <tbody id="timelineTableBody">
@@ -201,7 +235,6 @@ include __DIR__ . '/../../includes/header.php';
             </div>
         </div>
     </div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -283,6 +316,29 @@ document.addEventListener('DOMContentLoaded', () => {
             statCashRemitted.textContent = formatCurrency(summary.cash_remitted);
             statUnremittedCash.textContent = `Unremitted in courier hands: ${formatCurrency(summary.unremitted_cod_cash)}`;
 
+            // Render Financial Trajectory & Expense Mix Donut (ApexCharts)
+            function renderFinanceReportCharts() {
+                try {
+                    if (typeof ApexCharts === 'undefined') {
+                        setTimeout(renderFinanceReportCharts, 60);
+                        return;
+                    }
+                    if (window.BTSCharts && document.getElementById('financeReportChart')) {
+                        window.BTSCharts.renderMultiComparison('financeReportChart', timeline, {
+                            currency: '<?= APP_CURRENCY ?>'
+                        });
+                    }
+                    if (window.BTSCharts && document.getElementById('expenseMixDonutChart')) {
+                        window.BTSCharts.renderExpenseMixDonut('expenseMixDonutChart', 'expenseMixList', categories, {
+                            currency: '<?= APP_CURRENCY ?>'
+                        });
+                    }
+                } catch (chartErr) {
+                    console.error('Chart render error:', chartErr);
+                }
+            }
+            renderFinanceReportCharts();
+
             // Render Category Table
             if (!categories || categories.length === 0) {
                 categoryTableBody.innerHTML = `
@@ -297,10 +353,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 categories.forEach(c => {
                     catHtml += `
                         <tr>
-                            <td><strong>${escapeHtml(c.category_name)}</strong></td>
-                            <td class="text-center">${c.entry_count}</td>
-                            <td class="text-right tabular-nums" style="font-weight: 600;">${formatCurrency(c.category_total)}</td>
-                            <td>
+                            <td style="padding: 8px 16px;"><strong>${escapeHtml(c.category_name)}</strong></td>
+                            <td class="text-center" style="padding: 8px 16px;">${c.entry_count}</td>
+                            <td class="text-right tabular-nums" style="font-weight: 600; padding: 8px 16px;">${formatCurrency(c.category_total)}</td>
+                            <td style="padding: 8px 16px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="flex: 1; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                                         <div style="width: ${c.percentage}%; background: var(--color-primary); height: 100%;"></div>
@@ -329,14 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isNetPositive = t.net >= 0;
                     timeHtml += `
                         <tr>
-                            <td><span style="font-family: monospace; font-size: 13px;">${escapeHtml(t.date)}</span></td>
-                            <td class="text-right tabular-nums" style="color: var(--color-success); font-weight: 500;">
+                            <td style="padding: 7px 16px;"><span style="font-family: monospace; font-size: 12.5px;">${escapeHtml(t.date)}</span></td>
+                            <td class="text-right tabular-nums" style="color: var(--color-success); font-weight: 500; padding: 7px 16px;">
                                 ${formatCurrency(t.sales)}
                             </td>
-                            <td class="text-right tabular-nums" style="color: var(--color-danger); font-weight: 500;">
+                            <td class="text-right tabular-nums" style="color: var(--color-danger); font-weight: 500; padding: 7px 16px;">
                                 ${formatCurrency(t.expenses)}
                             </td>
-                            <td class="text-right tabular-nums" style="font-weight: 700; color: ${isNetPositive ? 'var(--color-success)' : 'var(--color-danger)'};">
+                            <td class="text-right tabular-nums" style="font-weight: 700; color: ${isNetPositive ? 'var(--color-success)' : 'var(--color-danger)'}; padding: 7px 16px;">
                                 ${formatCurrency(t.net)}
                             </td>
                         </tr>
@@ -346,8 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (err) {
-            console.error('Report fetch error:', err);
-            alert('Error communicating with backend server.');
+            console.error('Report error:', err);
+            if (window.API && API.toast) {
+                API.toast(err.message || 'Error processing report data.', 'error');
+            } else {
+                alert(err.message || 'Error processing report data.');
+            }
         }
     }
 

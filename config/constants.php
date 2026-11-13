@@ -7,7 +7,7 @@
 declare(strict_types=1);
 
 // Application Identity
-define('APP_NAME', 'Sales & Expense Tracker');
+define('APP_NAME', 'Business Tracker System');
 define('APP_VERSION', '1.0.0');
 
 // Currency & Financial Standards (Excludes tax calculations per requirements)
