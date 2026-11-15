@@ -1,13 +1,37 @@
-# Logs and cache
-*.log
-.DS_Store
-Thumbs.db
+# ==============================================================================
+# Git Ignore Rules for Small Business Sales & Expense Tracking System
+# Production Clean Setup
+# ==============================================================================
 
-# IDE and editors
+# Agent Harness, Rules & Instructions
+.agents/
+AGENTS.md
+
+# Development Documentation & Plans (keep schema.sql)
+docs/*.md
+docs/superpowers/
+
+# Automated Test Suites
+tests/
+
+# Scratch & Design Mockup Files
+new-design.html
+preview.html
+
+# User Uploaded Receipts & Documents (keep .htaccess and index.html placeholders)
+uploads/receipts/*
+!uploads/receipts/index.html
+uploads/*
+!uploads/.htaccess
+!uploads/index.html
+!uploads/receipts/
+
+# System, OS & Editor Cache
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
-
-# Temporary / scratch
+*.log
+Thumbs.db
+.DS_Store
 scratch/
