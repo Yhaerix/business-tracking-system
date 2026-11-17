@@ -7,6 +7,12 @@
 
 declare(strict_types=1);
 
+if (!headers_sent()) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -226,14 +232,43 @@ $formattedCoins = number_format($customerCoins, 2) . ' Coins';
     async function handleCustomerSignOut() {
         if (!confirm('Are you sure you want to sign out of your Prestige account?')) return;
         try {
+            sessionStorage.setItem('prestige_just_logged_out', '1');
             const res = await fetch('handler.php?action=customer_logout', { method: 'POST' });
             const data = await res.json();
             const target = (data && data.data && data.data.redirect) ? data.data.redirect : 'index.php';
-            window.location.href = target;
+            window.location.replace(target);
         } catch (e) {
-            window.location.href = 'index.php';
+            window.location.replace('index.php');
         }
     }
+
+    // Force fresh state if retrieved from browser Back/Forward Cache (bfcache)
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+
+    // Trap back button immediately upon landing on index after logout
+    document.addEventListener('DOMContentLoaded', function () {
+        if (sessionStorage.getItem('prestige_just_logged_out') === '1') {
+            const path = window.location.pathname.toLowerCase();
+            if (path.endsWith('index.php') || path.endsWith('/') || path.endsWith('store/')) {
+                window.history.pushState(null, '', window.location.href);
+                window.addEventListener('popstate', function () {
+                    window.history.pushState(null, '', window.location.href);
+                });
+            }
+        }
+    });
+
+    // Clear logged out trap flag when user clicks any ordinary navigation link
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a');
+        if (link && !link.getAttribute('onclick')?.includes('handleCustomerSignOut')) {
+            sessionStorage.removeItem('prestige_just_logged_out');
+        }
+    });
     </script>
 
     <!-- ====================================================================

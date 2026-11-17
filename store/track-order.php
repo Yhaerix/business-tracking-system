@@ -212,11 +212,21 @@ require_once __DIR__ . '/includes/store_header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // If user just logged out, enforce clean bounce to store index
+    if (sessionStorage.getItem('prestige_just_logged_out') === '1') {
+        window.location.replace('index.php');
+        return;
+    }
+
     // Check URL parameters e.g. ?order=PAS-2026-0001 or ?tracking=PAS-2026-0001
     const urlParams = new URLSearchParams(window.location.search);
     const orderParam = urlParams.get('order') || urlParams.get('tracking') || urlParams.get('order_number') || urlParams.get('query');
     if (orderParam) {
         document.getElementById('trackingInput').value = orderParam;
+        // Clean URL to prevent query parameter from persisting in browser history stack
+        try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {}
         performOrderTracking(orderParam);
     }
 });
@@ -400,17 +410,6 @@ function renderTrackingView(order) {
     document.getElementById('summaryDeliveryFee').textContent = order.formatted_delivery_fee;
     document.getElementById('summaryTotal').textContent = order.formatted_total;
 }
-
-// Auto-run on page load if query or order_number is in URL
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const q = urlParams.get('query') || urlParams.get('order_number') || urlParams.get('order');
-    if (q) {
-        const inp = document.getElementById('trackingInput');
-        if (inp) inp.value = q;
-        performTrackQuery(q);
-    }
-});
 </script>
 
 <?php
