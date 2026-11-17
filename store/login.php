@@ -144,35 +144,61 @@ require_once __DIR__ . '/includes/store_header.php';
 }
 .auth-card {
     display: flex !important;
+    position: relative;
     background: #ffffff;
     border-radius: 28px;
     box-shadow: 0 16px 50px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     padding: 0 !important;
     border: none;
-    min-height: 560px;
-    transition: flex-direction 0.35s ease;
-}
-.auth-card.mode-signin {
-    flex-direction: row !important;
-}
-.auth-card.mode-register {
-    flex-direction: row-reverse !important;
+    height: 640px;
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
 }
 .auth-col-form {
-    flex: 1.15;
-    padding: 48px 44px;
+    flex: 0 0 50%;
+    width: 50%;
+    height: 100%;
+    padding: 36px 44px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-width: 0;
     background: #ffffff;
+    box-sizing: border-box;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(0);
+    z-index: 2;
+    overflow-y: auto;
+}
+.auth-col-form::-webkit-scrollbar {
+    width: 5px;
+}
+.auth-col-form::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+.auth-col-form .auth-form {
+    animation: authFadeIn 0.3s ease;
+}
+@keyframes authFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.auth-col-form .auth-form-group {
+    margin-bottom: 12px;
+}
+.auth-col-form .auth-form-input {
+    height: 42px;
 }
 .auth-col-brand {
-    flex: 0.85;
+    flex: 0 0 50%;
+    width: 50%;
+    height: 100%;
     background: linear-gradient(145deg, #1d1d1f 0%, #000000 100%);
     color: #ffffff;
-    padding: 48px 36px;
+    padding: 44px 36px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -180,6 +206,16 @@ require_once __DIR__ . '/includes/store_header.php';
     text-align: center;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(0);
+    z-index: 1;
+}
+.auth-card.mode-register .auth-col-form {
+    transform: translateX(100%);
+}
+.auth-card.mode-register .auth-col-brand {
+    transform: translateX(-100%);
 }
 .auth-col-brand::before {
     content: '';
@@ -241,40 +277,33 @@ require_once __DIR__ . '/includes/store_header.php';
     font-size: 13.5px;
     color: #94a3b8;
     line-height: 1.5;
-    margin: 0 0 24px 0;
-}
-.auth-brand-perks {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    text-align: left;
-}
-.auth-perk-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-size: 12.5px;
-    color: #e2e8f0;
-    font-weight: 500;
+    margin: 0;
 }
 @media (max-width: 768px) {
-    .auth-card.mode-signin,
-    .auth-card.mode-register {
+    .auth-card {
+        height: auto !important;
         flex-direction: column !important;
+        border-radius: 20px;
+    }
+    .auth-col-form,
+    .auth-col-brand {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .auth-card.mode-register .auth-col-form,
+    .auth-card.mode-register .auth-col-brand {
+        transform: none !important;
     }
     .auth-col-brand {
         padding: 32px 20px;
+        order: -1;
     }
     .auth-col-form {
-        padding: 32px 20px;
-    }
-    .auth-brand-perks {
-        display: none;
+        padding: 28px 20px 36px 20px;
+        order: 1;
     }
 }
 </style>
@@ -551,20 +580,6 @@ require_once __DIR__ . '/includes/store_header.php';
                     <p class="auth-brand-tagline">
                         Official Store Experience. Genuine Apple innovations with insured nationwide shipping &amp; local warranty.
                     </p>
-                    <div class="auth-brand-perks">
-                        <div class="auth-perk-item">
-                            <span>✨</span> 100% Brand New Sealed Devices
-                        </div>
-                        <div class="auth-perk-item">
-                            <span>🛡️</span> 1-Year Official Apple Warranty
-                        </div>
-                        <div class="auth-perk-item">
-                            <span>🚀</span> Insured Nationwide Express Shipping
-                        </div>
-                        <div class="auth-perk-item">
-                            <span>🪙</span> Earn &amp; Redeem Prestige Coins
-                        </div>
-                    </div>
                 </div>
             </div>
 
