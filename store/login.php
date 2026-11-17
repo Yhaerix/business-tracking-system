@@ -190,10 +190,7 @@ require_once __DIR__ . '/includes/store_header.php';
                 <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') ?>">
                 
                 <div class="auth-form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <label class="auth-form-label" for="loginIdentifier" style="margin-bottom: 0;">Email or Phone</label>
-                        <a href="javascript:void(0)" onclick="openForgotEmailModal()" class="auth-forgot-link">Forgot email?</a>
-                    </div>
+                    <label class="auth-form-label" for="loginIdentifier">Email or Phone</label>
                     <input 
                         type="text" 
                         id="loginIdentifier" 
@@ -405,30 +402,7 @@ require_once __DIR__ . '/includes/store_header.php';
         </div>
 
         <!-- ================================================================
-             3. MODAL: FORGOT EMAIL HELP
-             ================================================================ -->
-        <div id="forgotEmailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
-            <div style="background:#ffffff; max-width:440px; width:100%; border-radius:20px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.18); position:relative;">
-                <button type="button" onclick="closeForgotEmailModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:22px; color:#86868b; cursor:pointer;" aria-label="Close">&times;</button>
-                <div style="width:48px; height:48px; border-radius:50%; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:14px;">
-                    📧
-                </div>
-                <h3 style="font-size:18px; font-weight:700; color:#1d1d1f; margin-bottom:8px;">Forgot Your Registered Email?</h3>
-                <p style="font-size:13.5px; color:#64748b; line-height:1.5; margin-bottom:16px;">
-                    You can sign in using your registered <strong>Mobile Phone Number</strong> (e.g., <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; color:#0f172a;">0917XXXXXXX</code>) instead of your email address.
-                </p>
-                <div style="background:#f8fafc; border-radius:12px; padding:12px 14px; font-size:12.5px; color:#475569; margin-bottom:20px;">
-                    💡 <strong>Need direct account recovery?</strong> Contact our support team at <a href="mailto:support@prestigeapple.ph" style="color:#0071e3; font-weight:600; text-decoration:none;">support@prestigeapple.ph</a>.
-                </div>
-                <div style="display:flex; gap:10px; justify-content:flex-end;">
-                    <button type="button" onclick="closeForgotEmailModal()" style="height:40px; padding:0 16px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Close</button>
-                    <button type="button" onclick="usePhoneForLogin()" class="btn-apple-primary" style="height:40px; padding:0 20px; font-size:13px; border-radius:10px; font-weight:600;">Sign in with Phone</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================================================================
-             4. MODAL: FORGOT PASSWORD (OTP RESET)
+             3. MODAL: FORGOT PASSWORD (OTP RESET)
              ================================================================ -->
         <div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
             <div style="background:#ffffff; max-width:440px; width:100%; border-radius:20px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.18); position:relative;">
@@ -942,28 +916,9 @@ async function resendCustomerOtp() {
 }
 
 // =========================================================================
-// FORGOT EMAIL & FORGOT PASSWORD MODAL HANDLERS
+// FORGOT PASSWORD MODAL & RESET HANDLERS
 // =========================================================================
 let currentResetDevOtp = '';
-
-function openForgotEmailModal() {
-    const modal = document.getElementById('forgotEmailModal');
-    if (modal) modal.style.display = 'flex';
-}
-
-function closeForgotEmailModal() {
-    const modal = document.getElementById('forgotEmailModal');
-    if (modal) modal.style.display = 'none';
-}
-
-function usePhoneForLogin() {
-    closeForgotEmailModal();
-    const inp = document.getElementById('loginIdentifier');
-    if (inp) {
-        inp.placeholder = 'e.g. 09171234567';
-        inp.focus();
-    }
-}
 
 function openForgotPasswordModal() {
     const modal = document.getElementById('forgotPasswordModal');
