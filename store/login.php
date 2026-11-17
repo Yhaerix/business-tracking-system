@@ -121,46 +121,32 @@ require_once __DIR__ . '/includes/store_header.php';
     font-size: 12.5px;
     color: #475569;
 }
-.c-btn-fill-dev {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 5px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #0071e3;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-.c-btn-fill-dev:hover {
-    background: #eff6ff;
-    border-color: #93c5fd;
-}
+
 
 /* Split-Screen Auth Layout Styles */
 .auth-split-container {
-    max-width: 960px !important;
-    padding: 40px 16px 80px 16px !important;
+    max-width: 900px !important;
+    padding: 36px 16px 60px 16px !important;
 }
 .auth-card {
     display: flex !important;
     position: relative;
     background: #ffffff;
     border-radius: 28px;
-    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
     overflow: hidden;
     padding: 0 !important;
     border: none;
-    height: 640px;
-    max-width: 960px;
+    min-height: 520px;
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
+    align-items: stretch;
 }
 .auth-col-form {
-    flex: 0 0 50%;
+    flex: 1 1 50%;
     width: 50%;
-    height: 100%;
-    padding: 36px 44px;
+    padding: 40px 44px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -187,16 +173,20 @@ require_once __DIR__ . '/includes/store_header.php';
     to { opacity: 1; transform: translateY(0); }
 }
 .auth-col-form .auth-form-group {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 .auth-col-form .auth-form-input {
     height: 42px;
 }
+.auth-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
 .auth-col-brand {
-    flex: 0 0 50%;
+    flex: 1 1 50%;
     width: 50%;
-    height: 100%;
-    background: linear-gradient(145deg, #1d1d1f 0%, #000000 100%);
+    background: linear-gradient(150deg, #18181b 0%, #000000 100%);
     color: #ffffff;
     padding: 44px 36px;
     display: flex;
@@ -220,23 +210,23 @@ require_once __DIR__ . '/includes/store_header.php';
 .auth-col-brand::before {
     content: '';
     position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 220px;
-    height: 220px;
+    top: -40px;
+    right: -40px;
+    width: 240px;
+    height: 240px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 113, 227, 0.28) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0, 113, 227, 0.25) 0%, transparent 70%);
     pointer-events: none;
 }
 .auth-col-brand::after {
     content: '';
     position: absolute;
-    bottom: -50px;
-    left: -50px;
-    width: 200px;
-    height: 200px;
+    bottom: -40px;
+    left: -40px;
+    width: 220px;
+    height: 220px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, transparent 70%);
     pointer-events: none;
 }
 .auth-brand-inner {
@@ -276,12 +266,13 @@ require_once __DIR__ . '/includes/store_header.php';
 .auth-brand-tagline {
     font-size: 13.5px;
     color: #94a3b8;
-    line-height: 1.5;
+    line-height: 1.55;
     margin: 0;
+    max-width: 300px;
 }
 @media (max-width: 768px) {
     .auth-card {
-        height: auto !important;
+        min-height: auto !important;
         flex-direction: column !important;
         border-radius: 20px;
     }
@@ -304,6 +295,10 @@ require_once __DIR__ . '/includes/store_header.php';
     .auth-col-form {
         padding: 28px 20px 36px 20px;
         order: 1;
+    }
+    .auth-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
 }
 </style>
@@ -413,33 +408,35 @@ require_once __DIR__ . '/includes/store_header.php';
             <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleCustomerRegister(event)">
                 <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') ?>">
 
-                <div class="auth-form-group">
-                    <label class="auth-form-label" for="regName">Full Name</label>
-                    <input 
-                        type="text" 
-                        id="regName" 
-                        name="name" 
-                        class="auth-form-input" 
-                        placeholder="Full name" 
-                        required 
-                        minlength="2"
-                        autocomplete="name"
-                    >
-                </div>
+                <div class="auth-form-row">
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regName">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="regName" 
+                            name="name" 
+                            class="auth-form-input" 
+                            placeholder="Full name" 
+                            required 
+                            minlength="2"
+                            autocomplete="name"
+                        >
+                    </div>
 
-                <div class="auth-form-group">
-                    <label class="auth-form-label" for="regPhone">Phone Number</label>
-                    <input 
-                        type="tel" 
-                        id="regPhone" 
-                        name="phone" 
-                        class="auth-form-input" 
-                        placeholder="Phone number" 
-                        required 
-                        minlength="10"
-                        maxlength="15"
-                        autocomplete="tel"
-                    >
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regPhone">Phone Number</label>
+                        <input 
+                            type="tel" 
+                            id="regPhone" 
+                            name="phone" 
+                            class="auth-form-input" 
+                            placeholder="Phone number" 
+                            required 
+                            minlength="10"
+                            maxlength="15"
+                            autocomplete="tel"
+                        >
+                    </div>
                 </div>
 
                 <div class="auth-form-group">
@@ -455,39 +452,45 @@ require_once __DIR__ . '/includes/store_header.php';
                     >
                 </div>
 
-                <div class="auth-form-group">
-                    <label class="auth-form-label" for="regPassword">Password</label>
-                    <div class="auth-password-wrapper">
-                        <input 
-                            type="password" 
-                            id="regPassword" 
-                            name="password" 
-                            class="auth-form-input" 
-                            placeholder="Password" 
-                            required 
-                            minlength="8"
-                            autocomplete="new-password"
-                        >
-                        <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('regPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
+                <div class="auth-form-row">
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regPassword">Password</label>
+                        <div class="auth-password-wrapper">
+                            <input 
+                                type="password" 
+                                id="regPassword" 
+                                name="password" 
+                                class="auth-form-input" 
+                                placeholder="Password" 
+                                required 
+                                minlength="8"
+                                autocomplete="new-password"
+                            >
+                            <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('regPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label" for="regConfirmPassword">Confirm Password</label>
+                        <div class="auth-password-wrapper">
+                            <input 
+                                type="password" 
+                                id="regConfirmPassword" 
+                                name="confirm_password" 
+                                class="auth-form-input" 
+                                placeholder="Confirm password" 
+                                required 
+                                minlength="8"
+                                autocomplete="new-password"
+                            >
+                            <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('regConfirmPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div class="auth-form-group">
-                    <label class="auth-form-label" for="regConfirmPassword">Confirm Password</label>
-                    <div class="auth-password-wrapper">
-                        <input 
-                            type="password" 
-                            id="regConfirmPassword" 
-                            name="confirm_password" 
-                            class="auth-form-input" 
-                            placeholder="Confirm password" 
-                            required 
-                            minlength="8"
-                            autocomplete="new-password"
-                        >
-                        <button type="button" class="auth-toggle-pwd" onclick="togglePasswordVisibility('regConfirmPassword', this)" title="Show/Hide Password" aria-label="Toggle password visibility">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
@@ -555,17 +558,9 @@ require_once __DIR__ . '/includes/store_header.php';
                     </div>
                 </div>
 
-                <!-- Sandbox Auto-Fill OTP Helper -->
-                <div id="customerDevBadge" class="c-dev-badge" style="display: none;">
-                    <div>
-                        <span>OTP Code:</span> <strong id="customerDevOtpCode" style="font-size: 14.5px; letter-spacing: 1px; color: #0071e3;">------</strong>
-                    </div>
-                    <button type="button" class="c-btn-fill-dev" onclick="autoFillCustomerDevOtp()">
-                        Auto-fill OTP
-                    </button>
-                </div>
-            </div>
+                
 
+            </div><!-- /#customerOtpSection -->
             </div><!-- /.auth-col-form -->
 
             <!-- Right / Brand Column (Logo & Name) -->
@@ -621,11 +616,7 @@ require_once __DIR__ . '/includes/store_header.php';
                     </p>
                     <div id="forgotPwdAlert2" style="display:none; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px;"></div>
                     
-                    <!-- Dev Quick-Fill Badge -->
-                    <div id="resetDevBadge" style="display:none; margin-bottom:14px; padding:8px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; align-items:center; justify-content:space-between; font-size:12px; color:#475569;">
-                        <span>Code: <strong id="resetDevOtpCode" style="color:#0071e3; font-family:monospace; font-size:14px;"></strong></span>
-                        <button type="button" onclick="fillResetDevOtp()" style="background:#fff; border:1px solid #cbd5e1; border-radius:4px; padding:3px 8px; font-size:11px; font-weight:600; color:#0071e3; cursor:pointer;">Auto Fill</button>
-                    </div>
+                    
 
                     <form onsubmit="handleExecutePasswordReset(event)">
                         <div class="auth-form-group" style="margin-bottom:12px;">
@@ -878,17 +869,7 @@ function switchToCustomerOtp(data, purpose = 'login') {
     const backName = document.getElementById('backToTabName');
     backName.textContent = (purpose === 'register') ? 'registration' : 'sign in';
 
-    // Show Auto-fill OTP badge if available
-    const devBadge = document.getElementById('customerDevBadge');
-    const devOtpDisplay = document.getElementById('customerDevOtpCode');
-    const devOtpVal = data.dev_otp || data.otp || '';
-    if (devOtpVal) {
-        currentCustomerDevOtp = devOtpVal;
-        devOtpDisplay.textContent = devOtpVal;
-        devBadge.style.display = 'flex';
-    } else {
-        devBadge.style.display = 'none';
-    }
+    
 
     // Reset digit inputs
     const cInputs = getCustomerOtpInputs();
@@ -978,16 +959,6 @@ cInputs.forEach((input, idx) => {
         }
     });
 });
-
-function autoFillCustomerDevOtp() {
-    if (!currentCustomerDevOtp || currentCustomerDevOtp.length !== 6) return;
-    const chars = currentCustomerDevOtp.split('');
-    chars.forEach((c, i) => {
-        if (cInputs[i]) cInputs[i].value = c;
-    });
-    cInputs[5].focus();
-    document.getElementById('customerOtpForm').requestSubmit();
-}
 
 function startCustomerResendCountdown(seconds = 60) {
     if (cResendTimer) clearInterval(cResendTimer);
@@ -1089,12 +1060,7 @@ async function resendCustomerOtp() {
             if (window.showStoreNotification) {
                 window.showStoreNotification('New verification code sent to your email!', 'success');
             }
-            const newDevOtp = payload.dev_otp || data.dev_otp || '';
-            if (newDevOtp) {
-                currentCustomerDevOtp = newDevOtp;
-                document.getElementById('customerDevOtpCode').textContent = newDevOtp;
-                document.getElementById('customerDevBadge').style.display = 'flex';
-            }
+            
             startCustomerResendCountdown(60);
         } else {
             showAuthAlert(data?.message || 'Could not resend code. Please try again.');
@@ -1170,11 +1136,7 @@ async function handleRequestPasswordReset(e) {
             document.getElementById('forgotPwdStep1').style.display = 'none';
             document.getElementById('forgotPwdStep2').style.display = 'block';
 
-            if (payload.dev_otp) {
-                currentResetDevOtp = payload.dev_otp;
-                document.getElementById('resetDevOtpCode').textContent = payload.dev_otp;
-                document.getElementById('resetDevBadge').style.display = 'flex';
-            }
+            
 
             const alert2 = document.getElementById('forgotPwdAlert2');
             alert2.style.display = 'block';
@@ -1196,15 +1158,6 @@ async function handleRequestPasswordReset(e) {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Send Reset Code';
-    }
-}
-
-function fillResetDevOtp() {
-    if (!currentResetDevOtp) return;
-    const inp = document.getElementById('resetOtpCode');
-    if (inp) {
-        inp.value = currentResetDevOtp;
-        document.getElementById('resetNewPassword')?.focus();
     }
 }
 
