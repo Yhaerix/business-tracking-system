@@ -2727,7 +2727,12 @@ try {
             // Note: $_SESSION['cart'] is preserved for guest shopping experience
             $_SESSION['customer_coins'] = 0.00;
 
-            send_json(true, 'Signed out of your Prestige account successfully.');
+            if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) && stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') === false && $_SERVER['REQUEST_METHOD'] === 'GET') {
+                header('Location: index.php');
+                exit;
+            }
+
+            send_json(true, 'Signed out of your Prestige account successfully.', ['redirect' => 'index.php']);
             break;
 
         case 'customer_profile':

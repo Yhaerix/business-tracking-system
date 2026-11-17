@@ -228,11 +228,10 @@ $formattedCoins = number_format($customerCoins, 2) . ' Coins';
         try {
             const res = await fetch('handler.php?action=customer_logout', { method: 'POST' });
             const data = await res.json();
-            if (data && data.success) {
-                window.location.reload();
-            }
+            const target = (data && data.data && data.data.redirect) ? data.data.redirect : 'index.php';
+            window.location.href = target;
         } catch (e) {
-            window.location.reload();
+            window.location.href = 'index.php';
         }
     }
     </script>
