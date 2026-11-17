@@ -58,6 +58,45 @@ $galleryImages = $stmtImages->fetchAll(PDO::FETCH_ASSOC);
 
 $primaryImage = !empty($galleryImages[0]['image_path']) ? $galleryImages[0]['image_path'] : 'assets/images/placeholder-apple.svg';
 
+// Available product colors configured by admin
+$rawColors = trim((string)($product['color'] ?? ''));
+$availableColors = [];
+if ($rawColors !== '') {
+    $availableColors = array_values(array_unique(array_filter(array_map('trim', explode(',', $rawColors)))));
+}
+if (empty($availableColors)) {
+    $availableColors = ['Space Black'];
+}
+$firstColor = $availableColors[0];
+
+// Color palette mapping for swatches
+$paletteMap = [
+    'Natural Titanium' => '#9e9a93',
+    'Black Titanium'   => '#2c2d30',
+    'White Titanium'   => '#f4f3f0',
+    'Blue Titanium'    => '#394653',
+    'Desert Titanium'  => '#c7b299',
+    'Space Black'      => '#1f2022',
+    'Space Gray'       => '#4d4f53',
+    'Silver'           => '#e3e4e6',
+    'Starlight'        => '#f0ece1',
+    'Midnight'         => '#1e232d',
+    'Deep Purple'      => '#4f4459',
+    'Alpine Green'     => '#505c54',
+    'Sierra Blue'      => '#9bb5ce',
+    'Product(RED)'     => '#e11d48',
+    'Pink'             => '#f9d5dc',
+    'Teal'             => '#73959c',
+    'Ultramarine'      => '#3c4f76',
+    'Gold'             => '#eed2b2',
+    'Yellow'           => '#e8ddaa',
+    'Blue'             => '#546e8c',
+    'Green'            => '#6b7a69',
+    'White'            => '#f8f9fa',
+    'Black'            => '#1f2022',
+    'Standard'         => '#1f2022'
+];
+
 // Related ecosystem items
 $stmtRelated = $db->prepare("
     SELECT p.id, p.name, p.selling_price, p.storage, p.color,
@@ -130,28 +169,26 @@ require_once __DIR__ . '/includes/store_header.php';
                 </div>
             </div>
 
-            <!-- 1. Color Finish Swatches -->
+            <!-- 1. Color Finish Swatches (Rendered only from Admin-selected colors) -->
             <div>
                 <div class="config-group-title">
-                    <span>Finish: <strong id="selectedColorLabel"><?= htmlspecialchars($product['color'] ?: 'Desert Titanium', ENT_QUOTES, 'UTF-8') ?></strong></span>
+                    <span>Finish: <strong id="selectedColorLabel"><?= htmlspecialchars($firstColor, ENT_QUOTES, 'UTF-8') ?></strong></span>
                 </div>
                 <div class="swatches-row" id="colorSwatchesRow">
-                    <div class="color-swatch-item active" onclick="selectPdpColor('Desert Titanium', this)">
-                        <span class="color-swatch-circle" style="background:#bfa88f;"></span>
-                        <span>Desert Titanium</span>
-                    </div>
-                    <div class="color-swatch-item" onclick="selectPdpColor('Natural Titanium', this)">
-                        <span class="color-swatch-circle" style="background:#9a9895;"></span>
-                        <span>Natural Titanium</span>
-                    </div>
-                    <div class="color-swatch-item" onclick="selectPdpColor('White Titanium', this)">
-                        <span class="color-swatch-circle" style="background:#f2f1ed;"></span>
-                        <span>White Titanium</span>
-                    </div>
-                    <div class="color-swatch-item" onclick="selectPdpColor('Black Titanium', this)">
-                        <span class="color-swatch-circle" style="background:#3b3a38;"></span>
-                        <span>Black Titanium</span>
-                    </div>
+                    <?php foreach ($availableColors as $idx => $cName): 
+                        $hex = '#1f2022';
+                        foreach ($paletteMap as $pName => $h) {
+                            if (stripos($cName, $pName) !== false) {
+                                $hex = $h;
+                                break;
+                            }
+                        }
+                    ?>
+                        <div class="color-swatch-item <?= $idx === 0 ? 'active' : '' ?>" onclick="selectPdpColor('<?= htmlspecialchars($cName, ENT_QUOTES, 'UTF-8') ?>', this)">
+                            <span class="color-swatch-circle" style="background:<?= htmlspecialchars($hex, ENT_QUOTES, 'UTF-8') ?>;"></span>
+                            <span><?= htmlspecialchars($cName, ENT_QUOTES, 'UTF-8') ?></span>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
@@ -195,6 +232,12 @@ require_once __DIR__ . '/includes/store_header.php';
                     Buy Now
                 </button>
             </div>
+
+            <!-- Inquire Stock with Store Support -->
+            <button type="button" class="btn-ask-stock" onclick="askStoreAboutStock()" style="width: 100%; margin: 10px 0 16px 0; height: 42px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 13px; font-weight: 600; color: #1e293b; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
+                <svg viewBox="0 0 24 24" width="16" height="16" style="stroke: #0071e3; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
+                <span>💬 Inquire Stock with Store Support</span>
+            </button>
 
             <!-- 4-Pillar Trust Highlights -->
             <div class="pdp-trust-mini">
@@ -347,7 +390,7 @@ const PDP = {
     name: <?= json_encode($product['name']) ?>,
     basePrice: <?= $basePrice ?>,
     currentPrice: <?= $basePrice ?>,
-    selectedColor: <?= json_encode($product['color'] ?: 'Desert Titanium') ?>,
+    selectedColor: <?= json_encode($firstColor) ?>,
     selectedStorage: <?= json_encode($product['storage'] ?: '256GB') ?>,
     image: <?= json_encode($primaryImage) ?>,
     currentStock: <?= (int)$product['current_stock'] ?>,
@@ -407,6 +450,16 @@ function executePdpBuyNow() {
     setTimeout(() => {
         window.location.href = 'cart.php';
     }, 200);
+}
+
+function askStoreAboutStock() {
+    const colorText = PDP.selectedColor ? ` in ${PDP.selectedColor}` : '';
+    const inquiryText = `Hi! Is ${PDP.name}${colorText} currently available in stock?`;
+    if (typeof openStoreChatWithProduct === 'function') {
+        openStoreChatWithProduct(PDP.id, inquiryText);
+    } else {
+        alert(inquiryText);
+    }
 }
 </script>
 

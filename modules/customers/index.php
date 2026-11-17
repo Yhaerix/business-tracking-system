@@ -425,8 +425,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>
                         <td style="text-align: right; white-space: nowrap;">
                             <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-                                <button type="button" class="btn btn-outline btn-sm view-cust-btn" data-id="${c.id}" title="View Details in Drawer">
-                                    <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;margin-right:4px;vertical-align:-1px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View
+                                <button type="button" class="btn btn-primary btn-sm message-cust-btn" data-id="${c.id}" data-name="${escapeHtml(c.name)}" title="Chat with Customer" style="display:inline-flex;align-items:center;gap:5px;font-weight:600;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
+                                    <span>Message</span>
+                                    ${(parseInt(c.unread_messages, 10) > 0) ? `<span style="background:#ef4444;color:#fff;border-radius:10px;padding:0 5px;font-size:10px;font-weight:700;margin-left:2px;">${c.unread_messages}</span>` : ''}
                                 </button>
                                 ${canManage ? `
                                     <button type="button" class="btn btn-outline btn-sm toggle-cust-btn" data-id="${c.id}" data-status="${c.status}" title="${isActive ? 'Suspend User' : 'Activate User'}" style="${!isActive ? 'color: var(--color-success); border-color: #a7f3d0;' : 'color: var(--color-danger); border-color: #fca5a5;'}">
@@ -532,6 +534,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastLoginStr = customer.last_login_at ? new Date(customer.last_login_at).toLocaleString() : 'Never logged in';
 
         drawerBody.innerHTML = `
+            <!-- Quick Chat Action Bar -->
+            <div style="margin-bottom: 16px; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12.5px; font-weight: 600; color: #1e40af;">Direct Customer Communication</span>
+                <button type="button" class="btn btn-primary btn-sm" onclick="closeCustomerDrawer(); openChat('customer_${customer.id}', '${escapeHtml(customer.name)}', 'Store Customer');" style="display:inline-flex;align-items:center;gap:5px;">
+                    💬 Open Chat Thread
+                </button>
+            </div>
+
             <!-- Overview Stat Cards -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                 <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px;">
@@ -676,6 +686,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delegated Table Click Listener
     // -------------------------------------------------------------
     customersTable.addEventListener('click', (e) => {
+        // 0. Message Customer Button
+        const msgBtn = e.target.closest('.message-cust-btn');
+        if (msgBtn) {
+            e.stopPropagation();
+            const id = parseInt(msgBtn.dataset.id, 10);
+            const name = msgBtn.dataset.name || 'Store Customer';
+            if (typeof window.openChat === 'function') {
+                window.openChat('customer_' + id, name, 'Store Customer');
+            }
+            return;
+        }
+
         // 1. Toggle Status Button
         const toggleBtn = e.target.closest('.toggle-cust-btn');
         if (toggleBtn) {

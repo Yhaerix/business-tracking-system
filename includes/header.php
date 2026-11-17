@@ -17,8 +17,18 @@ $user = current_user();
 
 // Fetch dynamic system alerts and notifications for the topbar bell
 $allNotifications = [];
+$systemStoreName = $_SESSION['store_name'] ?? null;
 try {
     $db = get_db();
+
+    if (empty($systemStoreName)) {
+        $stmtStore = $db->query("SELECT setting_value FROM store_settings WHERE setting_key = 'store_name' LIMIT 1");
+        $dbStoreName = $stmtStore ? $stmtStore->fetchColumn() : null;
+        if (!empty($dbStoreName)) {
+            $systemStoreName = (string)$dbStoreName;
+            $_SESSION['store_name'] = $systemStoreName;
+        }
+    }
 
     // 1. Critical Out of Stock & Low Stock Alerts
     if (has_permission('inventory_view')) {
@@ -162,10 +172,40 @@ try {
             'icon'      => 'bell'
         ];
     }
+
+    // 5. Unread Customer Messages & Inquiries
+    if (has_permission('users_manage') || has_permission('orders_view')) {
+        $stmtCustMsgs = $db->query("
+            SELECT cm.id, cm.customer_id, cm.message, cm.created_at, c.name AS customer_name
+            FROM customer_messages cm
+            JOIN customers c ON cm.customer_id = c.id
+            WHERE cm.sender_type = 'customer' AND cm.is_read = 0
+            ORDER BY cm.created_at DESC
+            LIMIT 5
+        ");
+        if ($stmtCustMsgs) {
+            while ($msgRow = $stmtCustMsgs->fetch(PDO::FETCH_ASSOC)) {
+                $timeStr = !empty($msgRow['created_at']) ? date('M j, g:i A', strtotime($msgRow['created_at'])) : 'Recent';
+                $custName = $msgRow['customer_name'] ?: 'Customer';
+                $allNotifications[] = [
+                    'type'      => 'customer_message',
+                    'badge'     => 'Customer Message',
+                    'badge_cls' => 'badge-info',
+                    'title'     => 'Inquiry from ' . $custName,
+                    'desc'      => $msgRow['message'],
+                    'url'       => 'javascript:openChat("customer_' . (int)$msgRow['customer_id'] . '", ' . json_encode($custName) . ', "Store Customer")',
+                    'time'      => $timeStr,
+                    'dot_cls'   => 'notif-dot-info',
+                    'icon'      => 'message'
+                ];
+            }
+        }
+    }
 } catch (Throwable $e) {
     $allNotifications = [];
 }
 $notifCount = count($allNotifications);
+    $activeStoreName = !empty($systemStoreName) ? $systemStoreName : (defined('APP_NAME') ? APP_NAME : 'Store Management System');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -173,16 +213,20 @@ $notifCount = count($allNotifications);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
-    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — ' : '' ?><?= APP_NAME ?></title>
+    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') . ' — ' : '' ?><?= htmlspecialchars($activeStoreName, ENT_QUOTES, 'UTF-8') ?></title>
     
     <!-- Google Fonts: Inter (400, 500, 600, 700, 800) with safe system fallback -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Design System Stylesheets -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/components.css">
+    <!-- Design System Stylesheets with Auto Cache Busting -->
+    <?php 
+    $mainCssVer = file_exists(__DIR__ . '/../assets/css/main.css') ? filemtime(__DIR__ . '/../assets/css/main.css') : 1;
+    $compCssVer = file_exists(__DIR__ . '/../assets/css/components.css') ? filemtime(__DIR__ . '/../assets/css/components.css') : 1;
+    ?>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css?v=<?= $mainCssVer ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/components.css?v=<?= $compCssVer ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/print.css">
 </head>
 <body>
@@ -237,6 +281,8 @@ $notifCount = count($allNotifications);
                                                     <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
                                                 <?php elseif ($item['icon'] === 'truck'): ?>
                                                     <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                                                <?php elseif ($item['icon'] === 'message'): ?>
+                                                    <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
                                                 <?php elseif ($item['icon'] === 'bell'): ?>
                                                     <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
                                                 <?php else: /* low_stock */ ?>

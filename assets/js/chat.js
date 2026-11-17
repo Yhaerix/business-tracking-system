@@ -86,36 +86,85 @@
 
                 const convs = res.data.conversations || [];
                 if (convs.length === 0) {
-                    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--color-text-secondary);">No team members found</div>`;
+                    list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--color-text-secondary);">No conversations found</div>`;
                     return;
                 }
 
-                let html = '';
-                convs.forEach(c => {
-                    const isTeam = c.is_team;
-                    const unreadBadge = c.unread > 0 ? `<span class="chat-unread">${c.unread}</span>` : '';
-                    const timeStr = c.last_time ? new Date(c.last_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-                    const senderPrefix = c.last_sender ? `${escapeHtml(c.last_sender)}: ` : '';
+                const teamStaff = convs.filter(c => !c.is_customer);
+                const customers = convs.filter(c => c.is_customer);
 
+                let html = '';
+
+                // 1. Team & Staff Section
+                if (teamStaff.length > 0) {
+                    html += `<div class="chat-section-header">Internal Team &amp; Staff</div>`;
+                    teamStaff.forEach(c => {
+                        const isTeam = c.is_team;
+                        const unreadBadge = c.unread > 0 ? `<span class="chat-unread">${c.unread}</span>` : '';
+                        const timeStr = c.last_time ? new Date(c.last_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const senderPrefix = c.last_sender ? `${escapeHtml(c.last_sender)}: ` : '';
+
+                        html += `
+                            <div class="chat-row" onclick="chatOpen('${escapeHtml(c.key)}', '${escapeHtml(c.name)}', '${escapeHtml(c.role_label)}')">
+                                <div class="chat-av ${isTeam ? 'team' : ''}">
+                                    ${escapeHtml(c.initials)}
+                                    ${!isTeam ? '<i></i>' : ''}
+                                </div>
+                                <div class="chat-meta">
+                                    <div class="chat-name">
+                                        <span>${escapeHtml(c.name)}</span>
+                                        <small>${timeStr}</small>
+                                    </div>
+                                    <div class="chat-last">
+                                        ${senderPrefix}${escapeHtml(c.last_message)}
+                                    </div>
+                                </div>
+                                ${unreadBadge}
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2. Customer Inquiries & Users Section with Clean Divider
+                html += `
+                    <div class="chat-divider-wrap">
+                        <div class="chat-divider-line"></div>
+                        <span class="chat-divider-text">Customer Inquiries &amp; Users</span>
+                        <div class="chat-divider-line"></div>
+                    </div>
+                `;
+
+                if (customers.length === 0) {
                     html += `
-                        <div class="chat-row" onclick="chatOpen('${escapeHtml(c.key)}', '${escapeHtml(c.name)}', '${escapeHtml(c.role_label)}')">
-                            <div class="chat-av ${isTeam ? 'team' : ''}">
-                                ${escapeHtml(c.initials)}
-                                ${!isTeam ? '<i></i>' : ''}
-                            </div>
-                            <div class="chat-meta">
-                                <div class="chat-name">
-                                    <span>${escapeHtml(c.name)}</span>
-                                    <small>${timeStr}</small>
-                                </div>
-                                <div class="chat-last">
-                                    ${senderPrefix}${escapeHtml(c.last_message)}
-                                </div>
-                            </div>
-                            ${unreadBadge}
+                        <div style="padding:16px 12px;text-align:center;color:var(--text-muted);font-size:12px;">
+                            No customer inquiries yet. Customer messages from the storefront will appear here.
                         </div>
                     `;
-                });
+                } else {
+                    customers.forEach(c => {
+                        const unreadBadge = c.unread > 0 ? `<span class="chat-unread" style="background:#2563eb;">${c.unread}</span>` : '';
+                        const timeStr = c.last_time ? new Date(c.last_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const senderPrefix = c.last_sender ? `${escapeHtml(c.last_sender)}: ` : '';
+
+                        html += `
+                            <div class="chat-row" onclick="chatOpen('${escapeHtml(c.key)}', '${escapeHtml(c.name)}', 'Store Customer')">
+                                <div class="chat-av customer">
+                                    ${escapeHtml(c.initials)}
+                                </div>
+                                <div class="chat-meta">
+                                    <div class="chat-name">
+                                        <span>${escapeHtml(c.name)} <span class="chat-badge-customer">Customer</span></span>
+                                        <small>${timeStr}</small>
+                                    </div>
+                                    <div class="chat-last">
+                                        ${senderPrefix}${escapeHtml(c.last_message)}
+                                    </div>
+                                </div>
+                                ${unreadBadge}
+                            </div>
+                        `;
+                    });
+                }
 
                 list.innerHTML = html;
                 window.chatRefreshUnread();
@@ -202,11 +251,24 @@
                         </div>
                     ` : '';
 
+                    const productHtml = m.product ? `
+                        <div class="msg-product-card">
+                            <span style="font-size:22px;line-height:1;">🍎</span>
+                            <div style="flex:1;">
+                                <div style="font-weight:700;color:#166534;">${escapeHtml(m.product.name)}</div>
+                                <div style="color:#15803d;font-size:11px;margin-top:2px;">
+                                    Price: <b>${escapeHtml(m.product.price_formatted)}</b> &bull; Stock: <b style="color:${m.product.stock > 0 ? '#15803d' : '#dc2626'};">${m.product.stock} units available</b>
+                                </div>
+                            </div>
+                        </div>
+                    ` : '';
+
                     const seenStatus = (mine && !channel.is_team && m.is_read) ? ' &bull; Seen' : '';
 
                     html += `
                         <div class="msg ${mine ? 'me' : ''}">
                             ${!mine && channel.is_team ? `<div class="who">${escapeHtml(m.sender_name)} (${escapeHtml(m.sender_role)})</div>` : ''}
+                            ${productHtml}
                             <div class="text">${escapeHtml(m.message)}</div>
                             ${orderHtml}
                             <small>${escapeHtml(m.time_formatted)}${seenStatus}</small>
@@ -341,11 +403,17 @@
 
                 const count = res.data.unread || 0;
                 const badge = document.getElementById('chatBadge');
+                const topbarBadge = document.getElementById('topbarChatBadge');
                 const chip = document.querySelector('.profile-chip');
 
                 if (badge) {
                     badge.textContent = count;
                     badge.classList.toggle('show', count > 0);
+                }
+
+                if (topbarBadge) {
+                    topbarBadge.textContent = count;
+                    topbarBadge.style.display = count > 0 ? 'inline-block' : 'none';
                 }
 
                 if (chip) {

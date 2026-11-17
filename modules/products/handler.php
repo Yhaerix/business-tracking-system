@@ -424,7 +424,15 @@ try {
             $name = trim((string) ($input['name'] ?? ''));
             $description = trim((string) ($input['description'] ?? ''));
             $specs = trim((string) ($input['specs'] ?? ''));
-            $color = trim((string) ($input['color'] ?? ''));
+            $rawColor = $input['color'] ?? '';
+            if (is_array($rawColor)) {
+                $cleanColors = array_filter(array_map('trim', $rawColor));
+                $color = implode(', ', $cleanColors);
+            } else {
+                $parts = explode(',', (string) $rawColor);
+                $cleanColors = array_filter(array_map('trim', $parts));
+                $color = implode(', ', $cleanColors);
+            }
             $storage = trim((string) ($input['storage'] ?? ''));
             $conditionType = trim((string) ($input['condition_type'] ?? 'Brand New Sealed'));
             $warranty = trim((string) ($input['warranty'] ?? '1 Year Official Apple Warranty'));
@@ -638,7 +646,15 @@ try {
             $name = trim((string) ($input['name'] ?? ''));
             $description = trim((string) ($input['description'] ?? ''));
             $specs = trim((string) ($input['specs'] ?? ''));
-            $color = trim((string) ($input['color'] ?? ''));
+            $rawColor = $input['color'] ?? '';
+            if (is_array($rawColor)) {
+                $cleanColors = array_filter(array_map('trim', $rawColor));
+                $color = implode(', ', $cleanColors);
+            } else {
+                $parts = explode(',', (string) $rawColor);
+                $cleanColors = array_filter(array_map('trim', $parts));
+                $color = implode(', ', $cleanColors);
+            }
             $storage = trim((string) ($input['storage'] ?? ''));
             $conditionType = trim((string) ($input['condition_type'] ?? 'Brand New Sealed'));
             $warranty = trim((string) ($input['warranty'] ?? '1 Year Official Apple Warranty'));

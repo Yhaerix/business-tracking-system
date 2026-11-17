@@ -207,6 +207,232 @@ $currency = defined('APP_CURRENCY') ? APP_CURRENCY : '₱';
         </div>
     </div>
 
+    <!-- ====================================================================
+         PRESTIGE APPLE STORE LIVE CUSTOMER CHAT WIDGET
+         ==================================================================== -->
+    <div id="storeChatFloatingBtn" onclick="toggleStoreChat()" title="Message Prestige Apple Support" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#0071e3;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,113,227,0.35);cursor:pointer;z-index:9998;transition:transform 0.2s cubic-bezier(0.16,1,0.3,1);">
+        <svg viewBox="0 0 24 24" width="26" height="26" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>
+        <span id="storeChatUnreadBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;border-radius:10px;padding:2px 7px;font-size:11px;font-weight:800;border:2px solid #fff;">0</span>
+    </div>
+
+    <!-- Store Live Chat Window -->
+    <div id="storeChatBox" style="display:none;position:fixed;bottom:90px;right:24px;width:370px;max-width:calc(100vw - 32px);height:520px;max-height:calc(100vh - 120px);background:#ffffff;border-radius:20px;box-shadow:0 18px 45px rgba(0,0,0,0.18);z-index:9999;flex-direction:column;overflow:hidden;border:1px solid #e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+        <!-- Chat Header -->
+        <div style="background:#0071e3;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">🍎</div>
+                <div>
+                    <div style="font-weight:700;font-size:14px;line-height:1.2;">Prestige Store Support</div>
+                    <div style="font-size:11px;opacity:0.9;display:flex;align-items:center;gap:4px;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;"></span> Online &bull; Stock &amp; Order Inquiries
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="toggleStoreChat()" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 4px;" aria-label="Close Chat">&times;</button>
+        </div>
+
+        <?php if (!empty($_SESSION['customer_id'])): ?>
+            <!-- Chat Messages Feed -->
+            <div id="storeChatMessages" style="flex:1;overflow-y:auto;padding:14px;background:#f8fafc;display:flex;flex-direction:column;gap:10px;font-size:13px;">
+                <div style="text-align:center;color:#64748b;font-size:12px;padding:20px 0;">Loading conversation...</div>
+            </div>
+
+            <!-- Quick Question Chips -->
+            <div style="padding:6px 12px;background:#fff;border-top:1px solid #f1f5f9;display:flex;gap:6px;overflow-x:auto;white-space:nowrap;flex-shrink:0;">
+                <button type="button" onclick="sendStoreQuickMsg('Hi! Is iPhone 16 Pro Max available in stock?')" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:4px 10px;font-size:11px;color:#334155;cursor:pointer;flex-shrink:0;">📦 Check Stock</button>
+                <button type="button" onclick="sendStoreQuickMsg('When is the estimated delivery time?')" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:4px 10px;font-size:11px;color:#334155;cursor:pointer;flex-shrink:0;">🚚 Delivery Time</button>
+                <button type="button" onclick="sendStoreQuickMsg('How does the 1-year Apple Warranty work?')" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:4px 10px;font-size:11px;color:#334155;cursor:pointer;flex-shrink:0;">🛡️ Apple Warranty</button>
+            </div>
+
+            <!-- Chat Input Form -->
+            <form id="storeChatForm" onsubmit="submitStoreChatMessage(event)" style="padding:10px 12px;background:#ffffff;border-top:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-shrink:0;">
+                <input type="hidden" id="storeChatProductId" value="">
+                <input type="text" id="storeChatInput" placeholder="Type a message or inquiry..." autocomplete="off" style="flex:1;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:20px;font-size:13px;outline:none;">
+                <button type="submit" id="storeChatSendBtn" style="height:38px;padding:0 16px;background:#0071e3;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+            </form>
+        <?php else: ?>
+            <!-- Guest Prompt: Sign In Required -->
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:#f8fafc;">
+                <div style="font-size:36px;margin-bottom:12px;">💬</div>
+                <h4 style="margin:0 0 6px 0;font-size:16px;color:#0f172a;">Sign in to Chat with Us</h4>
+                <p style="font-size:12.5px;color:#64748b;margin:0 0 16px 0;line-height:1.4;">Sign in to your Prestige customer account to message our staff about available stock, order updates, and technical assistance.</p>
+                <a href="login.php?redirect=index.php" style="background:#0071e3;color:#fff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:600;font-size:13px;display:inline-block;">
+                    Sign In or Register
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+    // Store Customer Live Chat Controller
+    let isStoreChatOpen = false;
+    let storeChatPollTimer = null;
+
+    function toggleStoreChat() {
+        const box = document.getElementById('storeChatBox');
+        if (!box) return;
+        isStoreChatOpen = !isStoreChatOpen;
+        box.style.display = isStoreChatOpen ? 'flex' : 'none';
+
+        if (isStoreChatOpen) {
+            loadStoreChatMessages(true);
+            startStoreChatPolling();
+            const input = document.getElementById('storeChatInput');
+            if (input) input.focus();
+        } else {
+            stopStoreChatPolling();
+            refreshStoreChatUnread();
+        }
+    }
+
+    function openStoreChatWithProduct(productId, defaultText) {
+        const box = document.getElementById('storeChatBox');
+        if (!box) return;
+        if (!isStoreChatOpen) toggleStoreChat();
+        const pIdInput = document.getElementById('storeChatProductId');
+        const input = document.getElementById('storeChatInput');
+        if (pIdInput) pIdInput.value = productId || '';
+        if (input) {
+            input.value = defaultText || '';
+            input.focus();
+        }
+    }
+
+    function loadStoreChatMessages(scrollToBottom = false) {
+        const feed = document.getElementById('storeChatMessages');
+        if (!feed) return;
+
+        fetch('handler.php?action=get_my_messages')
+            .then(res => res.json())
+            .then(res => {
+                if (!res.success || !res.data) {
+                    feed.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px 0;">Sign in to view messages</div>';
+                    return;
+                }
+
+                const msgs = res.data.messages || [];
+                if (msgs.length === 0) {
+                    feed.innerHTML = `
+                        <div style="text-align:center;color:#64748b;margin:auto;padding:24px;">
+                            <div style="font-size:32px;margin-bottom:8px;">👋</div>
+                            <div style="font-weight:700;color:#0f172a;">Welcome to Prestige Support</div>
+                            <div style="font-size:12px;margin-top:4px;">Ask us about product availability, stock status, or your orders!</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                feed.innerHTML = msgs.map(m => {
+                    const mine = m.is_me;
+                    const prodHtml = m.product ? `
+                        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:6px 10px;margin-bottom:5px;font-size:11.5px;text-align:left;">
+                            <div style="font-weight:700;color:#1e40af;">🍎 ${m.product.name}</div>
+                            <div style="color:#2563eb;font-size:11px;">Price: ${m.product.price} &bull; Stock: ${m.product.stock > 0 ? m.product.stock + ' in stock' : 'Out of stock'}</div>
+                        </div>
+                    ` : '';
+
+                    return `
+                        <div style="display:flex;flex-direction:column;align-self:${mine ? 'flex-end' : 'flex-start'};max-width:80%;">
+                            <div style="background:${mine ? '#0071e3' : '#ffffff'};color:${mine ? '#ffffff' : '#1e293b'};padding:8px 12px;border-radius:${mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px'};box-shadow:0 1px 3px rgba(0,0,0,0.06);line-height:1.4;">
+                                ${prodHtml}
+                                <div>${m.message}</div>
+                            </div>
+                            <small style="font-size:10px;color:#94a3b8;margin-top:3px;align-self:${mine ? 'flex-end' : 'flex-start'};">${m.time_formatted}</small>
+                        </div>
+                    `;
+                }).join('');
+
+                if (scrollToBottom) {
+                    feed.scrollTop = feed.scrollHeight;
+                }
+                refreshStoreChatUnread();
+            })
+            .catch(() => {});
+    }
+
+    function submitStoreChatMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('storeChatInput');
+        const pIdInput = document.getElementById('storeChatProductId');
+        const sendBtn = document.getElementById('storeChatSendBtn');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+
+        if (sendBtn) sendBtn.disabled = true;
+
+        const payload = new URLSearchParams();
+        payload.append('action', 'send_message_to_store');
+        payload.append('message', text);
+        if (pIdInput && pIdInput.value) {
+            payload.append('product_id', pIdInput.value);
+        }
+
+        fetch('handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: payload.toString()
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (sendBtn) sendBtn.disabled = false;
+                if (res.success) {
+                    input.value = '';
+                    if (pIdInput) pIdInput.value = '';
+                    loadStoreChatMessages(true);
+                } else {
+                    alert(res.message || 'Failed to send message');
+                }
+            })
+            .catch(() => {
+                if (sendBtn) sendBtn.disabled = false;
+            });
+    }
+
+    function sendStoreQuickMsg(text) {
+        const input = document.getElementById('storeChatInput');
+        if (input) {
+            input.value = text;
+            const form = document.getElementById('storeChatForm');
+            if (form) form.requestSubmit();
+        }
+    }
+
+    function refreshStoreChatUnread() {
+        fetch('handler.php?action=get_chat_unread_count')
+            .then(res => res.json())
+            .then(res => {
+                if (!res.success || !res.data) return;
+                const count = res.data.unread || 0;
+                const badge = document.getElementById('storeChatUnreadBadge');
+                if (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(() => {});
+    }
+
+    function startStoreChatPolling() {
+        stopStoreChatPolling();
+        storeChatPollTimer = setInterval(() => {
+            loadStoreChatMessages(false);
+        }, 5000);
+    }
+
+    function stopStoreChatPolling() {
+        if (storeChatPollTimer) {
+            clearInterval(storeChatPollTimer);
+            storeChatPollTimer = null;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        refreshStoreChatUnread();
+        setInterval(refreshStoreChatUnread, 30000);
+    });
+    </script>
+
     <!-- Centralized Client Logic Script -->
     <script src="../assets/js/store.js?v=<?= time() ?>"></script>
 </body>

@@ -49,6 +49,306 @@ $stats = $stmtStats->fetch() ?: ['total_items' => 0, 'low_stock_items' => 0, 'ou
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
+<style>
+/* ==============================================================
+   Prestige Apple Store - Color Multi-Select Dropdown Component
+   ============================================================== */
+.color-dropdown-trigger {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 6px 12px !important;
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.color-dropdown-trigger:hover {
+    border-color: #94a3b8 !important;
+}
+
+.color-dropdown-trigger:focus,
+.color-dropdown-trigger.open {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    outline: none !important;
+}
+
+.color-dropdown-trigger-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.color-dropdown-placeholder {
+    color: #94a3b8 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+
+.color-trigger-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 7px !important;
+    padding: 3px 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+}
+
+.color-trigger-tag-dot {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.color-trigger-tag-remove {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #3b82f6 !important;
+    cursor: pointer !important;
+    padding: 0 2px !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    transition: all 0.12s ease !important;
+}
+
+.color-trigger-tag-remove:hover {
+    color: #ef4444 !important;
+    background: #fee2e2 !important;
+}
+
+.color-dropdown-arrow {
+    color: #64748b !important;
+    font-size: 13px !important;
+    margin-left: 8px !important;
+    transition: transform 0.2s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.color-dropdown-trigger.open .color-dropdown-arrow {
+    transform: rotate(180deg) !important;
+    color: #2563eb !important;
+}
+
+.color-dropdown-menu {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 18px 36px -4px rgba(15, 23, 42, 0.15), 0 8px 16px -4px rgba(15, 23, 42, 0.08) !important;
+    z-index: 1050 !important;
+    display: none !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    animation: ddSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.color-dropdown-menu.open {
+    display: flex !important;
+}
+
+@keyframes ddSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.color-dropdown-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.btn-dd-preset {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 20px !important;
+    padding: 4px 11px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.btn-dd-preset:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+.btn-dd-clear {
+    background: none !important;
+    border: none !important;
+    color: #ef4444 !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    transition: background 0.12s ease !important;
+}
+
+.btn-dd-clear:hover {
+    background: #fef2f2 !important;
+    text-decoration: underline !important;
+}
+
+.color-dropdown-options-list {
+    max-height: 220px !important;
+    overflow-y: auto !important;
+    padding: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+
+.color-dropdown-options-list::-webkit-scrollbar {
+    width: 6px;
+}
+.color-dropdown-options-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.color-dd-option {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    transition: all 0.12s ease !important;
+}
+
+.color-dd-option:hover {
+    background: #f1f5f9 !important;
+}
+
+.color-dd-option.selected {
+    background: #eff6ff !important;
+}
+
+.color-dd-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 5px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: transparent !important;
+    background: #ffffff !important;
+    flex-shrink: 0 !important;
+    transition: all 0.15s ease !important;
+}
+
+.color-dd-option.selected .color-dd-checkbox {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+.color-dd-dot {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.12) !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+}
+
+.color-dd-name {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    flex: 1 !important;
+}
+
+.color-dd-option.selected .color-dd-name {
+    font-weight: 700 !important;
+    color: #1d4ed8 !important;
+}
+
+.color-dropdown-footer {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding: 9px 12px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+#customColorInput {
+    height: 34px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    flex: 1 !important;
+    background: #ffffff !important;
+    outline: none !important;
+}
+
+#customColorInput:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12) !important;
+}
+
+#addCustomColorBtn {
+    height: 34px !important;
+    border-radius: 8px !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 0 14px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    white-space: nowrap !important;
+}
+
+#addCustomColorBtn:hover {
+    background: #1d4ed8 !important;
+}
+</style>
+
     <!-- Page Action Header -->
     <div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -193,7 +493,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- ============================================================== -->
 <?php if ($canManage): ?>
 <div class="modal-overlay" id="addProductModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
-    <div class="modal-card" style="max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-card">
         <div class="modal-header">
             <div>
                 <h3 class="modal-title" id="productModalTitle">Add New Product</h3>
@@ -308,7 +608,8 @@ require_once __DIR__ . '/../../includes/header.php';
                         <small style="color: var(--text-muted); font-size: 11px;">Prestige Storefront Attributes</small>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                    <!-- Storage & Device Condition -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label" for="prodStorage">Storage / Capacity</label>
                             <input type="text" class="form-input" id="prodStorage" name="storage" list="appleStorageList" placeholder="e.g. 256GB, 512GB, 16GB/256GB">
@@ -326,27 +627,6 @@ require_once __DIR__ . '/../../includes/header.php';
                         </div>
 
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="prodColor">Color / Finish</label>
-                            <input type="text" class="form-input" id="prodColor" name="color" list="appleColorList" placeholder="e.g. Desert Titanium, Space Black">
-                            <datalist id="appleColorList">
-                                <option value="Desert Titanium">
-                                <option value="Natural Titanium">
-                                <option value="White Titanium">
-                                <option value="Black Titanium">
-                                <option value="Space Black">
-                                <option value="Midnight">
-                                <option value="Starlight">
-                                <option value="Silver">
-                                <option value="Teal">
-                                <option value="Ultramarine">
-                                <option value="Jet Black">
-                                <option value="White">
-                            </datalist>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                        <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label" for="prodCondition">Device Condition</label>
                             <select class="form-select" id="prodCondition" name="condition_type">
                                 <option value="Brand New Sealed">Brand New Sealed</option>
@@ -354,11 +634,61 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <option value="Open Box">Open Box</option>
                             </select>
                         </div>
+                    </div>
 
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" for="prodWarranty">Warranty Coverage</label>
-                            <input type="text" class="form-input" id="prodWarranty" name="warranty" value="1 Year Official Apple Warranty">
+                    <!-- Warranty Coverage -->
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label" for="prodWarranty">Warranty Coverage</label>
+                        <input type="text" class="form-input" id="prodWarranty" name="warranty" value="1 Year Official Apple Warranty">
+                    </div>
+
+                    <!-- Available Color Finishes (Multi-Select Dropdown) -->
+                    <div class="form-group" style="margin-bottom: 16px; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" for="colorDropdownTrigger" style="margin-bottom: 0; font-size: 13px; font-weight: 600;">
+                                Available Finishes / Colors <span style="color: var(--color-danger);">*</span>
+                            </label>
+                            <span id="selectedColorsBadge" style="font-size: 11.5px; font-weight: 700; color: #2563eb;">
+                                0 selected
+                            </span>
                         </div>
+
+                        <!-- Hidden input storing comma-separated color list -->
+                        <input type="hidden" id="prodColor" name="color" value="">
+
+                        <!-- Dropdown Trigger Box -->
+                        <div id="colorDropdownTrigger" class="form-input color-dropdown-trigger" tabindex="0" role="combobox" aria-expanded="false">
+                            <div id="colorDropdownTriggerContent" class="color-dropdown-trigger-content">
+                                <span class="color-dropdown-placeholder">Select available colors...</span>
+                            </div>
+                            <span class="color-dropdown-arrow">▾</span>
+                        </div>
+
+                        <!-- Dropdown Floating Menu -->
+                        <div id="colorDropdownMenu" class="color-dropdown-menu">
+                            <!-- Dropdown Header -->
+                            <div class="color-dropdown-header">
+                                <span style="font-size: 11.5px; font-weight: 600; color: #64748b; letter-spacing: 0.3px;">SELECT FINISHES</span>
+                                <button type="button" class="btn-dd-clear" id="clearAllColorsBtn">Clear All</button>
+                            </div>
+
+                            <!-- Options List with Checkboxes & Swatch Dots -->
+                            <div id="colorDropdownOptionsList" class="color-dropdown-options-list">
+                                <!-- Dynamically populated by JS -->
+                            </div>
+
+                            <!-- Add Custom Color Footer -->
+                            <div class="color-dropdown-footer">
+                                <input type="text" id="customColorInput" class="form-input" placeholder="+ Add custom finish..." style="height: 30px; font-size: 11.5px; flex: 1;">
+                                <button type="button" id="addCustomColorBtn" class="btn btn-outline btn-sm" style="height: 30px; font-size: 11.5px; padding: 0 10px; white-space: nowrap;">
+                                    + Add
+                                </button>
+                            </div>
+                        </div>
+
+                        <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 5px;">
+                            Only colors selected in this dropdown will appear in the customer storefront.
+                        </small>
                     </div>
                 </div>
 
@@ -708,6 +1038,203 @@ document.addEventListener('DOMContentLoaded', () => {
         prodCostPrice.addEventListener('input', updateMarginPreview);
         prodSellingPrice.addEventListener('input', updateMarginPreview);
     }
+
+    // =========================================================================
+    // Multi-Color Dropdown Logic
+    // =========================================================================
+    const PRESET_APPLE_COLORS = [
+        { name: 'Desert Titanium', hex: '#bfa88f' },
+        { name: 'Natural Titanium', hex: '#9a9895' },
+        { name: 'White Titanium', hex: '#f2f1ed' },
+        { name: 'Black Titanium', hex: '#3b3a38' },
+        { name: 'Space Black', hex: '#1f2022' },
+        { name: 'Midnight', hex: '#1e232d' },
+        { name: 'Starlight', hex: '#f0ece1' },
+        { name: 'Silver', hex: '#e3e4e6' },
+        { name: 'Space Gray', hex: '#4d4f53' },
+        { name: 'Teal', hex: '#73959c' },
+        { name: 'Ultramarine', hex: '#3c4f76' },
+        { name: 'Pink', hex: '#f9d5dc' },
+        { name: 'Blue', hex: '#546e8c' },
+        { name: 'Gold', hex: '#eed2b2' }
+    ];
+
+    let selectedColorsSet = new Set();
+    const colorDropdownTrigger = document.getElementById('colorDropdownTrigger');
+    const colorDropdownTriggerContent = document.getElementById('colorDropdownTriggerContent');
+    const colorDropdownMenu = document.getElementById('colorDropdownMenu');
+    const colorDropdownOptionsList = document.getElementById('colorDropdownOptionsList');
+    const selectedColorsBadge = document.getElementById('selectedColorsBadge');
+    const clearAllColorsBtn = document.getElementById('clearAllColorsBtn');
+    const customColorInput = document.getElementById('customColorInput');
+    const addCustomColorBtn = document.getElementById('addCustomColorBtn');
+
+    function getColorHex(colorName) {
+        const found = PRESET_APPLE_COLORS.find(p => p.name.toLowerCase() === colorName.toLowerCase());
+        return found ? found.hex : '#475569';
+    }
+
+    // Toggle Dropdown open/close
+    if (colorDropdownTrigger && colorDropdownMenu) {
+        colorDropdownTrigger.addEventListener('click', (e) => {
+            if (e.target.closest('.color-trigger-tag-remove')) return;
+            const isOpen = colorDropdownMenu.classList.contains('open');
+            if (isOpen) {
+                closeColorDropdown();
+            } else {
+                openColorDropdown();
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!colorDropdownTrigger.contains(e.target) && !colorDropdownMenu.contains(e.target)) {
+                closeColorDropdown();
+            }
+        });
+    }
+
+    function openColorDropdown() {
+        if (!colorDropdownMenu) return;
+        colorDropdownMenu.classList.add('open');
+        colorDropdownTrigger.classList.add('open');
+        colorDropdownTrigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeColorDropdown() {
+        if (!colorDropdownMenu) return;
+        colorDropdownMenu.classList.remove('open');
+        colorDropdownTrigger.classList.remove('open');
+        colorDropdownTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderColorDropdownOptions() {
+        if (!colorDropdownOptionsList) return;
+
+        // Gather all colors: presets + any selected custom colors
+        const allColors = [...PRESET_APPLE_COLORS];
+        selectedColorsSet.forEach(cName => {
+            if (!allColors.some(c => c.name.toLowerCase() === cName.toLowerCase())) {
+                allColors.push({ name: cName, hex: '#475569' });
+            }
+        });
+
+        colorDropdownOptionsList.innerHTML = allColors.map(c => {
+            const isSelected = selectedColorsSet.has(c.name);
+            return `
+                <div class="color-dd-option ${isSelected ? 'selected' : ''}" data-color="${escapeHtml(c.name)}">
+                    <span class="color-dd-checkbox">${isSelected ? '✓' : ''}</span>
+                    <span class="color-dd-dot" style="background:${c.hex};"></span>
+                    <span class="color-dd-name">${escapeHtml(c.name)}</span>
+                </div>
+            `;
+        }).join('');
+
+        // Option click handlers
+        colorDropdownOptionsList.querySelectorAll('.color-dd-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const colorName = option.dataset.color;
+                if (selectedColorsSet.has(colorName)) {
+                    selectedColorsSet.delete(colorName);
+                } else {
+                    selectedColorsSet.add(colorName);
+                }
+                renderColorDropdownOptions();
+                updateTriggerContent();
+            });
+        });
+    }
+
+    function updateTriggerContent() {
+        const arr = Array.from(selectedColorsSet);
+        if (prodColor) prodColor.value = arr.join(', ');
+        if (selectedColorsBadge) {
+            selectedColorsBadge.textContent = `${arr.length} selected`;
+            selectedColorsBadge.style.color = arr.length > 0 ? '#2563eb' : '#64748b';
+        }
+
+        if (!colorDropdownTriggerContent) return;
+
+        if (arr.length === 0) {
+            colorDropdownTriggerContent.innerHTML = `<span class="color-dropdown-placeholder">Select available colors...</span>`;
+            return;
+        }
+
+        const maxDisplay = 3;
+        const displayed = arr.slice(0, maxDisplay);
+        const remainder = arr.length - maxDisplay;
+
+        let tagsHtml = displayed.map(c => `
+            <span class="color-trigger-tag">
+                <span class="color-trigger-tag-dot" style="background:${getColorHex(c)};"></span>
+                <span>${escapeHtml(c)}</span>
+                <span class="color-trigger-tag-remove" data-color="${escapeHtml(c)}" title="Remove">×</span>
+            </span>
+        `).join('');
+
+        if (remainder > 0) {
+            tagsHtml += `<span class="color-trigger-tag" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1;">+${remainder} more</span>`;
+        }
+
+        colorDropdownTriggerContent.innerHTML = tagsHtml;
+
+        // Attach tag remove handlers
+        colorDropdownTriggerContent.querySelectorAll('.color-trigger-tag-remove').forEach(rm => {
+            rm.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const colorName = rm.dataset.color;
+                selectedColorsSet.delete(colorName);
+                renderColorDropdownOptions();
+                updateTriggerContent();
+            });
+        });
+    }
+
+    function setSelectedColors(colorsString) {
+        selectedColorsSet.clear();
+        if (colorsString) {
+            colorsString.split(',').map(s => s.trim()).filter(Boolean).forEach(c => {
+                const preset = PRESET_APPLE_COLORS.find(p => p.name.toLowerCase() === c.toLowerCase());
+                selectedColorsSet.add(preset ? preset.name : c);
+            });
+        }
+        renderColorDropdownOptions();
+        updateTriggerContent();
+    }
+
+    if (clearAllColorsBtn) {
+        clearAllColorsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedColorsSet.clear();
+            renderColorDropdownOptions();
+            updateTriggerContent();
+        });
+    }
+
+    if (addCustomColorBtn && customColorInput) {
+        addCustomColorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const val = customColorInput.value.trim();
+            if (val) {
+                const preset = PRESET_APPLE_COLORS.find(p => p.name.toLowerCase() === val.toLowerCase());
+                selectedColorsSet.add(preset ? preset.name : val);
+                customColorInput.value = '';
+                renderColorDropdownOptions();
+                updateTriggerContent();
+            }
+        });
+        customColorInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomColorBtn.click();
+            }
+        });
+    }
+
+    // Initialize dropdown options on load
+    renderColorDropdownOptions();
+    updateTriggerContent();
 
     // Integrated Product Photo Upload Handlers
     const prodPhotoPreviewBox = document.getElementById('prodPhotoPreviewBox');
@@ -1170,6 +1697,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset Apple attributes
             if (prodStorage) prodStorage.value = '';
             if (prodColor) prodColor.value = '';
+            setSelectedColors('');
             if (prodCondition) prodCondition.value = 'Brand New Sealed';
             if (prodWarranty) prodWarranty.value = '1 Year Official Apple Warranty';
             if (prodSpecs) prodSpecs.value = '';
@@ -1256,6 +1784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Populate Apple device specs
             if (prodStorage) prodStorage.value = p.storage || '';
             if (prodColor) prodColor.value = p.color || '';
+            setSelectedColors(p.color || '');
             if (prodCondition) prodCondition.value = p.condition_type || 'Brand New Sealed';
             if (prodWarranty) prodWarranty.value = p.warranty || '1 Year Official Apple Warranty';
             if (prodSpecs) prodSpecs.value = p.specs || '';

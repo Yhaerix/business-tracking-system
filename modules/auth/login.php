@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/csrf.php';
 
@@ -17,6 +18,17 @@ if (is_logged_in()) {
 }
 
 $error = $_GET['error'] ?? '';
+
+// Dynamic store name resolution
+$authStoreName = defined('APP_NAME') ? APP_NAME : 'Store Panel';
+try {
+    $db = get_db();
+    $stmtStore = $db->query("SELECT setting_value FROM store_settings WHERE setting_key = 'store_name' LIMIT 1");
+    $dbStoreVal = $stmtStore ? $stmtStore->fetchColumn() : null;
+    if (!empty($dbStoreVal)) {
+        $authStoreName = (string)$dbStoreVal;
+    }
+} catch (Throwable $e) {}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +36,7 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
-    <title>Sign In — <?= APP_NAME ?></title>
+    <title>Sign In — <?= htmlspecialchars($authStoreName, ENT_QUOTES, 'UTF-8') ?></title>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -321,34 +333,6 @@ $error = $_GET['error'] ?? '';
             color: var(--auth-primary);
         }
 
-        .dev-sandbox-badge {
-            margin-top: 16px;
-            padding: 10px 14px;
-            background: #f0fdf4;
-            border: 1px dashed #86efac;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #166534;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .btn-fill-dev-otp {
-            background: #ffffff;
-            border: 1px solid #86efac;
-            color: #166534;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11.5px;
-            cursor: pointer;
-        }
-
-        .btn-fill-dev-otp:hover {
-            background: #dcfce7;
-        }
-
         /* Demo credentials helper */
         .demo-sandbox-card {
             margin-top: 20px;
@@ -395,9 +379,9 @@ $error = $_GET['error'] ?? '';
         <!-- Brand Header -->
         <header class="auth-brand-header">
             <div style="margin-bottom: 16px;">
-                <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Prestige Apple Panel Logo" width="96" height="96" style="display: block; margin: 0 auto; filter: drop-shadow(0 10px 24px rgba(37, 99, 235, 0.28));">
+                <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="<?= htmlspecialchars($authStoreName, ENT_QUOTES, 'UTF-8') ?> Logo" width="96" height="96" style="display: block; margin: 0 auto; filter: drop-shadow(0 10px 24px rgba(37, 99, 235, 0.28));">
             </div>
-            <h1 class="auth-title" id="pageMainTitle">Prestige Apple Panel</h1>
+            <h1 class="auth-title" id="pageMainTitle"><?= htmlspecialchars($authStoreName, ENT_QUOTES, 'UTF-8') ?></h1>
             <p class="auth-subtitle" id="pageSubTitle">Sign in to your account &bull; Operations &amp; Financial Management</p>
         </header>
 
@@ -516,7 +500,7 @@ $error = $_GET['error'] ?? '';
                     </div>
                     <div style="font-size: 13px; color: #64748b; line-height: 1.5;">
                         We sent a 6-digit security code to:<br>
-                        <strong id="otpTargetEmail" style="color: #0f172a;">admin@prestigeapple.ph</strong>
+                        <strong id="otpTargetEmail" style="color: #0f172a;">jandyellemendoza@gmail.com</strong>
                     </div>
                 </div>
 
@@ -548,16 +532,6 @@ $error = $_GET['error'] ?? '';
                         </button>
                     </div>
                 </div>
-
-                <!-- Local Dev Helper Badge -->
-                <div id="devOtpBadge" class="dev-sandbox-badge" style="display: none;">
-                    <div>
-                        <span>Dev OTP:</span> <strong id="devOtpCodeDisplay" style="font-size: 14px; letter-spacing: 1px;">------</strong>
-                    </div>
-                    <button type="button" class="btn-fill-dev-otp" onclick="fillDevOtp()">
-                        Auto-fill OTP
-                    </button>
-                </div>
             </div>
 
         </main>
@@ -572,10 +546,7 @@ $error = $_GET['error'] ?? '';
         const alertBox = document.getElementById('alertBox');
         const alertMsg = document.getElementById('alertMessage');
         const otpTargetEmail = document.getElementById('otpTargetEmail');
-        const devOtpBadge = document.getElementById('devOtpBadge');
-        const devOtpCodeDisplay = document.getElementById('devOtpCodeDisplay');
 
-        let currentDevOtp = '';
         let resendTimer = null;
         let countdownSeconds = 60;
 
@@ -604,24 +575,25 @@ $error = $_GET['error'] ?? '';
             });
         }
 
-        // Auto-fill Credentials Helper
-        const fillDemoBtn = document.getElementById('fillDemoBtn');
         const usernameInput = document.getElementById('username');
+        const fillDemoBtn = document.getElementById('fillDemoBtn');
 
         if (fillDemoBtn && usernameInput && passwordInput) {
             fillDemoBtn.addEventListener('click', () => {
                 usernameInput.value = 'admin';
                 passwordInput.value = 'admin123';
                 usernameInput.focus();
-
                 const originalText = fillDemoBtn.textContent;
                 fillDemoBtn.textContent = 'Filled!';
                 fillDemoBtn.style.color = '#2160cc';
                 setTimeout(() => {
                     fillDemoBtn.textContent = originalText;
+                    fillDemoBtn.style.color = '';
                 }, 1000);
             });
         }
+
+        
 
         // STEP 1: Submit Credentials
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -675,14 +647,7 @@ $error = $_GET['error'] ?? '';
             pageSubTitle.textContent = 'A one-time verification code has been dispatched to your email.';
             otpTargetEmail.textContent = res.masked_email || 'your registered email';
 
-            // Show dev badge if dev_otp provided
-            if (res.dev_otp) {
-                currentDevOtp = res.dev_otp;
-                devOtpCodeDisplay.textContent = res.dev_otp;
-                devOtpBadge.style.display = 'flex';
-            } else {
-                devOtpBadge.style.display = 'none';
-            }
+            
 
             hideAlert();
             startResendCountdown(60);
@@ -698,7 +663,7 @@ $error = $_GET['error'] ?? '';
         function backToCredentials() {
             otpStep.style.display = 'none';
             credentialsStep.style.display = 'block';
-            pageMainTitle.textContent = 'Prestige Apple Panel';
+            pageMainTitle.textContent = <?= json_encode($authStoreName, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
             pageSubTitle.textContent = 'Sign in to your account • Operations & Financial Management';
             hideAlert();
 
@@ -774,14 +739,7 @@ $error = $_GET['error'] ?? '';
             return otpInputs.map(i => i.value).join('');
         }
 
-        function fillDevOtp() {
-            if (!currentDevOtp || currentDevOtp.length !== 6) return;
-            currentDevOtp.split('').forEach((char, i) => {
-                if (otpInputs[i]) otpInputs[i].value = char;
-            });
-            otpInputs[5].focus();
-            checkAndAutoSubmit();
-        }
+        
 
         // STEP 2: Verify OTP Submit
         async function handleOtpSubmit(e) {
@@ -864,11 +822,7 @@ $error = $_GET['error'] ?? '';
                 const response = await API.post('handler.php', { action: 'resend_otp' });
                 if (response.success) {
                     showAlert('A fresh verification code has been dispatched.', true);
-                    if (response.dev_otp) {
-                        currentDevOtp = response.dev_otp;
-                        devOtpCodeDisplay.textContent = response.dev_otp;
-                        devOtpBadge.style.display = 'flex';
-                    }
+                    
                     startResendCountdown(60);
                 } else {
                     showAlert(response.message || 'Could not resend code. Please wait.');

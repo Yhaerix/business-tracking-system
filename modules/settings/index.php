@@ -916,6 +916,29 @@ async function saveStoreSettings(e) {
             if (badge) {
                 badge.innerHTML = 'Last updated: <strong>' + nowStr + '</strong>';
             }
+
+            // Immediately reflect new store name across upper sidebar and document title
+            const updatedStoreName = (res.data && res.data.store_name) ? res.data.store_name : payload.store_name;
+            if (updatedStoreName) {
+                const brandText = document.querySelector('.brand-text');
+                if (brandText) {
+                    brandText.textContent = updatedStoreName;
+                }
+                const brandLogo = document.querySelector('.brand-logo');
+                if (brandLogo) {
+                    brandLogo.setAttribute('alt', updatedStoreName + ' Logo');
+                }
+                const storefrontLink = document.querySelector('a[href*="/store/"]');
+                if (storefrontLink) {
+                    storefrontLink.setAttribute('title', 'Open Public ' + updatedStoreName + ' Storefront');
+                }
+                if (document.title.includes('—')) {
+                    const prefix = document.title.split('—')[0].trim();
+                    document.title = prefix + ' — ' + updatedStoreName;
+                } else {
+                    document.title = updatedStoreName;
+                }
+            }
         } else {
             const errorMsg = (res && res.message) ? res.message : 'Failed to update store settings.';
             API.toast(errorMsg, 'error');

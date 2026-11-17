@@ -29,8 +29,8 @@ function send_json(bool $success, string $message, $data = null, array $errors =
     echo json_encode([
         'success' => $success,
         'message' => $message,
-        'data'    => $data,
-        'errors'  => $errors
+        'data' => $data,
+        'errors' => $errors
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -105,7 +105,7 @@ try {
             $whereSql = implode(' AND ', $where);
 
             $stmt = $db->prepare("
-                SELECT u.id, u.username, u.full_name, u.role_id,
+                SELECT u.id, u.username, u.full_name, u.email, u.role_id,
                        r.name AS role_name, r.label AS role_label,
                        u.is_active, u.failed_logins, u.locked_until,
                        u.last_login_at, u.created_at, u.updated_at
@@ -122,19 +122,20 @@ try {
             foreach ($rawUsers as $row) {
                 $isLocked = !empty($row['locked_until']) && (strtotime($row['locked_until']) > $currentTime);
                 $users[] = [
-                    'id'            => (int) $row['id'],
-                    'username'      => $row['username'],
-                    'full_name'     => $row['full_name'],
-                    'role_id'       => (int) $row['role_id'],
-                    'role_name'     => $row['role_name'],
-                    'role_label'    => $row['role_label'],
-                    'is_active'     => (int) $row['is_active'],
+                    'id' => (int) $row['id'],
+                    'username' => $row['username'],
+                    'full_name' => $row['full_name'],
+                    'email' => $row['email'] ?? '',
+                    'role_id' => (int) $row['role_id'],
+                    'role_name' => $row['role_name'],
+                    'role_label' => $row['role_label'],
+                    'is_active' => (int) $row['is_active'],
                     'failed_logins' => (int) $row['failed_logins'],
-                    'locked_until'  => $row['locked_until'],
-                    'is_locked'     => $isLocked,
+                    'locked_until' => $row['locked_until'],
+                    'is_locked' => $isLocked,
                     'last_login_at' => $row['last_login_at'],
-                    'created_at'    => $row['created_at'],
-                    'updated_at'    => $row['updated_at']
+                    'created_at' => $row['created_at'],
+                    'updated_at' => $row['updated_at']
                 ];
             }
 
@@ -158,9 +159,9 @@ try {
             $roles = [];
             foreach ($rawRoles as $row) {
                 $roles[] = [
-                    'id'          => (int) $row['id'],
-                    'name'        => $row['name'],
-                    'label'       => $row['label'],
+                    'id' => (int) $row['id'],
+                    'name' => $row['name'],
+                    'label' => $row['label'],
                     'description' => $row['description']
                 ];
             }
@@ -179,6 +180,7 @@ try {
 
             $username = trim((string) ($input['username'] ?? ''));
             $fullName = trim((string) ($input['full_name'] ?? ''));
+            $email = trim((string) ($input['email'] ?? ''));
             $password = (string) ($input['password'] ?? '');
             $roleId = (int) ($input['role_id'] ?? 0);
             $isActive = isset($input['is_active']) ? ((int) $input['is_active'] === 0 ? 0 : 1) : 1;
@@ -203,6 +205,19 @@ try {
                 $errors['full_name'] = 'Full name is required.';
             } elseif (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100) {
                 $errors['full_name'] = 'Full name must be between 2 and 100 characters.';
+            }
+
+            // Email validation (Required for 2FA OTP verification)
+            if ($email === '') {
+                $errors['email'] = 'Email address is required for 2FA OTP verification.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Please enter a valid email address.';
+            } else {
+                $stmtCheckEmail = $db->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1");
+                $stmtCheckEmail->execute([':email' => $email]);
+                if ($stmtCheckEmail->fetch()) {
+                    $errors['email'] = 'Email address is already registered to another user account.';
+                }
             }
 
             // Password validation: min 6 chars
@@ -231,35 +246,38 @@ try {
 
             $stmtInsert = $db->prepare("
                 INSERT INTO users (
-                    role_id, username, full_name, password_hash, is_active, created_at
+                    role_id, username, full_name, email, password_hash, is_active, created_at
                 ) VALUES (
-                    :role_id, :username, :full_name, :password_hash, :is_active, NOW()
+                    :role_id, :username, :full_name, :email, :password_hash, :is_active, NOW()
                 )
             ");
             $stmtInsert->execute([
-                ':role_id'       => $roleId,
-                ':username'      => $username,
-                ':full_name'     => $fullName,
+                ':role_id' => $roleId,
+                ':username' => $username,
+                ':full_name' => $fullName,
+                ':email' => $email,
                 ':password_hash' => $passwordHash,
-                ':is_active'     => $isActive
+                ':is_active' => $isActive
             ]);
             $newUserId = (int) $db->lastInsertId();
 
             audit_log('users', 'CREATE', $newUserId, null, [
-                'username'  => $username,
+                'username' => $username,
                 'full_name' => $fullName,
-                'role_id'   => $roleId,
+                'email' => $email,
+                'role_id' => $roleId,
                 'is_active' => $isActive
             ]);
 
             send_json(true, 'User account created successfully', [
-                'id'         => $newUserId,
-                'username'   => $username,
-                'full_name'  => $fullName,
-                'role_id'    => $roleId,
-                'role_name'  => $roleRow['name'] ?? '',
+                'id' => $newUserId,
+                'username' => $username,
+                'full_name' => $fullName,
+                'email' => $email,
+                'role_id' => $roleId,
+                'role_name' => $roleRow['name'] ?? '',
                 'role_label' => $roleRow['label'] ?? '',
-                'is_active'  => $isActive
+                'is_active' => $isActive
             ], [], 201);
             break;
 
@@ -274,6 +292,7 @@ try {
 
             $userId = (int) ($input['user_id'] ?? $input['id'] ?? 0);
             $fullName = trim((string) ($input['full_name'] ?? ''));
+            $email = trim((string) ($input['email'] ?? ''));
             $roleId = (int) ($input['role_id'] ?? 0);
             $isActive = isset($input['is_active']) ? ((int) $input['is_active'] === 0 ? 0 : 1) : 1;
 
@@ -283,7 +302,7 @@ try {
 
             // Fetch existing user record
             $stmtFind = $db->prepare("
-                SELECT u.id, u.username, u.full_name, u.role_id, u.is_active,
+                SELECT u.id, u.username, u.full_name, u.email, u.role_id, u.is_active,
                        r.name AS role_name, r.label AS role_label
                 FROM users u
                 JOIN roles r ON u.role_id = r.id
@@ -304,6 +323,19 @@ try {
                 $errors['full_name'] = 'Full name is required.';
             } elseif (mb_strlen($fullName) < 2 || mb_strlen($fullName) > 100) {
                 $errors['full_name'] = 'Full name must be between 2 and 100 characters.';
+            }
+
+            // Email validation (Required for 2FA OTP verification)
+            if ($email === '') {
+                $errors['email'] = 'Email address is required for 2FA OTP verification.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Please enter a valid email address.';
+            } else {
+                $stmtCheckEmail = $db->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:email) AND id != :id LIMIT 1");
+                $stmtCheckEmail->execute([':email' => $email, ':id' => $userId]);
+                if ($stmtCheckEmail->fetch()) {
+                    $errors['email'] = 'Email address is already registered to another user account.';
+                }
             }
 
             // Role validation
@@ -340,6 +372,7 @@ try {
             $stmtUpdate = $db->prepare("
                 UPDATE users
                 SET full_name = :full_name,
+                    email = :email,
                     role_id = :role_id,
                     is_active = :is_active,
                     updated_at = NOW()
@@ -347,29 +380,33 @@ try {
             ");
             $stmtUpdate->execute([
                 ':full_name' => $fullName,
-                ':role_id'   => $roleId,
+                ':email' => $email,
+                ':role_id' => $roleId,
                 ':is_active' => $isActive,
-                ':id'        => $userId
+                ':id' => $userId
             ]);
 
             audit_log('users', 'UPDATE', $userId, [
                 'full_name' => $existing['full_name'],
-                'role_id'   => (int) $existing['role_id'],
+                'email' => $existing['email'] ?? '',
+                'role_id' => (int) $existing['role_id'],
                 'is_active' => (int) $existing['is_active']
             ], [
                 'full_name' => $fullName,
-                'role_id'   => $roleId,
+                'email' => $email,
+                'role_id' => $roleId,
                 'is_active' => $isActive
             ]);
 
             send_json(true, 'User details updated successfully', [
-                'id'         => $userId,
-                'username'   => $existing['username'],
-                'full_name'  => $fullName,
-                'role_id'    => $roleId,
-                'role_name'  => $targetRole['name'] ?? '',
+                'id' => $userId,
+                'username' => $existing['username'],
+                'full_name' => $fullName,
+                'email' => $email,
+                'role_id' => $roleId,
+                'role_name' => $targetRole['name'] ?? '',
                 'role_label' => $targetRole['label'] ?? '',
-                'is_active'  => $isActive
+                'is_active' => $isActive
             ]);
             break;
 
@@ -426,7 +463,7 @@ try {
             ");
             $stmtReset->execute([
                 ':hash' => $newHash,
-                ':id'   => $userId
+                ':id' => $userId
             ]);
 
             // Record password reset in audit logs (Never log plaintext password or hash!)

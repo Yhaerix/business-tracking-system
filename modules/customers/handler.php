@@ -143,7 +143,8 @@ try {
                        COALESCE(cw.coin_balance, c.wallet_balance, 0.00) AS wallet_balance,
                        c.status, c.last_login_at, c.created_at,
                        COUNT(DISTINCT o.id) AS total_orders,
-                       COALESCE(SUM(CASE WHEN o.deleted_at IS NULL THEN o.total_amount ELSE 0 END), 0.00) AS total_spent
+                       COALESCE(SUM(CASE WHEN o.deleted_at IS NULL THEN o.total_amount ELSE 0 END), 0.00) AS total_spent,
+                       (SELECT COUNT(*) FROM customer_messages cm WHERE cm.customer_id = c.id AND cm.sender_type = 'customer' AND cm.is_read = 0) AS unread_messages
                 FROM customers c
                 LEFT JOIN customer_wallets cw ON cw.customer_id = c.id
                 LEFT JOIN orders o ON o.customer_id = c.id AND o.deleted_at IS NULL
@@ -206,7 +207,7 @@ try {
 
             // Customer Addresses
             $stmtAddr = $db->prepare("
-                SELECT id, address_line1, address_line2, city, province, postal_code, is_default, created_at
+                SELECT id, address_line1, address_line2, city, province_state AS province, postal_code, is_default, created_at
                 FROM customer_addresses
                 WHERE customer_id = :id
                 ORDER BY is_default DESC, id DESC

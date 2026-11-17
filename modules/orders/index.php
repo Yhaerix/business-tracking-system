@@ -47,24 +47,6 @@ $initialKpi = $kpiStmt->fetch() ?: [
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<!-- Action Header -->
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-    <div>
-        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Orders &amp; Delivery Management</h1>
-        <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
-            Manage Cash-on-Delivery (COD) lifecycles, dispatch couriers, track collected cash, and verify store remittance.
-        </p>
-    </div>
-
-    <div>
-        <?php if ($canCreate): ?>
-            <a href="<?= BASE_URL ?>/modules/orders/create.php" class="btn btn-primary">
-                <span>+</span> New Order (POS)
-            </a>
-        <?php endif; ?>
-    </div>
-</div>
-
 <!-- 4 Top KPI Stat Cards -->
 <div class="stats-grid">
     <div class="card-stat">

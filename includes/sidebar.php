@@ -22,13 +22,15 @@ if (!function_exists('is_active')) {
         return (strpos($target, $match) !== false) ? 'active' : '';
     }
 }
+
+$sidebarStoreName = $activeStoreName ?? ($systemStoreName ?? ($_SESSION['store_name'] ?? (defined('APP_NAME') ? APP_NAME : 'Store Panel')));
 ?>
 <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-header">
         <a href="<?= BASE_URL ?>/modules/dashboard/" class="sidebar-brand">
-            <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Prestige Apple Panel Logo" class="brand-logo"
+            <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="<?= htmlspecialchars($sidebarStoreName, ENT_QUOTES, 'UTF-8') ?> Logo" class="brand-logo"
                 width="54" height="54">
-            <span class="brand-text">Prestige Apple Panel</span>
+            <span class="brand-text"><?= htmlspecialchars($sidebarStoreName, ENT_QUOTES, 'UTF-8') ?></span>
         </a>
 
         <!-- Button to collapse / expand the sidebar (Icon-Only Mode) placed beside logo/title -->
@@ -54,7 +56,7 @@ if (!function_exists('is_active')) {
             <span>Dashboard</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/store/?admin_session=1" class="nav-link" target="_blank" title="Open Public Prestige Apple Store">
+        <a href="<?= BASE_URL ?>/store/?admin_session=1" class="nav-link" target="_blank" title="Open Public <?= htmlspecialchars($sidebarStoreName, ENT_QUOTES, 'UTF-8') ?> Storefront">
             <svg class="nav-ico" viewBox="0 0 24 24">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>

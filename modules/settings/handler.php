@@ -24,6 +24,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/rbac.php';
 require_once __DIR__ . '/../../includes/csrf.php';
 require_once __DIR__ . '/../../includes/audit.php';
+require_once __DIR__ . '/../../includes/mailer.php';
 
 /**
  * Standardized JSON envelope
@@ -205,11 +206,181 @@ try {
             // Audit Trail
             audit_log('settings', 'update_settings', null, $oldSettings, $newSettings);
 
+            // Immediately update active session cache for store name
+            $_SESSION['store_name'] = $storeName;
+
             $db->commit();
 
             send_json(true, 'Store settings updated successfully.', [
-                'settings' => $newSettings
+                'settings'   => $newSettings,
+                'store_name' => $storeName
             ]);
+            break;
+
+        case 'get_smtp_settings':
+            if (!has_permission('settings_view')) {
+                send_json(false, 'Access denied: Insufficient permissions (settings_view required)', null, [], 403);
+            }
+
+            $smtpFile = __DIR__ . '/../../config/smtp.php';
+            $smtpData = [
+                'enabled'      => false,
+                'host'         => 'smtp.gmail.com',
+                'port'         => 587,
+                'secure'       => 'tls',
+                'username'     => '',
+                'has_password' => false,
+                'from_email'   => '',
+                'from_name'    => defined('APP_NAME') ? APP_NAME : 'Store Panel'
+            ];
+
+            if (file_exists($smtpFile)) {
+                $loaded = require $smtpFile;
+                if (is_array($loaded)) {
+                    $smtpData['enabled']      = !empty($loaded['enabled']);
+                    $smtpData['host']         = $loaded['host'] ?? 'smtp.gmail.com';
+                    $smtpData['port']         = (int)($loaded['port'] ?? 587);
+                    $smtpData['secure']       = $loaded['secure'] ?? 'tls';
+                    $smtpData['username']     = $loaded['username'] ?? '';
+                    $smtpData['has_password'] = !empty($loaded['password']);
+                    $smtpData['from_email']   = $loaded['from_email'] ?? '';
+                    $smtpData['from_name']    = $loaded['from_name'] ?? (defined('APP_NAME') ? APP_NAME : 'Store Panel');
+                }
+            }
+
+            send_json(true, 'SMTP configuration loaded successfully.', ['smtp' => $smtpData]);
+            break;
+
+        case 'update_smtp_settings':
+            if (!has_permission('settings_manage')) {
+                send_json(false, 'Access denied: Insufficient permissions (settings_manage required)', null, [], 403);
+            }
+
+            require_csrf($input);
+
+            $smtpFile = __DIR__ . '/../../config/smtp.php';
+            $existing = [];
+            if (file_exists($smtpFile)) {
+                $loaded = require $smtpFile;
+                if (is_array($loaded)) {
+                    $existing = $loaded;
+                }
+            }
+
+            $enabled = !empty($input['enabled']) && ($input['enabled'] === true || $input['enabled'] === '1' || $input['enabled'] === 1);
+            $host = trim((string)($input['host'] ?? 'smtp.gmail.com'));
+            $port = in_array((int)($input['port'] ?? 587), [465, 587, 25], true) ? (int)$input['port'] : 587;
+            $secure = ($port === 465) ? 'ssl' : 'tls';
+            $username = trim((string)($input['username'] ?? ''));
+            $rawPass = (string)($input['password'] ?? '');
+            $cleanPass = str_replace(' ', '', $rawPass);
+            $fromName = trim((string)($input['from_name'] ?? ''));
+
+            if ($fromName === '') {
+                $fromName = $_SESSION['store_name'] ?? (defined('APP_NAME') ? APP_NAME : 'Store Panel');
+            }
+
+            // Retain existing password if omitted during update
+            $finalPassword = ($cleanPass !== '') ? $cleanPass : ($existing['password'] ?? '');
+
+            if ($enabled) {
+                if ($username === '' || !filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                    send_json(false, 'A valid Gmail address is required when live delivery is enabled.', null, ['username' => 'Valid email address required'], 422);
+                }
+                if ($finalPassword === '') {
+                    send_json(false, 'A Google App Password is required when live delivery is enabled.', null, ['password' => 'Google App Password required'], 422);
+                }
+            }
+
+            $newConfig = [
+                'enabled'    => $enabled,
+                'host'       => $host !== '' ? $host : 'smtp.gmail.com',
+                'port'       => $port,
+                'secure'     => $secure,
+                'username'   => $username,
+                'password'   => $finalPassword,
+                'from_email' => $username,
+                'from_name'  => $fromName
+            ];
+
+            $exportPhp = "<?php\n"
+                . "/**\n"
+                . " * SMTP Mail Transport Configuration\n"
+                . " * Small Business Sales and Expense Tracking System\n"
+                . " */\n\n"
+                . "return [\n"
+                . "    'enabled'    => " . ($newConfig['enabled'] ? 'true' : 'false') . ",\n"
+                . "    'host'       => " . var_export($newConfig['host'], true) . ",\n"
+                . "    'port'       => " . $newConfig['port'] . ",\n"
+                . "    'secure'     => " . var_export($newConfig['secure'], true) . ",\n"
+                . "    'username'   => " . var_export($newConfig['username'], true) . ",\n"
+                . "    'password'   => " . var_export($newConfig['password'], true) . ",\n"
+                . "    'from_email' => " . var_export($newConfig['from_email'], true) . ",\n"
+                . "    'from_name'  => " . var_export($newConfig['from_name'], true) . "\n"
+                . "];\n";
+
+            $saved = @file_put_contents($smtpFile, $exportPhp);
+            if ($saved === false) {
+                send_json(false, 'Failed to save SMTP configuration file. Please check folder permissions.', null, [], 500);
+            }
+
+            // Redacted audit log
+            $auditOld = $existing;
+            if (isset($auditOld['password'])) $auditOld['password'] = '********';
+            $auditNew = $newConfig;
+            $auditNew['password'] = '********';
+            audit_log('settings', 'update_smtp_settings', null, $auditOld, $auditNew);
+
+            send_json(true, 'SMTP email delivery settings saved successfully!', [
+                'enabled'      => $newConfig['enabled'],
+                'username'     => $newConfig['username'],
+                'has_password' => !empty($newConfig['password']),
+                'from_name'    => $newConfig['from_name']
+            ]);
+            break;
+
+        case 'test_smtp_email':
+            if (!has_permission('settings_manage')) {
+                send_json(false, 'Access denied: Insufficient permissions (settings_manage required)', null, [], 403);
+            }
+
+            require_csrf($input);
+
+            $targetEmail = trim((string)($input['test_email'] ?? ''));
+            if ($targetEmail === '' || !filter_var($targetEmail, FILTER_VALIDATE_EMAIL)) {
+                send_json(false, 'Please enter a valid recipient email address for testing.', null, ['test_email' => 'Valid email address required'], 422);
+            }
+
+            $smtpFile = __DIR__ . '/../../config/smtp.php';
+            if (!file_exists($smtpFile)) {
+                send_json(false, 'SMTP configuration file not found.', null, [], 404);
+            }
+
+            $currentSmtp = require $smtpFile;
+            if (empty($currentSmtp['enabled'])) {
+                send_json(false, 'Live SMTP delivery is currently disabled. Please enable it and save your Google credentials first.', null, [], 400);
+            }
+            if (empty($currentSmtp['username']) || empty($currentSmtp['password'])) {
+                send_json(false, 'Incomplete SMTP credentials. Please enter and save your Gmail address and 16-character App Password.', null, [], 400);
+            }
+
+            $testOtp = (string)random_int(100000, 999999);
+            $testRes = send_otp_email($targetEmail, 'Admin System Verification Test', $testOtp, 10);
+
+            if ($testRes['success'] && ($testRes['mode'] ?? '') === 'smtp_live') {
+                send_json(true, "Success! Live test verification code ({$testOtp}) was sent to {$targetEmail} via Gmail. Please check your inbox.", [
+                    'recipient' => $targetEmail,
+                    'code'      => $testOtp,
+                    'mode'      => $testRes['mode']
+                ]);
+            } elseif ($testRes['success'] && ($testRes['mode'] ?? '') === 'sandbox_log') {
+                send_json(false, 'Email was logged to the local sandbox instead of live delivery because SMTP credentials failed or were not loaded. Check logs/mail_sandbox.log.', [
+                    'mode' => 'sandbox_log'
+                ], [], 500);
+            } else {
+                $err = $testRes['message'] ?? 'Unknown SMTP error';
+                send_json(false, "SMTP delivery failed: {$err}", null, [], 500);
+            }
             break;
 
         // =====================================================================

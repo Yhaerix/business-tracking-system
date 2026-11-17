@@ -389,9 +389,11 @@ function get_product_storage_options(array $product, float $basePrice): array
  */
 function get_product_color_options(array $product): array
 {
-    $baseColor = trim((string) ($product['color'] ?? 'Space Black'));
-    if ($baseColor === '') {
-        $baseColor = 'Space Black';
+    $rawColor = trim((string) ($product['color'] ?? ''));
+    if ($rawColor !== '') {
+        $colorNames = array_values(array_unique(array_filter(array_map('trim', explode(',', $rawColor)))));
+    } else {
+        $colorNames = ['Space Black'];
     }
 
     $paletteMap = [
@@ -412,30 +414,17 @@ function get_product_color_options(array $product): array
         'Pink' => '#f9d5dc',
         'Teal' => '#73959c',
         'Ultramarine' => '#3c4f76',
+        'Gold' => '#eed2b2',
+        'Yellow' => '#e8ddaa',
+        'Blue' => '#546e8c',
+        'Green' => '#6b7a69',
+        'White' => '#f8f9fa',
+        'Black' => '#1f2022',
         'Standard' => '#1f2022'
     ];
 
-    $categoryName = strtolower($product['category_name'] ?? '');
-    if (str_contains($product['name'], 'Pro') || str_contains($product['name'], 'Ultra')) {
-        $colorNames = ['Natural Titanium', 'Black Titanium', 'White Titanium', 'Blue Titanium'];
-    } elseif (str_contains($categoryName, 'mac')) {
-        $colorNames = ['Space Black', 'Silver', 'Space Gray', 'Midnight'];
-    } elseif (str_contains($categoryName, 'watch')) {
-        $colorNames = ['Midnight', 'Starlight', 'Silver', 'Natural Titanium'];
-    } else {
-        $colorNames = [$baseColor, 'Midnight', 'Starlight', 'Blue Titanium'];
-    }
-
-    if (!in_array($baseColor, $colorNames, true)) {
-        array_unshift($colorNames, $baseColor);
-        array_pop($colorNames);
-    } else {
-        $colorNames = array_diff($colorNames, [$baseColor]);
-        array_unshift($colorNames, $baseColor);
-    }
-
     $colors = [];
-    foreach (array_unique($colorNames) as $cName) {
+    foreach ($colorNames as $idx => $cName) {
         $hex = '#1f2022';
         foreach ($paletteMap as $name => $h) {
             if (stripos($cName, $name) !== false) {
@@ -446,7 +435,7 @@ function get_product_color_options(array $product): array
         $colors[] = [
             'name' => $cName,
             'hex' => $hex,
-            'is_default' => ($cName === $baseColor)
+            'is_default' => ($idx === 0)
         ];
     }
     return $colors;
@@ -2336,8 +2325,7 @@ try {
             send_json(true, 'A 6-digit verification code has been sent to ' . mask_email($email) . ' to verify your account.', [
                 'require_otp' => true,
                 'purpose' => 'register',
-                'masked_email' => mask_email($email),
-                'dev_otp' => $otpCode
+                'masked_email' => mask_email($email)
             ]);
             break;
 
@@ -2428,8 +2416,7 @@ try {
                 send_json(true, 'A 6-digit verification code has been sent to your registered email (' . mask_email($custEmail) . ').', [
                     'require_otp' => true,
                     'purpose' => 'login',
-                    'masked_email' => mask_email($custEmail),
-                    'dev_otp' => $otpCode
+                    'masked_email' => mask_email($custEmail)
                 ]);
             }
 
@@ -2725,7 +2712,6 @@ try {
             $_SESSION['pending_customer_otp']['time'] = time();
 
             send_json(true, 'A fresh 6-digit verification code has been dispatched to your email.', [
-                'dev_otp' => $newOtp,
                 'masked_email' => mask_email($email)
             ]);
             break;
@@ -2738,7 +2724,7 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $email = trim((string)($input['email'] ?? $input['login_identifier'] ?? ''));
+            $email = trim((string) ($input['email'] ?? $input['login_identifier'] ?? ''));
             if ($email === '') {
                 send_json(false, 'Please enter your registered email address.', null, [
                     'email' => 'Email address is required'
@@ -2772,8 +2758,8 @@ try {
                 ], 403);
             }
 
-            $customerId = (int)$cust['id'];
-            $custEmail = trim((string)($cust['email'] ?? ''));
+            $customerId = (int) $cust['id'];
+            $custEmail = trim((string) ($cust['email'] ?? ''));
 
             if (empty($custEmail)) {
                 send_json(false, 'No email address is linked to this account for password reset. Please contact support@prestigeapple.ph.', null, [], 422);
@@ -2809,15 +2795,14 @@ try {
 
             $_SESSION['pending_password_reset'] = [
                 'customer_id' => $customerId,
-                'email'       => $custEmail,
-                'name'        => $cust['name'],
-                'time'        => time()
+                'email' => $custEmail,
+                'name' => $cust['name'],
+                'time' => time()
             ];
 
             send_json(true, 'A 6-digit password reset code has been sent to ' . mask_email($custEmail) . '.', [
                 'masked_email' => mask_email($custEmail),
-                'email'        => $custEmail,
-                'dev_otp'      => $otpCode
+                'email' => $custEmail
             ]);
             break;
 
@@ -2829,9 +2814,9 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $otpCode = trim((string)($input['otp_code'] ?? ''));
-            $newPassword = (string)($input['new_password'] ?? '');
-            $confirmPassword = (string)($input['confirm_password'] ?? '');
+            $otpCode = trim((string) ($input['otp_code'] ?? ''));
+            $newPassword = (string) ($input['new_password'] ?? '');
+            $confirmPassword = (string) ($input['confirm_password'] ?? '');
 
             $pending = $_SESSION['pending_password_reset'] ?? null;
             if (!$pending || empty($pending['customer_id']) || empty($pending['email'])) {
@@ -2856,7 +2841,7 @@ try {
                 ], 422);
             }
 
-            $customerId = (int)$pending['customer_id'];
+            $customerId = (int) $pending['customer_id'];
 
             // Find matching active OTP
             $stmtFind = $db->prepare("
@@ -2881,7 +2866,7 @@ try {
 
             // Mark OTP used
             $stmtUsed = $db->prepare("UPDATE auth_otps SET is_used = 1 WHERE id = :id");
-            $stmtUsed->execute([':id' => (int)$otpRecord['id']]);
+            $stmtUsed->execute([':id' => (int) $otpRecord['id']]);
 
             // Update customer password
             $newHash = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
@@ -3295,6 +3280,142 @@ try {
 
             send_json(true, 'Recent shipments loaded.', [
                 'shipments' => $shipments
+            ]);
+            break;
+
+        // =====================================================================
+        // CUSTOMER SUPPORT & STORE INQUIRIES CHAT
+        // =====================================================================
+        case 'get_chat_unread_count':
+            if (empty($_SESSION['customer_id'])) {
+                send_json(true, 'Guest mode', ['unread' => 0]);
+            }
+            $cid = (int) $_SESSION['customer_id'];
+            $stmt = $db->prepare("
+                SELECT COUNT(*) 
+                FROM customer_messages 
+                WHERE customer_id = :cid 
+                  AND sender_type = 'admin' 
+                  AND is_read = 0
+            ");
+            $stmt->execute([':cid' => $cid]);
+            $unreadCount = (int) $stmt->fetchColumn();
+
+            send_json(true, 'Unread count fetched', ['unread' => $unreadCount]);
+            break;
+
+        case 'get_my_messages':
+            if (empty($_SESSION['customer_id'])) {
+                send_json(false, 'Sign in required to view messages.', ['redirect' => 'login.php'], [], 401);
+            }
+            $cid = (int) $_SESSION['customer_id'];
+            $afterId = (int) ($input['after_id'] ?? 0);
+
+            $query = "
+                SELECT m.id, m.sender_type, m.message, m.product_id, m.order_id, m.is_read, m.created_at,
+                       p.name AS product_name, p.selling_price, p.current_stock, p.color,
+                       (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, id ASC LIMIT 1) as product_image
+                FROM customer_messages m
+                LEFT JOIN products p ON m.product_id = p.id
+                WHERE m.customer_id = :cid
+            ";
+            $params = [':cid' => $cid];
+            if ($afterId > 0) {
+                $query .= " AND m.id > :after_id";
+                $params[':after_id'] = $afterId;
+            }
+            $query .= " ORDER BY m.id ASC LIMIT 100";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Mark received admin messages as read by customer
+            $readStmt = $db->prepare("
+                UPDATE customer_messages 
+                SET is_read = 1, read_at = NOW() 
+                WHERE customer_id = :cid 
+                  AND sender_type = 'admin' 
+                  AND is_read = 0
+            ");
+            $readStmt->execute([':cid' => $cid]);
+
+            $currency = defined('APP_CURRENCY') ? APP_CURRENCY : '₱';
+            $messages = array_map(function ($r) use ($currency) {
+                $isMe = ($r['sender_type'] === 'customer');
+                return [
+                    'id'             => (int) $r['id'],
+                    'is_me'          => $isMe,
+                    'sender_name'    => $isMe ? 'You' : 'Prestige Apple Store',
+                    'message'        => $r['message'],
+                    'time_formatted' => date('h:i A', strtotime($r['created_at'])),
+                    'date_formatted' => date('M d, Y', strtotime($r['created_at'])),
+                    'product'        => !empty($r['product_id']) ? [
+                        'id'         => (int) $r['product_id'],
+                        'name'       => $r['product_name'],
+                        'price'      => $currency . number_format((float) $r['selling_price'], 2),
+                        'stock'      => (int) $r['current_stock'],
+                        'color'      => $r['color'] ?? '',
+                        'image_url'  => !empty($r['product_image']) ? '../' . $r['product_image'] : null
+                    ] : null
+                ];
+            }, $rows);
+
+            send_json(true, 'Messages loaded successfully.', [
+                'customer_name' => $_SESSION['customer_name'] ?? 'Valued Customer',
+                'messages'      => $messages
+            ]);
+            break;
+
+        case 'send_message_to_store':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'POST method required', null, [], 405);
+            }
+            if (empty($_SESSION['customer_id'])) {
+                send_json(false, 'Sign in required to message the store.', ['redirect' => 'login.php'], [], 401);
+            }
+            $cid = (int) $_SESSION['customer_id'];
+            $msgText = trim((string) ($input['message'] ?? ''));
+            $productId = !empty($input['product_id']) ? (int) $input['product_id'] : null;
+
+            if (empty($msgText)) {
+                send_json(false, 'Message cannot be empty.', null, ['message' => 'Required'], 422);
+            }
+
+            // Verify product if provided
+            $productData = null;
+            if ($productId !== null) {
+                $chkP = $db->prepare("SELECT id, name, selling_price, current_stock, color FROM products WHERE id = :pid AND deleted_at IS NULL LIMIT 1");
+                $chkP->execute([':pid' => $productId]);
+                $productData = $chkP->fetch(PDO::FETCH_ASSOC);
+                if (!$productData) $productId = null;
+            }
+
+            $stmt = $db->prepare("
+                INSERT INTO customer_messages (customer_id, sender_type, staff_id, message, product_id, is_read, created_at)
+                VALUES (:cid, 'customer', NULL, :msg, :pid, 0, NOW())
+            ");
+            $stmt->execute([
+                ':cid' => $cid,
+                ':msg' => $msgText,
+                ':pid' => $productId
+            ]);
+
+            $newId = (int) $db->lastInsertId();
+            $currency = defined('APP_CURRENCY') ? APP_CURRENCY : '₱';
+
+            send_json(true, 'Message sent to store support.', [
+                'id'             => $newId,
+                'is_me'          => true,
+                'sender_name'    => 'You',
+                'message'        => $msgText,
+                'time_formatted' => date('h:i A'),
+                'product'        => $productData ? [
+                    'id'    => (int) $productData['id'],
+                    'name'  => $productData['name'],
+                    'price' => $currency . number_format((float) $productData['selling_price'], 2),
+                    'stock' => (int) $productData['current_stock']
+                ] : null
             ]);
             break;
 
