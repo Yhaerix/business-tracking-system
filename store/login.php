@@ -190,7 +190,10 @@ require_once __DIR__ . '/includes/store_header.php';
                 <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') ?>">
                 
                 <div class="auth-form-group">
-                    <label class="auth-form-label" for="loginIdentifier">Email or Phone</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="auth-form-label" for="loginIdentifier" style="margin-bottom: 0;">Email or Phone</label>
+                        <a href="javascript:void(0)" onclick="openForgotEmailModal()" class="auth-forgot-link">Forgot email?</a>
+                    </div>
                     <input 
                         type="text" 
                         id="loginIdentifier" 
@@ -203,7 +206,10 @@ require_once __DIR__ . '/includes/store_header.php';
                 </div>
 
                 <div class="auth-form-group">
-                    <label class="auth-form-label" for="loginPassword">Password</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="auth-form-label" for="loginPassword" style="margin-bottom: 0;">Password</label>
+                        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" class="auth-forgot-link">Forgot password?</a>
+                    </div>
                     <div class="auth-password-wrapper">
                         <input 
                             type="password" 
@@ -396,6 +402,93 @@ require_once __DIR__ . '/includes/store_header.php';
                 </div>
             </div>
 
+        </div>
+
+        <!-- ================================================================
+             3. MODAL: FORGOT EMAIL HELP
+             ================================================================ -->
+        <div id="forgotEmailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+            <div style="background:#ffffff; max-width:440px; width:100%; border-radius:20px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.18); position:relative;">
+                <button type="button" onclick="closeForgotEmailModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:22px; color:#86868b; cursor:pointer;" aria-label="Close">&times;</button>
+                <div style="width:48px; height:48px; border-radius:50%; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:14px;">
+                    📧
+                </div>
+                <h3 style="font-size:18px; font-weight:700; color:#1d1d1f; margin-bottom:8px;">Forgot Your Registered Email?</h3>
+                <p style="font-size:13.5px; color:#64748b; line-height:1.5; margin-bottom:16px;">
+                    You can sign in using your registered <strong>Mobile Phone Number</strong> (e.g., <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600; color:#0f172a;">0917XXXXXXX</code>) instead of your email address.
+                </p>
+                <div style="background:#f8fafc; border-radius:12px; padding:12px 14px; font-size:12.5px; color:#475569; margin-bottom:20px;">
+                    💡 <strong>Need direct account recovery?</strong> Contact our support team at <a href="mailto:support@prestigeapple.ph" style="color:#0071e3; font-weight:600; text-decoration:none;">support@prestigeapple.ph</a>.
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="closeForgotEmailModal()" style="height:40px; padding:0 16px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Close</button>
+                    <button type="button" onclick="usePhoneForLogin()" class="btn-apple-primary" style="height:40px; padding:0 20px; font-size:13px; border-radius:10px; font-weight:600;">Sign in with Phone</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             4. MODAL: FORGOT PASSWORD (OTP RESET)
+             ================================================================ -->
+        <div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+            <div style="background:#ffffff; max-width:440px; width:100%; border-radius:20px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,0.18); position:relative;">
+                <button type="button" onclick="closeForgotPasswordModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:22px; color:#86868b; cursor:pointer;" aria-label="Close">&times;</button>
+                <div style="width:48px; height:48px; border-radius:50%; background:#fef3c7; color:#d97706; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:14px;">
+                    🔑
+                </div>
+                <h3 style="font-size:18px; font-weight:700; color:#1d1d1f; margin-bottom:8px;">Reset Password</h3>
+
+                <!-- Step 1: Request Reset Code -->
+                <div id="forgotPwdStep1">
+                    <p style="font-size:13.5px; color:#64748b; line-height:1.5; margin-bottom:16px;">
+                        Enter your registered email address or mobile phone. We will send a 6-digit verification code to reset your password.
+                    </p>
+                    <div id="forgotPwdAlert1" style="display:none; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px;"></div>
+                    <form onsubmit="handleRequestPasswordReset(event)">
+                        <div class="auth-form-group" style="margin-bottom:16px;">
+                            <label class="auth-form-label" for="resetIdentifier">Email or Phone</label>
+                            <input type="text" id="resetIdentifier" class="auth-form-input" placeholder="e.g. customer@example.com or 0917XXXXXXX" required>
+                        </div>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button type="button" onclick="closeForgotPasswordModal()" style="height:42px; padding:0 16px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Cancel</button>
+                            <button type="submit" id="btnSendResetCode" class="btn-apple-primary" style="height:42px; padding:0 20px; font-size:13px; border-radius:10px; font-weight:600;">Send Reset Code</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Step 2: Verify OTP & Enter New Password -->
+                <div id="forgotPwdStep2" style="display:none;">
+                    <p style="font-size:13.5px; color:#64748b; line-height:1.5; margin-bottom:14px;">
+                        Enter the 6-digit verification code sent to <strong id="resetTargetEmail">your email</strong> and choose a new password.
+                    </p>
+                    <div id="forgotPwdAlert2" style="display:none; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px;"></div>
+                    
+                    <!-- Dev Quick-Fill Badge -->
+                    <div id="resetDevBadge" style="display:none; margin-bottom:14px; padding:8px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; align-items:center; justify-content:space-between; font-size:12px; color:#475569;">
+                        <span>Code: <strong id="resetDevOtpCode" style="color:#0071e3; font-family:monospace; font-size:14px;"></strong></span>
+                        <button type="button" onclick="fillResetDevOtp()" style="background:#fff; border:1px solid #cbd5e1; border-radius:4px; padding:3px 8px; font-size:11px; font-weight:600; color:#0071e3; cursor:pointer;">Auto Fill</button>
+                    </div>
+
+                    <form onsubmit="handleExecutePasswordReset(event)">
+                        <div class="auth-form-group" style="margin-bottom:12px;">
+                            <label class="auth-form-label" for="resetOtpCode">6-Digit Code</label>
+                            <input type="text" id="resetOtpCode" class="auth-form-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="font-family:monospace; letter-spacing:4px; text-align:center; font-size:16px; font-weight:700;">
+                        </div>
+                        <div class="auth-form-group" style="margin-bottom:12px;">
+                            <label class="auth-form-label" for="resetNewPassword">New Password</label>
+                            <input type="password" id="resetNewPassword" class="auth-form-input" placeholder="At least 6 characters" minlength="6" required>
+                        </div>
+                        <div class="auth-form-group" style="margin-bottom:18px;">
+                            <label class="auth-form-label" for="resetConfirmPassword">Confirm New Password</label>
+                            <input type="password" id="resetConfirmPassword" class="auth-form-input" placeholder="Re-enter new password" minlength="6" required>
+                        </div>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button type="button" onclick="backToResetStep1()" style="height:42px; padding:0 14px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Back</button>
+                            <button type="submit" id="btnSubmitNewPassword" class="btn-apple-primary" style="height:42px; padding:0 20px; font-size:13px; border-radius:10px; font-weight:600;">Reset Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -845,6 +938,197 @@ async function resendCustomerOtp() {
     } finally {
         resendBtn.disabled = false;
         resendBtn.textContent = 'Resend Code';
+    }
+}
+
+// =========================================================================
+// FORGOT EMAIL & FORGOT PASSWORD MODAL HANDLERS
+// =========================================================================
+let currentResetDevOtp = '';
+
+function openForgotEmailModal() {
+    const modal = document.getElementById('forgotEmailModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeForgotEmailModal() {
+    const modal = document.getElementById('forgotEmailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function usePhoneForLogin() {
+    closeForgotEmailModal();
+    const inp = document.getElementById('loginIdentifier');
+    if (inp) {
+        inp.placeholder = 'e.g. 09171234567';
+        inp.focus();
+    }
+}
+
+function openForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const currentLoginVal = document.getElementById('loginIdentifier')?.value?.trim();
+        const resetInp = document.getElementById('resetIdentifier');
+        if (currentLoginVal && resetInp) {
+            resetInp.value = currentLoginVal;
+        }
+        backToResetStep1();
+    }
+}
+
+function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function backToResetStep1() {
+    document.getElementById('forgotPwdStep1').style.display = 'block';
+    document.getElementById('forgotPwdStep2').style.display = 'none';
+    const alert1 = document.getElementById('forgotPwdAlert1');
+    if (alert1) alert1.style.display = 'none';
+    const alert2 = document.getElementById('forgotPwdAlert2');
+    if (alert2) alert2.style.display = 'none';
+}
+
+async function handleRequestPasswordReset(e) {
+    e.preventDefault();
+    const identifier = document.getElementById('resetIdentifier')?.value?.trim();
+    const btn = document.getElementById('btnSendResetCode');
+    const alert1 = document.getElementById('forgotPwdAlert1');
+
+    if (!identifier) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending code...';
+    alert1.style.display = 'none';
+
+    try {
+        const res = await fetch('handler.php?action=customer_forgot_password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ login_identifier: identifier })
+        });
+
+        const data = await res.json();
+        const payload = (data && typeof data.data === 'object' && data.data !== null) ? data.data : {};
+
+        if (data && data.success) {
+            document.getElementById('resetTargetEmail').textContent = payload.masked_email || 'your email';
+            document.getElementById('forgotPwdStep1').style.display = 'none';
+            document.getElementById('forgotPwdStep2').style.display = 'block';
+
+            if (payload.dev_otp) {
+                currentResetDevOtp = payload.dev_otp;
+                document.getElementById('resetDevOtpCode').textContent = payload.dev_otp;
+                document.getElementById('resetDevBadge').style.display = 'flex';
+            }
+
+            const alert2 = document.getElementById('forgotPwdAlert2');
+            alert2.style.display = 'block';
+            alert2.style.background = '#ecfdf5';
+            alert2.style.color = '#065f46';
+            alert2.textContent = data.message || 'Verification code sent!';
+        } else {
+            alert1.style.display = 'block';
+            alert1.style.background = '#fef2f2';
+            alert1.style.color = '#991b1b';
+            alert1.textContent = data?.message || 'Unable to find an account matching that identifier.';
+        }
+    } catch (err) {
+        console.error('Password reset request error:', err);
+        alert1.style.display = 'block';
+        alert1.style.background = '#fef2f2';
+        alert1.style.color = '#991b1b';
+        alert1.textContent = 'Network error. Please try again.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Code';
+    }
+}
+
+function fillResetDevOtp() {
+    if (!currentResetDevOtp) return;
+    const inp = document.getElementById('resetOtpCode');
+    if (inp) {
+        inp.value = currentResetDevOtp;
+        document.getElementById('resetNewPassword')?.focus();
+    }
+}
+
+async function handleExecutePasswordReset(e) {
+    e.preventDefault();
+    const otpCode = document.getElementById('resetOtpCode')?.value?.trim();
+    const newPassword = document.getElementById('resetNewPassword')?.value;
+    const confirmPassword = document.getElementById('resetConfirmPassword')?.value;
+    const btn = document.getElementById('btnSubmitNewPassword');
+    const alert2 = document.getElementById('forgotPwdAlert2');
+
+    if (!otpCode || !newPassword || !confirmPassword) return;
+
+    if (newPassword !== confirmPassword) {
+        alert2.style.display = 'block';
+        alert2.style.background = '#fef2f2';
+        alert2.style.color = '#991b1b';
+        alert2.textContent = 'Passwords do not match.';
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        alert2.style.display = 'block';
+        alert2.style.background = '#fef2f2';
+        alert2.style.color = '#991b1b';
+        alert2.textContent = 'Password must be at least 6 characters.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Resetting password...';
+    alert2.style.display = 'none';
+
+    try {
+        const res = await fetch('handler.php?action=customer_reset_password_with_otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                otp_code: otpCode,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+
+        const data = await res.json();
+
+        if (data && data.success) {
+            closeForgotPasswordModal();
+            showAuthAlert(data.message || 'Password reset successfully! Please sign in with your new password.', 'success');
+            const pwdInp = document.getElementById('loginPassword');
+            if (pwdInp) {
+                pwdInp.value = newPassword;
+                pwdInp.focus();
+            }
+        } else {
+            alert2.style.display = 'block';
+            alert2.style.background = '#fef2f2';
+            alert2.style.color = '#991b1b';
+            alert2.textContent = data?.message || 'Invalid or expired verification code.';
+        }
+    } catch (err) {
+        console.error('Password reset execution error:', err);
+        alert2.style.display = 'block';
+        alert2.style.background = '#fef2f2';
+        alert2.style.color = '#991b1b';
+        alert2.textContent = 'Network error. Please try again.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
     }
 }
 </script>

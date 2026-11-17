@@ -34,9 +34,9 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
     session_set_cookie_params([
         'lifetime' => 86400 * 7, // 7-day cart & coin persistence
-        'path'     => '/',
+        'path' => '/',
         'httponly' => true,
-        'secure'   => $isSecure,
+        'secure' => $isSecure,
         'samesite' => 'Lax'
     ]);
     session_start();
@@ -59,8 +59,8 @@ function send_json(bool $success, string $message, $data = null, array $errors =
     echo json_encode([
         'success' => $success,
         'message' => $message,
-        'data'    => $data,
-        'errors'  => $errors
+        'data' => $data,
+        'errors' => $errors
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -90,12 +90,18 @@ function get_request_data(): array
 function get_category_icon_slug(string $name): string
 {
     $lower = strtolower($name);
-    if (str_contains($lower, 'iphone') || str_contains($lower, 'phone')) return 'iphone';
-    if (str_contains($lower, 'mac') || str_contains($lower, 'laptop') || str_contains($lower, 'computer')) return 'mac';
-    if (str_contains($lower, 'ipad') || str_contains($lower, 'tablet')) return 'ipad';
-    if (str_contains($lower, 'watch')) return 'watch';
-    if (str_contains($lower, 'airpod') || str_contains($lower, 'audio') || str_contains($lower, 'headphone')) return 'airpods';
-    if (str_contains($lower, 'access')) return 'accessories';
+    if (str_contains($lower, 'iphone') || str_contains($lower, 'phone'))
+        return 'iphone';
+    if (str_contains($lower, 'mac') || str_contains($lower, 'laptop') || str_contains($lower, 'computer'))
+        return 'mac';
+    if (str_contains($lower, 'ipad') || str_contains($lower, 'tablet'))
+        return 'ipad';
+    if (str_contains($lower, 'watch'))
+        return 'watch';
+    if (str_contains($lower, 'airpod') || str_contains($lower, 'audio') || str_contains($lower, 'headphone'))
+        return 'airpods';
+    if (str_contains($lower, 'access'))
+        return 'accessories';
     return 'device';
 }
 
@@ -142,20 +148,20 @@ function get_cart_summary(): array
     $totalAmount = round($subtotal + $deliveryFee, 2);
 
     return [
-        'items'                          => $items,
-        'cart_count'                     => $cartCount,
-        'subtotal'                       => $subtotal,
-        'formatted_subtotal'             => $currency . number_format($subtotal, 2),
-        'delivery_fee'                   => $deliveryFee,
-        'formatted_delivery_fee'         => $deliveryFee === 0.00 ? 'FREE' : $currency . number_format($deliveryFee, 2),
-        'free_delivery_threshold'        => $freeThreshold,
-        'formatted_threshold'            => $currency . number_format($freeThreshold, 2),
-        'free_delivery_remaining'        => $freeDeliveryRemaining,
-        'formatted_remaining'            => $currency . number_format($freeDeliveryRemaining, 2),
+        'items' => $items,
+        'cart_count' => $cartCount,
+        'subtotal' => $subtotal,
+        'formatted_subtotal' => $currency . number_format($subtotal, 2),
+        'delivery_fee' => $deliveryFee,
+        'formatted_delivery_fee' => $deliveryFee === 0.00 ? 'FREE' : $currency . number_format($deliveryFee, 2),
+        'free_delivery_threshold' => $freeThreshold,
+        'formatted_threshold' => $currency . number_format($freeThreshold, 2),
+        'free_delivery_remaining' => $freeDeliveryRemaining,
+        'formatted_remaining' => $currency . number_format($freeDeliveryRemaining, 2),
         'free_delivery_progress_percent' => $freeDeliveryProgressPercent,
-        'total_amount'                   => $totalAmount,
-        'formatted_total'                => $currency . number_format($totalAmount, 2),
-        'currency_symbol'                => $currency
+        'total_amount' => $totalAmount,
+        'formatted_total' => $currency . number_format($totalAmount, 2),
+        'currency_symbol' => $currency
     ];
 }
 
@@ -180,7 +186,7 @@ function resolve_customer_wallet(PDO $db, int $customerId = 1): array
             $_SESSION['customer_name'] = $cust1['name'];
             $_SESSION['customer_email'] = $cust1['email'];
             $_SESSION['customer_phone'] = $cust1['phone'];
-            $_SESSION['customer_coins'] = (float)$cust1['wallet_balance'];
+            $_SESSION['customer_coins'] = (float) $cust1['wallet_balance'];
         } else {
             // Re-seed VIP Customer 1 with official bcrypt hash and zero coin balance
             $initialCoins = 0.00;
@@ -193,12 +199,12 @@ function resolve_customer_wallet(PDO $db, int $customerId = 1): array
             $stmtMakeCust->execute([':pass' => $vipPassHash]);
             $customerId = 1;
             $cust = [
-                'id'             => 1,
-                'name'           => 'Prestige VIP Shopper',
-                'email'          => 'vip@prestigeapple.ph',
-                'phone'          => '+63 917 800 2775',
+                'id' => 1,
+                'name' => 'Prestige VIP Shopper',
+                'email' => 'vip@prestigeapple.ph',
+                'phone' => '+63 917 800 2775',
                 'wallet_balance' => 0.00,
-                'status'         => 'active'
+                'status' => 'active'
             ];
             $_SESSION['customer_id'] = 1;
             $_SESSION['customer_name'] = 'Prestige VIP Shopper';
@@ -219,16 +225,16 @@ function resolve_customer_wallet(PDO $db, int $customerId = 1): array
     $wallet = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$wallet) {
-        $initialCoins = isset($cust['wallet_balance']) ? (float)$cust['wallet_balance'] : 0.00;
+        $initialCoins = isset($cust['wallet_balance']) ? (float) $cust['wallet_balance'] : 0.00;
         $stmtIns = $db->prepare("
             INSERT INTO customer_wallets (customer_id, coin_balance, is_frozen, created_at)
             VALUES (:cid, :coins, 0, NOW())
         ");
         $stmtIns->execute([
-            ':cid'   => $customerId,
+            ':cid' => $customerId,
             ':coins' => $initialCoins
         ]);
-        $walletId = (int)$db->lastInsertId();
+        $walletId = (int) $db->lastInsertId();
 
         if ($initialCoins > 0) {
             $stmtTrans = $db->prepare("
@@ -241,21 +247,21 @@ function resolve_customer_wallet(PDO $db, int $customerId = 1): array
                 )
             ");
             $stmtTrans->execute([
-                ':wid'   => $walletId,
-                ':amt'   => $initialCoins,
+                ':wid' => $walletId,
+                ':amt' => $initialCoins,
                 ':after' => $initialCoins
             ]);
         }
 
         $wallet = [
-            'id'           => $walletId,
-            'customer_id'  => $customerId,
+            'id' => $walletId,
+            'customer_id' => $customerId,
             'coin_balance' => $initialCoins,
-            'is_frozen'    => 0
+            'is_frozen' => 0
         ];
     } else {
         // Sync session with authoritative DB wallet balance
-        $_SESSION['customer_coins'] = (float)$wallet['coin_balance'];
+        $_SESSION['customer_coins'] = (float) $wallet['coin_balance'];
     }
 
     return $wallet;
@@ -271,10 +277,11 @@ function get_coin_conversion_rate(PDO $db): float
         $stmt = $db->prepare("SELECT setting_value FROM store_settings WHERE setting_key = 'coins_conversion_rate' LIMIT 1");
         $stmt->execute();
         $val = $stmt->fetchColumn();
-        if ($val !== false && is_numeric($val) && (float)$val > 0) {
-            return (float)$val;
+        if ($val !== false && is_numeric($val) && (float) $val > 0) {
+            return (float) $val;
         }
-    } catch (\Throwable $e) {}
+    } catch (\Throwable $e) {
+    }
     return 1.00;
 }
 
@@ -284,18 +291,18 @@ function get_coin_conversion_rate(PDO $db): float
 function get_product_storage_options(array $product, float $basePrice): array
 {
     $categoryName = strtolower($product['category_name'] ?? '');
-    $baseStorage = trim((string)($product['storage'] ?? ''));
+    $baseStorage = trim((string) ($product['storage'] ?? ''));
     $currency = defined('APP_CURRENCY') ? APP_CURRENCY : '₱';
 
     if (str_contains($categoryName, 'airpod') || str_contains($categoryName, 'access') || str_contains($categoryName, 'audio')) {
         return [
             [
-                'label'           => 'Standard',
-                'storage'         => 'Standard',
-                'price'           => $basePrice,
+                'label' => 'Standard',
+                'storage' => 'Standard',
+                'price' => $basePrice,
                 'formatted_price' => $currency . number_format($basePrice, 2),
-                'price_delta'     => 0.0,
-                'is_base'         => true
+                'price_delta' => 0.0,
+                'is_base' => true
             ]
         ];
     }
@@ -303,28 +310,28 @@ function get_product_storage_options(array $product, float $basePrice): array
     if (str_contains($categoryName, 'watch')) {
         return [
             [
-                'label'           => 'GPS (41mm)',
-                'storage'         => '41mm GPS',
-                'price'           => $basePrice,
+                'label' => 'GPS (41mm)',
+                'storage' => '41mm GPS',
+                'price' => $basePrice,
                 'formatted_price' => $currency . number_format($basePrice, 2),
-                'price_delta'     => 0.0,
-                'is_base'         => true
+                'price_delta' => 0.0,
+                'is_base' => true
             ],
             [
-                'label'           => 'GPS (45mm)',
-                'storage'         => '45mm GPS',
-                'price'           => $basePrice + 2500.0,
+                'label' => 'GPS (45mm)',
+                'storage' => '45mm GPS',
+                'price' => $basePrice + 2500.0,
                 'formatted_price' => $currency . number_format($basePrice + 2500.0, 2),
-                'price_delta'     => 2500.0,
-                'is_base'         => false
+                'price_delta' => 2500.0,
+                'is_base' => false
             ],
             [
-                'label'           => 'GPS + Cellular (45mm)',
-                'storage'         => '45mm Cellular',
-                'price'           => $basePrice + 6000.0,
+                'label' => 'GPS + Cellular (45mm)',
+                'storage' => '45mm Cellular',
+                'price' => $basePrice + 6000.0,
                 'formatted_price' => $currency . number_format($basePrice + 6000.0, 2),
-                'price_delta'     => 6000.0,
-                'is_base'         => false
+                'price_delta' => 6000.0,
+                'is_base' => false
             ]
         ];
     }
@@ -333,12 +340,12 @@ function get_product_storage_options(array $product, float $basePrice): array
         $tiers = [
             '256GB' => 0.0,
             '512GB' => 12000.0,
-            '1TB'   => 24000.0,
-            '2TB'   => 48000.0
+            '1TB' => 24000.0,
+            '2TB' => 48000.0
         ];
     } elseif (str_contains($categoryName, 'ipad')) {
         $tiers = [
-            '64GB'  => -3000.0,
+            '64GB' => -3000.0,
             '128GB' => 0.0,
             '256GB' => 6000.0,
             '512GB' => 18000.0
@@ -348,7 +355,7 @@ function get_product_storage_options(array $product, float $basePrice): array
             '128GB' => 0.0,
             '256GB' => 6000.0,
             '512GB' => 18000.0,
-            '1TB'   => 30000.0
+            '1TB' => 30000.0
         ];
     }
 
@@ -366,12 +373,12 @@ function get_product_storage_options(array $product, float $basePrice): array
         $relativeDelta = (float) ($delta - $baseTierOffset);
         $variantPrice = max(100.0, round($basePrice + $relativeDelta, 2));
         $options[] = [
-            'label'           => $tierKey,
-            'storage'         => $tierKey,
-            'price'           => $variantPrice,
+            'label' => $tierKey,
+            'storage' => $tierKey,
+            'price' => $variantPrice,
             'formatted_price' => $currency . number_format($variantPrice, 2),
-            'price_delta'     => $relativeDelta,
-            'is_base'         => ($tierKey === $baseKey)
+            'price_delta' => $relativeDelta,
+            'is_base' => ($tierKey === $baseKey)
         ];
     }
     return $options;
@@ -382,30 +389,30 @@ function get_product_storage_options(array $product, float $basePrice): array
  */
 function get_product_color_options(array $product): array
 {
-    $baseColor = trim((string)($product['color'] ?? 'Space Black'));
+    $baseColor = trim((string) ($product['color'] ?? 'Space Black'));
     if ($baseColor === '') {
         $baseColor = 'Space Black';
     }
 
     $paletteMap = [
         'Natural Titanium' => '#9e9a93',
-        'Black Titanium'   => '#2c2d30',
-        'White Titanium'   => '#f4f3f0',
-        'Blue Titanium'    => '#394653',
-        'Desert Titanium'  => '#c7b299',
-        'Space Black'      => '#1f2022',
-        'Space Gray'       => '#4d4f53',
-        'Silver'           => '#e3e4e6',
-        'Starlight'        => '#f0ece1',
-        'Midnight'         => '#1e232d',
-        'Deep Purple'      => '#4f4459',
-        'Alpine Green'     => '#505c54',
-        'Sierra Blue'      => '#9bb5ce',
-        'Product(RED)'     => '#e11d48',
-        'Pink'             => '#f9d5dc',
-        'Teal'             => '#73959c',
-        'Ultramarine'      => '#3c4f76',
-        'Standard'         => '#1f2022'
+        'Black Titanium' => '#2c2d30',
+        'White Titanium' => '#f4f3f0',
+        'Blue Titanium' => '#394653',
+        'Desert Titanium' => '#c7b299',
+        'Space Black' => '#1f2022',
+        'Space Gray' => '#4d4f53',
+        'Silver' => '#e3e4e6',
+        'Starlight' => '#f0ece1',
+        'Midnight' => '#1e232d',
+        'Deep Purple' => '#4f4459',
+        'Alpine Green' => '#505c54',
+        'Sierra Blue' => '#9bb5ce',
+        'Product(RED)' => '#e11d48',
+        'Pink' => '#f9d5dc',
+        'Teal' => '#73959c',
+        'Ultramarine' => '#3c4f76',
+        'Standard' => '#1f2022'
     ];
 
     $categoryName = strtolower($product['category_name'] ?? '');
@@ -437,8 +444,8 @@ function get_product_color_options(array $product): array
             }
         }
         $colors[] = [
-            'name'       => $cName,
-            'hex'        => $hex,
+            'name' => $cName,
+            'hex' => $hex,
             'is_default' => ($cName === $baseColor)
         ];
     }
@@ -550,11 +557,11 @@ function get_product_tech_specs(array $product): array
     }
 
     return [
-        'Display'         => $display,
-        'Processor'       => $processor,
-        'Camera System'   => $camera,
+        'Display' => $display,
+        'Processor' => $processor,
+        'Camera System' => $camera,
         'Battery & Power' => $battery,
-        'Box Contents'    => $box
+        'Box Contents' => $box
     ];
 }
 
@@ -574,15 +581,15 @@ try {
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $settings = [
-                'store_name'            => 'Prestige Apple Store',
-                'contact_email'         => 'support@prestigeapple.ph',
-                'contact_phone'         => '+63 917 800 2775',
-                'currency_symbol'       => $currency,
-                'currency_code'         => defined('APP_CURRENCY_CODE') ? APP_CURRENCY_CODE : 'PHP',
-                'announcement'          => 'Official Apple Authorised Reseller • Free Express Delivery on orders over ₱5,000 • 0% Installment available',
-                'coins_name'            => 'Prestige Coins',
+                'store_name' => 'Prestige Apple Store',
+                'contact_email' => 'support@prestigeapple.ph',
+                'contact_phone' => '+63 917 800 2775',
+                'currency_symbol' => $currency,
+                'currency_code' => defined('APP_CURRENCY_CODE') ? APP_CURRENCY_CODE : 'PHP',
+                'announcement' => 'Official Apple Authorised Reseller • Free Express Delivery on orders over ₱5,000 • 0% Installment available',
+                'coins_name' => 'Prestige Coins',
                 'coins_conversion_rate' => '1.00',
-                'coins_enabled'         => '1'
+                'coins_enabled' => '1'
             ];
 
             foreach ($rows as $row) {
@@ -595,12 +602,12 @@ try {
             $settings['coins_conversion_rate'] = $conversionRate;
 
             // Sync wallet balance: only resolve if customer is authenticated, otherwise default to 0.00
-            $customerId = (int)($_SESSION['customer_id'] ?? 0);
+            $customerId = (int) ($_SESSION['customer_id'] ?? 0);
             if ($customerId > 0) {
                 $wallet = resolve_customer_wallet($db, $customerId);
                 $coinBalance = (float) $wallet['coin_balance'];
             } else {
-                $coinBalance = (float)($_SESSION['customer_coins'] ?? 0.00);
+                $coinBalance = (float) ($_SESSION['customer_coins'] ?? 0.00);
             }
             $_SESSION['customer_coins'] = $coinBalance;
 
@@ -631,10 +638,10 @@ try {
             $categories = [];
             foreach ($rawCategories as $cat) {
                 $categories[] = [
-                    'id'            => (int) $cat['id'],
-                    'name'          => $cat['name'],
-                    'description'   => $cat['description'] ?? '',
-                    'icon_key'      => get_category_icon_slug($cat['name']),
+                    'id' => (int) $cat['id'],
+                    'name' => $cat['name'],
+                    'description' => $cat['description'] ?? '',
+                    'icon_key' => get_category_icon_slug($cat['name']),
                     'product_count' => (int) $cat['product_count']
                 ];
             }
@@ -771,36 +778,36 @@ try {
                 }
 
                 $products[] = [
-                    'id'                => $id,
-                    'category_id'       => (int) $p['category_id'],
-                    'category_name'     => $p['category_name'],
-                    'sku'               => $p['sku'],
-                    'name'              => $p['name'],
-                    'description'       => $p['description'] ?? '',
-                    'specs'             => $p['specs'] ?? '',
-                    'color'             => $p['color'] ?? 'Standard',
-                    'storage'           => $p['storage'] ?? '',
-                    'condition_type'    => $p['condition_type'] ?? 'Brand New Sealed',
-                    'warranty'          => $p['warranty'] ?? '1 Year Official Apple Warranty',
-                    'selling_price'     => $sellingPrice,
-                    'formatted_price'   => $currency . number_format($sellingPrice, 2),
-                    'current_stock'     => $currentStock,
-                    'in_stock'          => $currentStock > 0,
-                    'primary_image'     => $primaryImg,
-                    'rating'            => $rating,
-                    'reviews_count'     => $reviewsCount,
-                    'units_sold'        => $unitsSold,
-                    'created_at'        => $p['created_at']
+                    'id' => $id,
+                    'category_id' => (int) $p['category_id'],
+                    'category_name' => $p['category_name'],
+                    'sku' => $p['sku'],
+                    'name' => $p['name'],
+                    'description' => $p['description'] ?? '',
+                    'specs' => $p['specs'] ?? '',
+                    'color' => $p['color'] ?? 'Standard',
+                    'storage' => $p['storage'] ?? '',
+                    'condition_type' => $p['condition_type'] ?? 'Brand New Sealed',
+                    'warranty' => $p['warranty'] ?? '1 Year Official Apple Warranty',
+                    'selling_price' => $sellingPrice,
+                    'formatted_price' => $currency . number_format($sellingPrice, 2),
+                    'current_stock' => $currentStock,
+                    'in_stock' => $currentStock > 0,
+                    'primary_image' => $primaryImg,
+                    'rating' => $rating,
+                    'reviews_count' => $reviewsCount,
+                    'units_sold' => $unitsSold,
+                    'created_at' => $p['created_at']
                 ];
             }
 
             send_json(true, 'Products retrieved successfully', [
-                'products'   => $products,
+                'products' => $products,
                 'pagination' => [
-                    'current_page'  => $page,
-                    'per_page'      => $limit,
+                    'current_page' => $page,
+                    'per_page' => $limit,
                     'total_records' => $totalRecords,
-                    'total_pages'   => $totalPages
+                    'total_pages' => $totalPages
                 ]
             ]);
             break;
@@ -865,7 +872,7 @@ try {
             ");
             $stmtRelated->execute([
                 ':category_id' => (int) $p['category_id'],
-                ':self_id'     => $id
+                ':self_id' => $id
             ]);
             $rawRelated = $stmtRelated->fetchAll(PDO::FETCH_ASSOC);
 
@@ -873,13 +880,13 @@ try {
             foreach ($rawRelated as $rel) {
                 $relPrice = (float) $rel['selling_price'];
                 $related[] = [
-                    'id'              => (int) $rel['id'],
-                    'name'            => $rel['name'],
-                    'storage'         => $rel['storage'] ?? '',
-                    'color'           => $rel['color'] ?? '',
-                    'selling_price'   => $relPrice,
+                    'id' => (int) $rel['id'],
+                    'name' => $rel['name'],
+                    'storage' => $rel['storage'] ?? '',
+                    'color' => $rel['color'] ?? '',
+                    'selling_price' => $relPrice,
                     'formatted_price' => $currency . number_format($relPrice, 2),
-                    'primary_image'   => !empty($rel['primary_image']) ? $rel['primary_image'] : 'assets/images/placeholder-apple.svg'
+                    'primary_image' => !empty($rel['primary_image']) ? $rel['primary_image'] : 'assets/images/placeholder-apple.svg'
                 ];
             }
 
@@ -889,28 +896,28 @@ try {
 
             send_json(true, 'Product details retrieved successfully', [
                 'product' => [
-                    'id'              => $id,
-                    'category_id'     => (int) $p['category_id'],
-                    'category_name'   => $p['category_name'],
-                    'sku'             => $p['sku'],
-                    'name'            => $p['name'],
-                    'description'     => $p['description'] ?? '',
-                    'specs'           => $p['specs'] ?? '',
-                    'color'           => $p['color'] ?? 'Standard',
-                    'storage'         => $p['storage'] ?? '',
-                    'condition_type'  => $p['condition_type'] ?? 'Brand New Sealed',
-                    'warranty'        => $p['warranty'] ?? '1 Year Official Apple Warranty',
-                    'selling_price'   => $sellingPrice,
+                    'id' => $id,
+                    'category_id' => (int) $p['category_id'],
+                    'category_name' => $p['category_name'],
+                    'sku' => $p['sku'],
+                    'name' => $p['name'],
+                    'description' => $p['description'] ?? '',
+                    'specs' => $p['specs'] ?? '',
+                    'color' => $p['color'] ?? 'Standard',
+                    'storage' => $p['storage'] ?? '',
+                    'condition_type' => $p['condition_type'] ?? 'Brand New Sealed',
+                    'warranty' => $p['warranty'] ?? '1 Year Official Apple Warranty',
+                    'selling_price' => $sellingPrice,
                     'formatted_price' => $currency . number_format($sellingPrice, 2),
-                    'current_stock'   => $currentStock,
-                    'in_stock'        => $currentStock > 0,
-                    'rating'          => $rating,
-                    'reviews_count'   => $reviewsCount,
-                    'images'          => $images,
+                    'current_stock' => $currentStock,
+                    'in_stock' => $currentStock > 0,
+                    'rating' => $rating,
+                    'reviews_count' => $reviewsCount,
+                    'images' => $images,
                     'storage_options' => $storageOptions,
-                    'color_options'   => $colorOptions,
-                    'tech_specs'      => $techSpecs,
-                    'related'         => $related
+                    'color_options' => $colorOptions,
+                    'tech_specs' => $techSpecs,
+                    'related' => $related
                 ]
             ]);
             break;
@@ -967,29 +974,29 @@ try {
                 }
 
                 $deals[] = [
-                    'id'                => $id,
-                    'name'              => $row['name'],
-                    'storage'           => $row['storage'] ?? '',
-                    'color'             => $row['color'] ?? '',
-                    'condition_type'    => $row['condition_type'] ?? 'Brand New Sealed',
-                    'primary_image'     => $primaryImg,
-                    'selling_price'     => $dealPrice,
-                    'formatted_price'   => $currency . number_format($dealPrice, 2),
-                    'original_price'    => $originalPrice,
-                    'formatted_orig'    => $currency . number_format($originalPrice, 2),
-                    'discount_percent'  => $discountPercent,
-                    'savings_amount'    => $savingsAmount,
-                    'savings_badge'     => 'SAVE ' . $currency . number_format($savingsAmount, 0),
-                    'stock_left'        => $stockLeft,
-                    'units_sold'        => $unitsSold,
-                    'claimed_percent'   => $claimedPercent
+                    'id' => $id,
+                    'name' => $row['name'],
+                    'storage' => $row['storage'] ?? '',
+                    'color' => $row['color'] ?? '',
+                    'condition_type' => $row['condition_type'] ?? 'Brand New Sealed',
+                    'primary_image' => $primaryImg,
+                    'selling_price' => $dealPrice,
+                    'formatted_price' => $currency . number_format($dealPrice, 2),
+                    'original_price' => $originalPrice,
+                    'formatted_orig' => $currency . number_format($originalPrice, 2),
+                    'discount_percent' => $discountPercent,
+                    'savings_amount' => $savingsAmount,
+                    'savings_badge' => 'SAVE ' . $currency . number_format($savingsAmount, 0),
+                    'stock_left' => $stockLeft,
+                    'units_sold' => $unitsSold,
+                    'claimed_percent' => $claimedPercent
                 ];
             }
 
             send_json(true, 'Flash deals retrieved successfully', [
                 'countdown_seconds' => $countdownSeconds,
-                'cycle_label'       => 'Flash Sale Ends In',
-                'deals'             => $deals
+                'cycle_label' => 'Flash Sale Ends In',
+                'deals' => $deals
             ]);
             break;
 
@@ -998,18 +1005,18 @@ try {
         // =====================================================================
         case 'get_wallet_balance':
             $rate = get_coin_conversion_rate($db);
-            $customerId = (int)($_SESSION['customer_id'] ?? 0);
+            $customerId = (int) ($_SESSION['customer_id'] ?? 0);
             if ($customerId <= 0) {
                 // Visitor guest starts with 0.00
                 $_SESSION['customer_coins'] = 0.00;
                 send_json(true, 'Customer wallet balance retrieved', [
-                    'coins'                => 0.00,
-                    'formatted_coins'      => '0.00 Coins',
-                    'conversion_rate'      => $rate,
-                    'currency_equivalent'  => 0.00,
+                    'coins' => 0.00,
+                    'formatted_coins' => '0.00 Coins',
+                    'conversion_rate' => $rate,
+                    'currency_equivalent' => 0.00,
                     'formatted_equivalent' => $currency . '0.00',
-                    'currency_symbol'      => $currency,
-                    'recent_transactions'  => []
+                    'currency_symbol' => $currency,
+                    'recent_transactions' => []
                 ]);
             }
 
@@ -1033,13 +1040,13 @@ try {
             $recent = $stmtTrans->fetchAll(PDO::FETCH_ASSOC);
 
             send_json(true, 'Customer wallet balance retrieved', [
-                'coins'                => $coinBalance,
-                'formatted_coins'      => number_format($coinBalance, 2) . ' Coins',
-                'conversion_rate'      => $rate,
-                'currency_equivalent'  => $currencyEq,
+                'coins' => $coinBalance,
+                'formatted_coins' => number_format($coinBalance, 2) . ' Coins',
+                'conversion_rate' => $rate,
+                'currency_equivalent' => $currencyEq,
                 'formatted_equivalent' => $currency . number_format($currencyEq, 2),
-                'currency_symbol'      => $currency,
-                'recent_transactions'  => $recent
+                'currency_symbol' => $currency,
+                'recent_transactions' => $recent
             ]);
             break;
 
@@ -1069,10 +1076,10 @@ try {
             }
 
             if ($referenceNumber === '') {
-                $referenceNumber = 'TOP-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid((string)mt_rand(), true)), 0, 8));
+                $referenceNumber = 'TOP-' . date('Ymd') . '-' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 8));
             }
 
-            $customerId = (int)($_SESSION['customer_id'] ?? 1);
+            $customerId = (int) ($_SESSION['customer_id'] ?? 1);
             $conversionRate = get_coin_conversion_rate($db);
             $coinsToAdd = round($amount / $conversionRate, 2);
 
@@ -1093,18 +1100,18 @@ try {
                     VALUES (:cid, 0.00, 0, NOW())
                 ");
                 $stmtNewW->execute([':cid' => $customerId]);
-                $walletId = (int)$db->lastInsertId();
+                $walletId = (int) $db->lastInsertId();
                 $wallet = ['id' => $walletId, 'coin_balance' => 0.00, 'is_frozen' => 0];
             } else {
-                $walletId = (int)$wallet['id'];
+                $walletId = (int) $wallet['id'];
             }
 
-            if ((int)$wallet['is_frozen'] === 1) {
+            if ((int) $wallet['is_frozen'] === 1) {
                 $db->rollBack();
                 send_json(false, 'Your Prestige VIP wallet is currently suspended. Please contact customer care.', null, [], 403);
             }
 
-            $balanceBefore = (float)$wallet['coin_balance'];
+            $balanceBefore = (float) $wallet['coin_balance'];
             $balanceAfter = round($balanceBefore + $coinsToAdd, 2);
 
             // Update wallet balance
@@ -1115,7 +1122,7 @@ try {
             ");
             $stmtUpdateW->execute([
                 ':balance' => $balanceAfter,
-                ':id'      => $walletId
+                ':id' => $walletId
             ]);
 
             // Insert transaction ledger record
@@ -1131,13 +1138,13 @@ try {
                 )
             ");
             $stmtTrans->execute([
-                ':wid'     => $walletId,
-                ':amt'     => $coinsToAdd,
-                ':before'  => $balanceBefore,
-                ':after'   => $balanceAfter,
+                ':wid' => $walletId,
+                ':amt' => $coinsToAdd,
+                ':before' => $balanceBefore,
+                ':after' => $balanceAfter,
                 ':gateway' => $paymentMethod,
-                ':ref'     => $referenceNumber,
-                ':notes'   => $notes
+                ':ref' => $referenceNumber,
+                ':notes' => $notes
             ]);
 
             $db->commit();
@@ -1145,18 +1152,18 @@ try {
             $_SESSION['customer_coins'] = $balanceAfter;
 
             send_json(true, 'Top-up successful! Apple Coins have been added to your wallet balance.', [
-                'added_amount'        => $amount,
-                'paid_amount_php'     => $amount,
-                'formatted_paid'      => $currency . number_format($amount, 2),
-                'conversion_rate'     => $conversionRate,
-                'added_coins'         => $coinsToAdd,
-                'formatted_added'     => number_format($coinsToAdd, 2) . ' Coins',
-                'new_balance'         => $balanceAfter,
-                'formatted_balance'   => number_format($balanceAfter, 2) . ' Coins',
+                'added_amount' => $amount,
+                'paid_amount_php' => $amount,
+                'formatted_paid' => $currency . number_format($amount, 2),
+                'conversion_rate' => $conversionRate,
+                'added_coins' => $coinsToAdd,
+                'formatted_added' => number_format($coinsToAdd, 2) . ' Coins',
+                'new_balance' => $balanceAfter,
+                'formatted_balance' => number_format($balanceAfter, 2) . ' Coins',
                 'currency_equivalent' => round($balanceAfter * $conversionRate, 2),
-                'payment_method'      => $paymentMethod,
-                'reference_number'    => $referenceNumber,
-                'currency_symbol'     => $currency
+                'payment_method' => $paymentMethod,
+                'reference_number' => $referenceNumber,
+                'currency_symbol' => $currency
             ]);
             break;
 
@@ -1251,18 +1258,18 @@ try {
             }
 
             $_SESSION['cart'][$itemKey] = [
-                'item_key'       => $itemKey,
-                'product_id'     => $productId,
-                'name'           => $p['name'],
-                'sku'            => $p['sku'],
-                'primary_image'  => $primaryImg,
-                'storage'        => $selectedStorage,
-                'color'          => $selectedColor,
-                'unit_price'     => $variantPrice,
-                'quantity'       => $newQty,
-                'max_stock'      => $currentStock,
+                'item_key' => $itemKey,
+                'product_id' => $productId,
+                'name' => $p['name'],
+                'sku' => $p['sku'],
+                'primary_image' => $primaryImg,
+                'storage' => $selectedStorage,
+                'color' => $selectedColor,
+                'unit_price' => $variantPrice,
+                'quantity' => $newQty,
+                'max_stock' => $currentStock,
                 'condition_type' => $p['condition_type'] ?? 'Brand New Sealed',
-                'warranty'       => $p['warranty'] ?? '1 Year Official Apple Warranty'
+                'warranty' => $p['warranty'] ?? '1 Year Official Apple Warranty'
             ];
 
             send_json(true, 'Item added to your shopping bag!', get_cart_summary());
@@ -1285,11 +1292,11 @@ try {
                 $resolvedKey = $itemKey;
             } else {
                 foreach ($_SESSION['cart'] as $k => $ci) {
-                    if ($itemKey !== '' && (($ci['item_key'] ?? '') === $itemKey || (string)$k === $itemKey)) {
+                    if ($itemKey !== '' && (($ci['item_key'] ?? '') === $itemKey || (string) $k === $itemKey)) {
                         $resolvedKey = $k;
                         break;
                     }
-                    if ($productId > 0 && (int)($ci['product_id'] ?? 0) === $productId) {
+                    if ($productId > 0 && (int) ($ci['product_id'] ?? 0) === $productId) {
                         $matchStorage = ($storage === '' || strcasecmp($ci['storage'] ?? '', $storage) === 0);
                         $matchColor = ($color === '' || strcasecmp($ci['color'] ?? '', $color) === 0);
                         if ($matchStorage && $matchColor) {
@@ -1313,29 +1320,29 @@ try {
                 $pH = $stmtH->fetch(PDO::FETCH_ASSOC);
                 if ($pH) {
                     $useKey = $itemKey !== '' ? $itemKey : ('item_' . $productId . '_' . substr(md5(strtolower($storage) . '_' . strtolower($color)), 0, 10));
-                    $basePriceH = (float)$pH['selling_price'];
+                    $basePriceH = (float) $pH['selling_price'];
                     $storageOptionsH = get_product_storage_options($pH, $basePriceH);
                     $vPriceH = $basePriceH;
                     foreach ($storageOptionsH as $opt) {
                         if (strcasecmp($opt['storage'], $storage) === 0) {
-                            $vPriceH = (float)$opt['price'];
+                            $vPriceH = (float) $opt['price'];
                             break;
                         }
                     }
                     $primaryImgH = $pH['primary_image'] ?: 'assets/images/placeholder-apple.svg';
                     $_SESSION['cart'][$useKey] = [
-                        'item_key'       => $useKey,
-                        'product_id'     => $productId,
-                        'name'           => $pH['name'],
-                        'sku'            => $pH['sku'],
-                        'primary_image'  => $primaryImgH,
-                        'storage'        => $storage !== '' ? $storage : 'Standard',
-                        'color'          => $color !== '' ? $color : 'Standard',
-                        'unit_price'     => $vPriceH,
-                        'quantity'       => $quantity,
-                        'max_stock'      => (int)$pH['current_stock'],
+                        'item_key' => $useKey,
+                        'product_id' => $productId,
+                        'name' => $pH['name'],
+                        'sku' => $pH['sku'],
+                        'primary_image' => $primaryImgH,
+                        'storage' => $storage !== '' ? $storage : 'Standard',
+                        'color' => $color !== '' ? $color : 'Standard',
+                        'unit_price' => $vPriceH,
+                        'quantity' => $quantity,
+                        'max_stock' => (int) $pH['current_stock'],
                         'condition_type' => $pH['condition_type'] ?? 'Brand New Sealed',
-                        'warranty'       => $pH['warranty'] ?? '1 Year Official Apple Warranty'
+                        'warranty' => $pH['warranty'] ?? '1 Year Official Apple Warranty'
                     ];
                     $resolvedKey = $useKey;
                 }
@@ -1396,7 +1403,7 @@ try {
                 unset($_SESSION['cart'][$itemKey]);
             } else if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
                 foreach ($_SESSION['cart'] as $k => $ci) {
-                    if (($ci['item_key'] ?? '') === $itemKey || (string)$k === $itemKey) {
+                    if (($ci['item_key'] ?? '') === $itemKey || (string) $k === $itemKey) {
                         unset($_SESSION['cart'][$k]);
                         break;
                     }
@@ -1421,7 +1428,7 @@ try {
                 // Collect product IDs from incoming items
                 $incomingPids = [];
                 foreach ($rawItems as $it) {
-                    $pid = (int)($it['id'] ?? $it['product_id'] ?? 0);
+                    $pid = (int) ($it['id'] ?? $it['product_id'] ?? 0);
                     if ($pid > 0) {
                         $incomingPids[] = $pid;
                     }
@@ -1439,54 +1446,54 @@ try {
                     ");
                     $stmtP->execute($incomingPids);
                     while ($pRow = $stmtP->fetch(PDO::FETCH_ASSOC)) {
-                        $productsMap[(int)$pRow['id']] = $pRow;
+                        $productsMap[(int) $pRow['id']] = $pRow;
                     }
                 }
 
                 foreach ($rawItems as $it) {
-                    $pid = (int)($it['id'] ?? $it['product_id'] ?? 0);
+                    $pid = (int) ($it['id'] ?? $it['product_id'] ?? 0);
                     if ($pid <= 0 || !isset($productsMap[$pid])) {
                         continue;
                     }
 
                     $p = $productsMap[$pid];
-                    $currentStock = (int)$p['current_stock'];
+                    $currentStock = (int) $p['current_stock'];
                     if ($currentStock <= 0) {
                         continue;
                     }
 
-                    $selectedStorage = trim((string)($it['storage'] ?? $p['storage'] ?? 'Standard'));
-                    $selectedColor = trim((string)($it['color'] ?? $p['color'] ?? 'Standard'));
-                    $quantity = max(1, min((int)($it['quantity'] ?? 1), $currentStock));
+                    $selectedStorage = trim((string) ($it['storage'] ?? $p['storage'] ?? 'Standard'));
+                    $selectedColor = trim((string) ($it['color'] ?? $p['color'] ?? 'Standard'));
+                    $quantity = max(1, min((int) ($it['quantity'] ?? 1), $currentStock));
 
-                    $itemKey = trim((string)($it['key'] ?? $it['item_key'] ?? ''));
+                    $itemKey = trim((string) ($it['key'] ?? $it['item_key'] ?? ''));
                     if ($itemKey === '') {
                         $itemKey = 'item_' . $pid . '_' . substr(md5(strtolower($selectedStorage) . '_' . strtolower($selectedColor)), 0, 10);
                     }
 
-                    $basePrice = (float)$p['selling_price'];
+                    $basePrice = (float) $p['selling_price'];
                     $storageOptions = get_product_storage_options($p, $basePrice);
                     $variantPrice = $basePrice;
                     foreach ($storageOptions as $opt) {
                         if (strcasecmp($opt['storage'], $selectedStorage) === 0) {
-                            $variantPrice = (float)$opt['price'];
+                            $variantPrice = (float) $opt['price'];
                             break;
                         }
                     }
 
                     $_SESSION['cart'][$itemKey] = [
-                        'item_key'       => $itemKey,
-                        'product_id'     => $pid,
-                        'name'           => $p['name'],
-                        'sku'            => $p['sku'],
-                        'primary_image'  => $p['primary_image'],
-                        'storage'        => $selectedStorage,
-                        'color'          => $selectedColor,
-                        'unit_price'     => $variantPrice,
-                        'quantity'       => $quantity,
-                        'max_stock'      => $currentStock,
+                        'item_key' => $itemKey,
+                        'product_id' => $pid,
+                        'name' => $p['name'],
+                        'sku' => $p['sku'],
+                        'primary_image' => $p['primary_image'],
+                        'storage' => $selectedStorage,
+                        'color' => $selectedColor,
+                        'unit_price' => $variantPrice,
+                        'quantity' => $quantity,
+                        'max_stock' => $currentStock,
                         'condition_type' => $p['condition_type'] ?? 'Brand New Sealed',
-                        'warranty'       => $p['warranty'] ?? '1 Year Official Apple Warranty'
+                        'warranty' => $p['warranty'] ?? '1 Year Official Apple Warranty'
                     ];
                 }
             }
@@ -1504,7 +1511,7 @@ try {
         // =====================================================================
         case 'get_checkout_data':
             $cart = get_cart_summary();
-            $subtotal = (float)$cart['subtotal'];
+            $subtotal = (float) $cart['subtotal'];
 
             // Courier options matrix
             $standardFree = ($subtotal >= 5000.00);
@@ -1513,31 +1520,31 @@ try {
 
             $couriers = [
                 'STANDARD' => [
-                    'code'               => 'STANDARD',
-                    'name'               => 'Standard Insured Courier',
-                    'eta'                => '2-3 Business Days',
-                    'fee'                => $standardFee,
-                    'formatted_fee'      => $standardFree ? 'FREE' : $currency . number_format($standardFee, 2),
-                    'is_free'            => $standardFree,
-                    'description'        => 'Nationwide door-to-door insured delivery with live SMS tracking.'
+                    'code' => 'STANDARD',
+                    'name' => 'Standard Insured Courier',
+                    'eta' => '2-3 Business Days',
+                    'fee' => $standardFee,
+                    'formatted_fee' => $standardFree ? 'FREE' : $currency . number_format($standardFee, 2),
+                    'is_free' => $standardFree,
+                    'description' => 'Nationwide door-to-door insured delivery with live SMS tracking.'
                 ],
-                'EXPRESS'  => [
-                    'code'               => 'EXPRESS',
-                    'name'               => 'Metro Manila Same-Day Express',
-                    'eta'                => 'Within 4-6 Hours',
-                    'fee'                => $expressFee,
-                    'formatted_fee'      => $currency . number_format($expressFee, 2),
-                    'is_free'            => false,
-                    'description'        => 'Dedicated VIP courier dispatch for Metro Manila deliveries.'
+                'EXPRESS' => [
+                    'code' => 'EXPRESS',
+                    'name' => 'Metro Manila Same-Day Express',
+                    'eta' => 'Within 4-6 Hours',
+                    'fee' => $expressFee,
+                    'formatted_fee' => $currency . number_format($expressFee, 2),
+                    'is_free' => false,
+                    'description' => 'Dedicated VIP courier dispatch for Metro Manila deliveries.'
                 ]
             ];
 
             // Resolve wallet and evaluation
             $conversionRate = get_coin_conversion_rate($db);
-            $customerId = (int)($_SESSION['customer_id'] ?? 1);
+            $customerId = (int) ($_SESSION['customer_id'] ?? 1);
             $wallet = resolve_customer_wallet($db, $customerId);
-            $customerId = (int)$wallet['customer_id'];
-            $coinBalance = (float)$wallet['coin_balance'];
+            $customerId = (int) $wallet['customer_id'];
+            $coinBalance = (float) $wallet['coin_balance'];
             $_SESSION['customer_coins'] = $coinBalance;
 
             // Balance evaluation for Standard Courier
@@ -1561,35 +1568,35 @@ try {
             $custRow = $stmtCust->fetch(PDO::FETCH_ASSOC);
 
             $customerProfile = [
-                'customer_id'    => $customerId,
-                'name'           => $custRow['name'] ?? ($_SESSION['customer_name'] ?? 'Prestige VIP Member'),
-                'phone'          => $custRow['phone'] ?? ($_SESSION['customer_phone'] ?? '09171234567'),
-                'email'          => $custRow['email'] ?? ($_SESSION['customer_email'] ?? 'vip@prestigeapple.ph'),
+                'customer_id' => $customerId,
+                'name' => $custRow['name'] ?? ($_SESSION['customer_name'] ?? 'Prestige VIP Member'),
+                'phone' => $custRow['phone'] ?? ($_SESSION['customer_phone'] ?? '09171234567'),
+                'email' => $custRow['email'] ?? ($_SESSION['customer_email'] ?? 'vip@prestigeapple.ph'),
                 'street_address' => $custRow['address_line1'] ?? 'Unit 12B, Prestige Tower, 1200 F. Ortigas Jr. Rd',
-                'province'       => $custRow['province_state'] ?? 'Metro Manila',
-                'city'           => $custRow['city'] ?? 'Pasig City',
-                'barangay'       => 'San Antonio',
-                'landmark'       => $custRow['address_line2'] ?? 'Across Emerald Avenue'
+                'province' => $custRow['province_state'] ?? 'Metro Manila',
+                'city' => $custRow['city'] ?? 'Pasig City',
+                'barangay' => 'San Antonio',
+                'landmark' => $custRow['address_line2'] ?? 'Across Emerald Avenue'
             ];
 
             send_json(true, 'Checkout data prepared successfully', [
-                'cart'     => $cart,
+                'cart' => $cart,
                 'couriers' => $couriers,
-                'wallet'   => [
-                    'coin_balance'             => $coinBalance,
-                    'formatted_balance'        => number_format($coinBalance, 2) . ' Coins',
-                    'conversion_rate'          => $conversionRate,
-                    'purchasing_power'         => $purchasingPowerPhp,
-                    'formatted_power'          => $currency . number_format($purchasingPowerPhp, 2),
-                    'is_sufficient'            => $isSufficient,
-                    'required_amount'          => $requiredStandardPhp,
-                    'formatted_required'       => $currency . number_format($requiredStandardPhp, 2),
-                    'required_coins'           => $requiredStandardCoins,
+                'wallet' => [
+                    'coin_balance' => $coinBalance,
+                    'formatted_balance' => number_format($coinBalance, 2) . ' Coins',
+                    'conversion_rate' => $conversionRate,
+                    'purchasing_power' => $purchasingPowerPhp,
+                    'formatted_power' => $currency . number_format($purchasingPowerPhp, 2),
+                    'is_sufficient' => $isSufficient,
+                    'required_amount' => $requiredStandardPhp,
+                    'formatted_required' => $currency . number_format($requiredStandardPhp, 2),
+                    'required_coins' => $requiredStandardCoins,
                     'formatted_required_coins' => number_format($requiredStandardCoins, 2) . ' Coins',
-                    'shortage_amount'          => $shortagePhp,
-                    'formatted_shortage'       => $currency . number_format($shortagePhp, 2),
-                    'shortage_coins'           => $shortageCoins,
-                    'currency_symbol'          => $currency
+                    'shortage_amount' => $shortagePhp,
+                    'formatted_shortage' => $currency . number_format($shortagePhp, 2),
+                    'shortage_coins' => $shortageCoins,
+                    'currency_symbol' => $currency
                 ],
                 'customer' => $customerProfile
             ]);
@@ -1616,25 +1623,31 @@ try {
             }
 
             // Input sanitization & validation
-            $customerName = trim((string)($input['customer_name'] ?? ''));
-            $customerPhone = trim((string)($input['customer_phone'] ?? ''));
-            $customerEmail = trim((string)($input['customer_email'] ?? ''));
-            $province = trim((string)($input['province'] ?? ''));
-            $city = trim((string)($input['city'] ?? ''));
-            $barangay = trim((string)($input['barangay'] ?? ''));
-            $streetAddress = trim((string)($input['street_address'] ?? ''));
-            $landmark = trim((string)($input['landmark'] ?? ''));
-            $orderNotes = trim((string)($input['order_notes'] ?? ''));
-            $courierCode = strtoupper(trim((string)($input['courier_code'] ?? 'STANDARD')));
-            $paymentMethod = strtoupper(trim((string)($input['payment_method'] ?? 'PRESTIGE_COINS')));
+            $customerName = trim((string) ($input['customer_name'] ?? ''));
+            $customerPhone = trim((string) ($input['customer_phone'] ?? ''));
+            $customerEmail = trim((string) ($input['customer_email'] ?? ''));
+            $province = trim((string) ($input['province'] ?? ''));
+            $city = trim((string) ($input['city'] ?? ''));
+            $barangay = trim((string) ($input['barangay'] ?? ''));
+            $streetAddress = trim((string) ($input['street_address'] ?? ''));
+            $landmark = trim((string) ($input['landmark'] ?? ''));
+            $orderNotes = trim((string) ($input['order_notes'] ?? ''));
+            $courierCode = strtoupper(trim((string) ($input['courier_code'] ?? 'STANDARD')));
+            $paymentMethod = strtoupper(trim((string) ($input['payment_method'] ?? 'PRESTIGE_COINS')));
 
             $errors = [];
-            if ($customerName === '') $errors['customer_name'] = 'Customer name is required';
-            if ($customerPhone === '') $errors['customer_phone'] = 'Mobile phone number is required';
-            if ($province === '') $errors['province'] = 'Province is required';
-            if ($city === '') $errors['city'] = 'City is required';
-            if ($barangay === '') $errors['barangay'] = 'Barangay is required';
-            if ($streetAddress === '') $errors['street_address'] = 'Street address is required';
+            if ($customerName === '')
+                $errors['customer_name'] = 'Customer name is required';
+            if ($customerPhone === '')
+                $errors['customer_phone'] = 'Mobile phone number is required';
+            if ($province === '')
+                $errors['province'] = 'Province is required';
+            if ($city === '')
+                $errors['city'] = 'City is required';
+            if ($barangay === '')
+                $errors['barangay'] = 'Barangay is required';
+            if ($streetAddress === '')
+                $errors['street_address'] = 'Street address is required';
 
             if (!in_array($paymentMethod, ['PRESTIGE_COINS', 'COD'], true)) {
                 $errors['payment_method'] = 'Invalid payment method. Choose Prestige Coins or Cash on Delivery.';
@@ -1645,7 +1658,7 @@ try {
             }
 
             // Delivery fee and courier resolution
-            $subtotal = (float)$cart['subtotal'];
+            $subtotal = (float) $cart['subtotal'];
             if ($courierCode === 'EXPRESS') {
                 $deliveryFee = 350.00;
                 $courierName = 'Metro Manila Same-Day Express';
@@ -1670,8 +1683,8 @@ try {
             ");
 
             foreach ($cart['items'] as $item) {
-                $pid = (int)$item['product_id'];
-                $reqQty = (int)$item['quantity'];
+                $pid = (int) $item['product_id'];
+                $reqQty = (int) $item['quantity'];
 
                 $stmtProdLock->execute([':id' => $pid]);
                 $pRow = $stmtProdLock->fetch(PDO::FETCH_ASSOC);
@@ -1681,7 +1694,7 @@ try {
                     send_json(false, "Item '{$item['name']}' is no longer active in our store.", null, [], 422);
                 }
 
-                $availableStock = (int)$pRow['current_stock'];
+                $availableStock = (int) $pRow['current_stock'];
                 if ($reqQty > $availableStock) {
                     $db->rollBack();
                     send_json(
@@ -1697,7 +1710,7 @@ try {
             }
 
             // 2. Customer and Wallet Verification
-            $customerId = (int)($_SESSION['customer_id'] ?? 0);
+            $customerId = (int) ($_SESSION['customer_id'] ?? 0);
             $stmtCustFind = $db->prepare("SELECT id FROM customers WHERE id = :cid AND deleted_at IS NULL LIMIT 1");
             $stmtCustFind->execute([':cid' => $customerId]);
             if (!$stmtCustFind->fetchColumn()) {
@@ -1720,10 +1733,10 @@ try {
                 WHERE id = :cid
             ");
             $stmtUpCust->execute([
-                ':name'  => $customerName,
+                ':name' => $customerName,
                 ':phone' => $customerPhone,
                 ':email' => $customerEmail !== '' ? $customerEmail : null,
-                ':cid'   => $customerId
+                ':cid' => $customerId
             ]);
 
             // Save address
@@ -1735,9 +1748,9 @@ try {
                 )
             ");
             $stmtAddr->execute([
-                ':cid'  => $customerId,
-                ':a1'   => $streetAddress,
-                ':a2'   => $landmark !== '' ? $landmark : null,
+                ':cid' => $customerId,
+                ':a1' => $streetAddress,
+                ':a2' => $landmark !== '' ? $landmark : null,
                 ':city' => $city,
                 ':prov' => $province
             ]);
@@ -1765,8 +1778,8 @@ try {
                     $wallet = $stmtWalletLock->fetch(PDO::FETCH_ASSOC);
                 }
 
-                $walletId = (int)$wallet['id'];
-                $currentCoins = (float)$wallet['coin_balance'];
+                $walletId = (int) $wallet['id'];
+                $currentCoins = (float) $wallet['coin_balance'];
 
                 if ($currentCoins < $coinsRequired) {
                     $shortageCoins = round($coinsRequired - $currentCoins, 2);
@@ -1777,10 +1790,10 @@ try {
                         "Insufficient Prestige Coins balance. You need " . number_format($shortageCoins, 2) . " more coins (" . $currency . number_format($shortagePhp, 2) . ") to complete this order.",
                         null,
                         [
-                            'coins'          => 'Insufficient balance',
-                            'shortage'       => $shortagePhp,
+                            'coins' => 'Insufficient balance',
+                            'shortage' => $shortagePhp,
                             'shortage_coins' => $shortageCoins,
-                            'shortage_php'   => $shortagePhp
+                            'shortage_php' => $shortagePhp
                         ],
                         422
                     );
@@ -1796,7 +1809,7 @@ try {
                 ");
                 $stmtDeduct->execute([
                     ':after' => $balanceAfter,
-                    ':wid'   => $walletId
+                    ':wid' => $walletId
                 ]);
 
                 $_SESSION['customer_coins'] = $balanceAfter;
@@ -1822,21 +1835,21 @@ try {
                 )
             ");
             $stmtOrder->execute([
-                ':order_number'     => $orderNumber,
-                ':customer_id'      => $customerId,
-                ':customer_name'    => $customerName,
-                ':customer_phone'   => $customerPhone,
+                ':order_number' => $orderNumber,
+                ':customer_id' => $customerId,
+                ':customer_name' => $customerName,
+                ':customer_phone' => $customerPhone,
                 ':delivery_address' => $fullAddress,
-                ':delivery_notes'   => $orderNotes !== '' ? $orderNotes : null,
-                ':courier_name'     => $courierName,
-                ':tracking_number'  => $trackingNumber,
-                ':subtotal'         => $subtotal,
-                ':delivery_fee'     => $deliveryFee,
-                ':total_amount'     => $grandTotal,
-                ':payment_method'   => $paymentMethod,
-                ':payment_status'   => $orderPaymentStatus
+                ':delivery_notes' => $orderNotes !== '' ? $orderNotes : null,
+                ':courier_name' => $courierName,
+                ':tracking_number' => $trackingNumber,
+                ':subtotal' => $subtotal,
+                ':delivery_fee' => $deliveryFee,
+                ':total_amount' => $grandTotal,
+                ':payment_method' => $paymentMethod,
+                ':payment_status' => $orderPaymentStatus
             ]);
-            $orderId = (int)$db->lastInsertId();
+            $orderId = (int) $db->lastInsertId();
 
             // 6. Record Ledger Entry if Paid by Coins
             if ($paymentMethod === 'PRESTIGE_COINS' && $walletId !== null) {
@@ -1850,13 +1863,13 @@ try {
                     )
                 ");
                 $stmtTransPay->execute([
-                    ':wid'      => $walletId,
-                    ':amt'      => $coinsRequired,
-                    ':before'   => $balanceBefore,
-                    ':after'    => $balanceAfter,
+                    ':wid' => $walletId,
+                    ':amt' => $coinsRequired,
+                    ':before' => $balanceBefore,
+                    ':after' => $balanceAfter,
                     ':order_id' => $orderId,
-                    ':ref'      => 'PAY-' . $orderNumber,
-                    ':notes'    => "Prestige VIP payment of " . number_format($coinsRequired, 2) . " coins for Order {$orderNumber} (" . $currency . number_format($grandTotal, 2) . " PHP at " . $currency . number_format($conversionRate, 2) . "/coin)"
+                    ':ref' => 'PAY-' . $orderNumber,
+                    ':notes' => "Prestige VIP payment of " . number_format($coinsRequired, 2) . " coins for Order {$orderNumber} (" . $currency . number_format($grandTotal, 2) . " PHP at " . $currency . number_format($conversionRate, 2) . "/coin)"
                 ]);
             }
 
@@ -1867,7 +1880,7 @@ try {
                     VALUES (:order_id, :amount_due, 0.00, 'PENDING', NOW())
                 ");
                 $stmtCod->execute([
-                    ':order_id'   => $orderId,
+                    ':order_id' => $orderId,
                     ':amount_due' => $grandTotal
                 ]);
             }
@@ -1898,41 +1911,41 @@ try {
             ");
 
             foreach ($cart['items'] as $item) {
-                $pid = (int)$item['product_id'];
-                $qty = (int)$item['quantity'];
-                $unitPrice = (float)$item['unit_price'];
+                $pid = (int) $item['product_id'];
+                $qty = (int) $item['quantity'];
+                $unitPrice = (float) $item['unit_price'];
                 $lineTotal = round($unitPrice * $qty, 2);
 
                 $pData = $lockedProducts[$pid];
-                $internalCost = (float)$pData['cost_price'];
-                $stockBefore = (int)$pData['current_stock'];
+                $internalCost = (float) $pData['cost_price'];
+                $stockBefore = (int) $pData['current_stock'];
                 $stockAfter = $stockBefore - $qty;
 
                 // Insert item line
                 $stmtItem->execute([
-                    ':order_id'     => $orderId,
-                    ':product_id'   => $pid,
+                    ':order_id' => $orderId,
+                    ':product_id' => $pid,
                     ':product_name' => $item['name'] . ($item['storage'] ? ' (' . $item['storage'] . ')' : '') . ($item['color'] ? ' - ' . $item['color'] : ''),
-                    ':unit_cost'    => $internalCost, // Strictly internal bookkeeping
-                    ':unit_price'   => $unitPrice,
-                    ':quantity'     => $qty,
-                    ':line_total'   => $lineTotal
+                    ':unit_cost' => $internalCost, // Strictly internal bookkeeping
+                    ':unit_price' => $unitPrice,
+                    ':quantity' => $qty,
+                    ':line_total' => $lineTotal
                 ]);
 
                 // Decrement inventory
                 $stmtStockDec->execute([
                     ':qty' => $qty,
-                    ':id'  => $pid
+                    ':id' => $pid
                 ]);
 
                 // Record movement audit
                 $stmtMove->execute([
-                    ':product_id'   => $pid,
-                    ':quantity'     => -$qty,
+                    ':product_id' => $pid,
+                    ':quantity' => -$qty,
                     ':stock_before' => $stockBefore,
-                    ':stock_after'  => $stockAfter,
+                    ':stock_after' => $stockAfter,
                     ':reference_id' => $orderId,
-                    ':notes'        => "Online Storefront Order {$orderNumber}"
+                    ':notes' => "Online Storefront Order {$orderNumber}"
                 ]);
             }
 
@@ -1945,18 +1958,18 @@ try {
                 )
             ");
             $stmtNotif->execute([
-                ':title'   => "New Order Placed: #{$orderNumber}",
+                ':title' => "New Order Placed: #{$orderNumber}",
                 ':message' => "Order #{$orderNumber} placed for {$currency}" . number_format($grandTotal, 2) . " via {$paymentMethod}.",
-                ':ref_id'  => $orderId
+                ':ref_id' => $orderId
             ]);
 
             // 10. System Audit Log
             audit_log('orders', 'ORDER_CREATE', $orderId, null, [
-                'order_number'   => $orderNumber,
-                'customer_name'  => $customerName,
-                'total_amount'   => $grandTotal,
+                'order_number' => $orderNumber,
+                'customer_name' => $customerName,
+                'total_amount' => $grandTotal,
                 'payment_method' => $paymentMethod,
-                'items_count'    => count($cart['items'])
+                'items_count' => count($cart['items'])
             ]);
 
             // 11. Initial Order Note
@@ -1966,29 +1979,29 @@ try {
             ");
             $stmtNote->execute([
                 ':order_id' => $orderId,
-                ':note'     => "Order placed via online storefront. Payment method: {$paymentMethod}. Courier: {$courierName}."
+                ':note' => "Order placed via online storefront. Payment method: {$paymentMethod}. Courier: {$courierName}."
             ]);
 
             // Clear shopping bag
             $_SESSION['cart'] = [];
             $_SESSION['last_order'] = [
-                'order_number'    => $orderNumber,
+                'order_number' => $orderNumber,
                 'tracking_number' => $trackingNumber,
-                'total_amount'    => $grandTotal,
-                'payment_method'  => $paymentMethod
+                'total_amount' => $grandTotal,
+                'payment_method' => $paymentMethod
             ];
 
             // Commit atomic transaction
             $db->commit();
 
             send_json(true, 'Your order has been placed successfully!', [
-                'order_number'    => $orderNumber,
+                'order_number' => $orderNumber,
                 'tracking_number' => $trackingNumber,
-                'total_amount'    => $grandTotal,
+                'total_amount' => $grandTotal,
                 'formatted_total' => $currency . number_format($grandTotal, 2),
-                'payment_method'  => $paymentMethod,
-                'payment_status'  => ($paymentMethod === 'PRESTIGE_COINS' ? 'PAID' : 'PENDING_COLLECTION'),
-                'redirect_url'    => 'order-success.php?order=' . urlencode($orderNumber)
+                'payment_method' => $paymentMethod,
+                'payment_status' => ($paymentMethod === 'PRESTIGE_COINS' ? 'PAID' : 'PENDING_COLLECTION'),
+                'redirect_url' => 'order-success.php?order=' . urlencode($orderNumber)
             ], [], 201);
             break;
 
@@ -1996,7 +2009,7 @@ try {
         // 11. PUBLIC CUSTOMER ORDER TRACKER (PHASE 6)
         // =====================================================================
         case 'track_order':
-            $orderRef = trim((string)($input['order_number'] ?? $input['tracking_code'] ?? $input['query'] ?? ''));
+            $orderRef = trim((string) ($input['order_number'] ?? $input['tracking_code'] ?? $input['query'] ?? ''));
 
             if ($orderRef === '') {
                 send_json(false, 'Please provide an Order Reference or Tracking Number.', null, [
@@ -2004,7 +2017,7 @@ try {
                 ], 422);
             }
 
-            $refId = ctype_digit($orderRef) ? (int)$orderRef : 0;
+            $refId = ctype_digit($orderRef) ? (int) $orderRef : 0;
 
             if ($refId > 0) {
                 $stmtOrder = $db->prepare("
@@ -2019,9 +2032,9 @@ try {
                     LIMIT 1
                 ");
                 $stmtOrder->execute([
-                    ':ref'     => $orderRef,
+                    ':ref' => $orderRef,
                     ':ref_trk' => $orderRef,
-                    ':ref_id'  => $refId
+                    ':ref_id' => $refId
                 ]);
             } else {
                 $stmtOrder = $db->prepare("
@@ -2036,7 +2049,7 @@ try {
                     LIMIT 1
                 ");
                 $stmtOrder->execute([
-                    ':ref'     => $orderRef,
+                    ':ref' => $orderRef,
                     ':ref_trk' => $orderRef
                 ]);
             }
@@ -2048,7 +2061,7 @@ try {
                 ], 404);
             }
 
-            $orderId = (int)$order['id'];
+            $orderId = (int) $order['id'];
 
             // Fetch order items (Zero cost_price leakage invariant)
             $stmtItems = $db->prepare("
@@ -2069,28 +2082,28 @@ try {
                 if (empty($img)) {
                     $img = 'assets/images/placeholder-apple.svg';
                 }
-                $uPrice = (float)$it['unit_price'];
-                $lTotal = (float)$it['line_total'];
+                $uPrice = (float) $it['unit_price'];
+                $lTotal = (float) $it['line_total'];
                 $items[] = [
-                    'product_id'           => (int)$it['product_id'],
-                    'product_name'         => $it['product_name'],
-                    'storage'              => $it['storage'] ?: 'Standard',
-                    'color'                => $it['color'] ?: 'Standard',
-                    'sku'                  => $it['sku'] ?: 'APPLE-DEVICE',
-                    'condition_type'       => $it['condition_type'] ?: 'Brand New Sealed',
-                    'warranty'             => $it['warranty'] ?: '1 Year Official Apple Warranty',
-                    'primary_image'        => $img,
-                    'quantity'             => (int)$it['quantity'],
-                    'unit_price'           => $uPrice,
-                    'line_total'           => $lTotal,
+                    'product_id' => (int) $it['product_id'],
+                    'product_name' => $it['product_name'],
+                    'storage' => $it['storage'] ?: 'Standard',
+                    'color' => $it['color'] ?: 'Standard',
+                    'sku' => $it['sku'] ?: 'APPLE-DEVICE',
+                    'condition_type' => $it['condition_type'] ?: 'Brand New Sealed',
+                    'warranty' => $it['warranty'] ?: '1 Year Official Apple Warranty',
+                    'primary_image' => $img,
+                    'quantity' => (int) $it['quantity'],
+                    'unit_price' => $uPrice,
+                    'line_total' => $lTotal,
                     'formatted_unit_price' => $currency . number_format($uPrice, 2),
                     'formatted_line_total' => $currency . number_format($lTotal, 2)
                 ];
             }
 
             // Milestone state resolution (1 to 5)
-            $status = strtoupper((string)$order['order_status']);
-            $shipStatus = strtoupper((string)($order['shipping_status'] ?? 'NOT_SHIPPED'));
+            $status = strtoupper((string) $order['order_status']);
+            $shipStatus = strtoupper((string) ($order['shipping_status'] ?? 'NOT_SHIPPED'));
             $isCancelled = ($status === 'CANCELLED' || $status === 'RETURNED');
             $isDelivered = ($status === 'DELIVERED');
 
@@ -2117,7 +2130,7 @@ try {
             }
 
             // Mask phone number for security (e.g. 0917****567)
-            $rawPhone = (string)$order['customer_phone'];
+            $rawPhone = (string) $order['customer_phone'];
             $maskedPhone = $rawPhone;
             if (strlen($rawPhone) >= 7) {
                 $maskedPhone = substr($rawPhone, 0, 4) . '****' . substr($rawPhone, -3);
@@ -2136,9 +2149,9 @@ try {
             }
 
             // Payment specifics
-            $paymentMethod = strtoupper((string)$order['payment_method']);
+            $paymentMethod = strtoupper((string) $order['payment_method']);
             $isCoins = ($paymentMethod === 'PRESTIGE_COINS');
-            $totalAmount = (float)$order['total_amount'];
+            $totalAmount = (float) $order['total_amount'];
             $codAmountDue = $isCoins ? 0.00 : $totalAmount;
 
             $createdAtTs = strtotime($order['created_at']);
@@ -2151,83 +2164,83 @@ try {
             // 5 Milestone definitions
             $milestones = [
                 [
-                    'step'        => 1,
-                    'title'       => 'Order Placed',
+                    'step' => 1,
+                    'title' => 'Order Placed',
                     'description' => $isCoins ? 'Verified & Paid via Prestige Coins' : 'Order Placed (Cash on Delivery)',
-                    'timestamp'   => $formattedCreated,
+                    'timestamp' => $formattedCreated,
                     'is_complete' => true,
-                    'is_current'  => ($currentStep === 1 && !$isCancelled)
+                    'is_current' => ($currentStep === 1 && !$isCancelled)
                 ],
                 [
-                    'step'        => 2,
-                    'title'       => 'Packed & Quality Checked',
+                    'step' => 2,
+                    'title' => 'Packed & Quality Checked',
                     'description' => 'Apple serial verified and tamper-proof sealed',
-                    'timestamp'   => ($currentStep >= 2) ? date('M d, Y', $createdAtTs) . ' (Quality Checked)' : 'Pending',
+                    'timestamp' => ($currentStep >= 2) ? date('M d, Y', $createdAtTs) . ' (Quality Checked)' : 'Pending',
                     'is_complete' => ($currentStep >= 2),
-                    'is_current'  => ($currentStep === 2 && !$isCancelled)
+                    'is_current' => ($currentStep === 2 && !$isCancelled)
                 ],
                 [
-                    'step'        => 3,
-                    'title'       => 'Handed to Courier',
+                    'step' => 3,
+                    'title' => 'Handed to Courier',
                     'description' => "Transferred to {$courierName} ({$trackingNo})",
-                    'timestamp'   => $dispatchedTime,
+                    'timestamp' => $dispatchedTime,
                     'is_complete' => ($currentStep >= 3),
-                    'is_current'  => ($currentStep === 3 && !$isCancelled)
+                    'is_current' => ($currentStep === 3 && !$isCancelled)
                 ],
                 [
-                    'step'        => 4,
-                    'title'       => 'Out for Delivery',
+                    'step' => 4,
+                    'title' => 'Out for Delivery',
                     'description' => 'Courier courier rider out for direct delivery',
-                    'timestamp'   => ($currentStep >= 4) ? 'Today' : 'Pending',
+                    'timestamp' => ($currentStep >= 4) ? 'Today' : 'Pending',
                     'is_complete' => ($currentStep >= 4),
-                    'is_current'  => ($currentStep === 4 && !$isCancelled)
+                    'is_current' => ($currentStep === 4 && !$isCancelled)
                 ],
                 [
-                    'step'        => 5,
-                    'title'       => 'Delivered & Completed',
+                    'step' => 5,
+                    'title' => 'Delivered & Completed',
                     'description' => $isCoins ? 'Signed and received by customer' : 'Package received & COD cash collected',
-                    'timestamp'   => $deliveredTime,
+                    'timestamp' => $deliveredTime,
                     'is_complete' => ($currentStep >= 5),
-                    'is_current'  => ($currentStep === 5 && !$isCancelled)
+                    'is_current' => ($currentStep === 5 && !$isCancelled)
                 ]
             ];
 
             $orderPayload = [
-                'id'                       => $orderId,
-                'order_number'             => $order['order_number'],
-                'order_status'             => $status,
-                'shipping_status'          => $shipStatus,
-                'status_badge_text'        => $statusBadgeText,
-                'current_step'             => $currentStep,
-                'is_cancelled'             => $isCancelled,
-                'is_delivered'             => $isDelivered,
-                'customer_name'            => $order['customer_name'],
-                'customer_phone_masked'    => $maskedPhone,
-                'delivery_address'         => $order['delivery_address'],
-                'delivery_notes'           => $order['delivery_notes'] ?: 'Standard insured delivery',
-                'courier_name'             => $courierName,
-                'tracking_number'          => $trackingNo,
-                'tracking_url'             => $trackingUrl,
-                'payment_method'           => $paymentMethod,
-                'payment_method_label'     => $isCoins ? '🪙 Prestige Coins' : '💵 Cash on Delivery (COD)',
-                'is_coins'                 => $isCoins,
-                'is_coins_paid'            => $isCoins,
-                'is_cod'                   => !$isCoins,
-                'payment_status'           => $order['payment_status'],
-                'payment_status_label'     => $isCoins ? 'Paid in Full' : ($isDelivered ? 'Cash Collected' : 'To Collect Upon Delivery'),
-                'cod_amount_to_collect'    => $codAmountDue,
+                'id' => $orderId,
+                'order_number' => $order['order_number'],
+                'order_status' => $status,
+                'shipping_status' => $shipStatus,
+                'status_badge_text' => $statusBadgeText,
+                'current_step' => $currentStep,
+                'is_cancelled' => $isCancelled,
+                'is_delivered' => $isDelivered,
+                'customer_name' => $order['customer_name'],
+                'customer_phone_masked' => $maskedPhone,
+                'delivery_address' => $order['delivery_address'],
+                'delivery_notes' => $order['delivery_notes'] ?: 'Standard insured delivery',
+                'courier_name' => $courierName,
+                'tracking_number' => $trackingNo,
+                'tracking_url' => $trackingUrl,
+                'payment_method' => $paymentMethod,
+                'payment_method_label' => $isCoins ? '🪙 Prestige Coins' : '💵 Cash on Delivery (COD)',
+                'is_coins' => $isCoins,
+                'is_coins_paid' => $isCoins,
+                'is_cod' => !$isCoins,
+                'payment_status' => $order['payment_status'],
+                'payment_status_label' => $isCoins ? 'Paid in Full' : ($isDelivered ? 'Cash Collected' : 'To Collect Upon Delivery'),
+                'cod_amount_to_collect' => $codAmountDue,
                 'formatted_cod_to_collect' => $currency . number_format($codAmountDue, 2),
-                'subtotal'                 => (float)$order['subtotal'],
-                'delivery_fee'             => (float)$order['delivery_fee'],
-                'total_amount'             => $totalAmount,
-                'formatted_subtotal'       => $currency . number_format((float)$order['subtotal'], 2),
-                'formatted_delivery_fee'   => (float)$order['delivery_fee'] > 0 ? $currency . number_format((float)$order['delivery_fee'], 2) : 'FREE',
-                'formatted_total'          => $currency . number_format($totalAmount, 2),
-                'created_at'               => $order['created_at'],
-                'formatted_created_at'     => $formattedCreated,
-                'estimated_delivery'       => $estimatedDelivery,
-                'milestones'               => $milestones,
-                'items'                    => $items
+                'subtotal' => (float) $order['subtotal'],
+                'delivery_fee' => (float) $order['delivery_fee'],
+                'total_amount' => $totalAmount,
+                'formatted_subtotal' => $currency . number_format((float) $order['subtotal'], 2),
+                'formatted_delivery_fee' => (float) $order['delivery_fee'] > 0 ? $currency . number_format((float) $order['delivery_fee'], 2) : 'FREE',
+                'formatted_total' => $currency . number_format($totalAmount, 2),
+                'created_at' => $order['created_at'],
+                'formatted_created_at' => $formattedCreated,
+                'estimated_delivery' => $estimatedDelivery,
+                'milestones' => $milestones,
+                'items' => $items
             ];
 
             send_json(true, 'Order tracking details retrieved successfully', ['order' => $orderPayload]);
@@ -2241,11 +2254,11 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $name = trim((string)($input['name'] ?? ''));
-            $email = strtolower(trim((string)($input['email'] ?? '')));
-            $phone = trim((string)($input['phone'] ?? ''));
-            $password = (string)($input['password'] ?? '');
-            $confirmPassword = (string)($input['confirm_password'] ?? '');
+            $name = trim((string) ($input['name'] ?? ''));
+            $email = strtolower(trim((string) ($input['email'] ?? '')));
+            $phone = trim((string) ($input['phone'] ?? ''));
+            $password = (string) ($input['password'] ?? '');
+            $confirmPassword = (string) ($input['confirm_password'] ?? '');
 
             $errors = [];
             if (strlen($name) < 2) {
@@ -2298,12 +2311,12 @@ try {
                     ('customer', 0, :email, :hash, :plain, 'register', :expires, :ip, :ua)
             ");
             $stmtOtp->execute([
-                ':email'   => $email,
-                ':hash'    => $otpHash,
-                ':plain'   => $otpCode,
+                ':email' => $email,
+                ':hash' => $otpHash,
+                ':plain' => $otpCode,
                 ':expires' => $expiresAt,
-                ':ip'      => $ipAddress,
-                ':ua'      => $userAgent
+                ':ip' => $ipAddress,
+                ':ua' => $userAgent
             ]);
 
             // Dispatch OTP to the registering email
@@ -2311,20 +2324,20 @@ try {
 
             // Store pending registration in visitor session
             $_SESSION['pending_customer_otp'] = [
-                'purpose'       => 'register',
-                'customer_id'   => 0,
-                'name'          => $name,
-                'email'         => $email,
-                'phone'         => $phone,
+                'purpose' => 'register',
+                'customer_id' => 0,
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone,
                 'password_hash' => $passwordHash,
-                'time'          => time()
+                'time' => time()
             ];
 
             send_json(true, 'A 6-digit verification code has been sent to ' . mask_email($email) . ' to verify your account.', [
-                'require_otp'  => true,
-                'purpose'      => 'register',
+                'require_otp' => true,
+                'purpose' => 'register',
                 'masked_email' => mask_email($email),
-                'dev_otp'      => $otpCode
+                'dev_otp' => $otpCode
             ]);
             break;
 
@@ -2333,8 +2346,8 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $identifier = trim((string)($input['login_identifier'] ?? $input['email'] ?? $input['phone'] ?? ''));
-            $password = (string)($input['password'] ?? '');
+            $identifier = trim((string) ($input['login_identifier'] ?? $input['email'] ?? $input['phone'] ?? ''));
+            $password = (string) ($input['password'] ?? '');
 
             if ($identifier === '') {
                 send_json(false, 'Please enter your email or mobile phone number.', null, [
@@ -2368,8 +2381,8 @@ try {
                 ], 403);
             }
 
-            $customerId = (int)$cust['id'];
-            $custEmail = trim((string)($cust['email'] ?? ''));
+            $customerId = (int) $cust['id'];
+            $custEmail = trim((string) ($cust['email'] ?? ''));
 
             // If customer has a registered email, enforce OTP authentication to that registered email
             if (!empty($custEmail)) {
@@ -2390,13 +2403,13 @@ try {
                         ('customer', :uid, :email, :hash, :plain, 'login', :expires, :ip, :ua)
                 ");
                 $stmtOtp->execute([
-                    ':uid'     => $customerId,
-                    ':email'   => $custEmail,
-                    ':hash'    => $otpHash,
-                    ':plain'   => $otpCode,
+                    ':uid' => $customerId,
+                    ':email' => $custEmail,
+                    ':hash' => $otpHash,
+                    ':plain' => $otpCode,
                     ':expires' => $expiresAt,
-                    ':ip'      => $ipAddress,
-                    ':ua'      => $userAgent
+                    ':ip' => $ipAddress,
+                    ':ua' => $userAgent
                 ]);
 
                 // Dispatch OTP directly to the registered email address
@@ -2404,19 +2417,19 @@ try {
 
                 // Set pending login state in session
                 $_SESSION['pending_customer_otp'] = [
-                    'purpose'     => 'login',
+                    'purpose' => 'login',
                     'customer_id' => $customerId,
-                    'name'        => $cust['name'],
-                    'email'       => $custEmail,
-                    'phone'       => $cust['phone'],
-                    'time'        => time()
+                    'name' => $cust['name'],
+                    'email' => $custEmail,
+                    'phone' => $cust['phone'],
+                    'time' => time()
                 ];
 
                 send_json(true, 'A 6-digit verification code has been sent to your registered email (' . mask_email($custEmail) . ').', [
-                    'require_otp'  => true,
-                    'purpose'      => 'login',
+                    'require_otp' => true,
+                    'purpose' => 'login',
                     'masked_email' => mask_email($custEmail),
-                    'dev_otp'      => $otpCode
+                    'dev_otp' => $otpCode
                 ]);
             }
 
@@ -2428,7 +2441,7 @@ try {
             $stmtW->execute([':cid' => $customerId]);
             $wCoin = $stmtW->fetchColumn();
 
-            $coins = ($wCoin !== false) ? (float)$wCoin : (float)($cust['wallet_balance'] ?? 0.00);
+            $coins = ($wCoin !== false) ? (float) $wCoin : (float) ($cust['wallet_balance'] ?? 0.00);
             $conversionRate = get_coin_conversion_rate($db);
 
             $_SESSION['customer_id'] = $customerId;
@@ -2441,13 +2454,13 @@ try {
 
             send_json(true, 'Welcome back, ' . htmlspecialchars($cust['name'], ENT_QUOTES, 'UTF-8') . '!', [
                 'customer' => [
-                    'id'                  => $customerId,
-                    'name'                => $cust['name'],
-                    'email'               => $cust['email'],
-                    'phone'               => $cust['phone'],
-                    'coins'               => $coins,
-                    'formatted_coins'     => number_format($coins, 2) . ' Coins',
-                    'conversion_rate'     => $conversionRate,
+                    'id' => $customerId,
+                    'name' => $cust['name'],
+                    'email' => $cust['email'],
+                    'phone' => $cust['phone'],
+                    'coins' => $coins,
+                    'formatted_coins' => number_format($coins, 2) . ' Coins',
+                    'conversion_rate' => $conversionRate,
                     'currency_equivalent' => round($coins * $conversionRate, 2)
                 ]
             ]);
@@ -2461,7 +2474,7 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $otpCode = trim((string)($input['otp_code'] ?? ''));
+            $otpCode = trim((string) ($input['otp_code'] ?? ''));
             if (empty($otpCode) || !preg_match('/^[0-9]{6}$/', $otpCode)) {
                 send_json(false, 'Please enter a valid 6-digit verification code.', null, [
                     'otp_code' => '6-digit numeric code required'
@@ -2498,7 +2511,7 @@ try {
                 send_json(false, 'Verification code has expired. Please request a new code.', null, [], 401);
             }
 
-            if ((int)$otp['attempts'] >= (int)$otp['max_attempts']) {
+            if ((int) $otp['attempts'] >= (int) $otp['max_attempts']) {
                 $db->prepare("UPDATE auth_otps SET is_used = 1 WHERE id = :id")->execute([':id' => $otp['id']]);
                 send_json(false, 'Too many failed attempts. This code has been invalidated. Please request a new code.', null, [], 401);
             }
@@ -2507,9 +2520,9 @@ try {
             $matched = password_verify($otpCode, $otp['otp_code_hash']) || ($otpCode === $otp['otp_code_plain']);
 
             if (!$matched) {
-                $newAtt = (int)$otp['attempts'] + 1;
+                $newAtt = (int) $otp['attempts'] + 1;
                 $db->prepare("UPDATE auth_otps SET attempts = :att WHERE id = :id")->execute([':att' => $newAtt, ':id' => $otp['id']]);
-                $rem = max(0, (int)$otp['max_attempts'] - $newAtt);
+                $rem = max(0, (int) $otp['max_attempts'] - $newAtt);
                 send_json(false, 'Invalid verification code.' . ($rem > 0 ? " ({$rem} attempt(s) remaining)" : ''), null, [], 401);
             }
 
@@ -2522,7 +2535,7 @@ try {
             // SUB-BRANCH: LOGIN OTP
             // =========================
             if ($purpose === 'login') {
-                $customerId = (int)$pending['customer_id'];
+                $customerId = (int) $pending['customer_id'];
                 $db->prepare("UPDATE customers SET last_login_at = NOW() WHERE id = :id")->execute([':id' => $customerId]);
 
                 $stmtCust = $db->prepare("SELECT id, name, email, phone, wallet_balance, status FROM customers WHERE id = :id LIMIT 1");
@@ -2530,7 +2543,7 @@ try {
                 $cust = $stmtCust->fetch(PDO::FETCH_ASSOC);
 
                 $wallet = resolve_customer_wallet($db, $customerId);
-                $coins = (float)$wallet['coin_balance'];
+                $coins = (float) $wallet['coin_balance'];
 
                 $_SESSION['customer_id'] = $customerId;
                 $_SESSION['customer_name'] = $cust['name'];
@@ -2545,19 +2558,19 @@ try {
 
                 // Send Welcome / Sign-in Alert Email to registered email
                 send_login_welcome_email($cust['email'], $cust['name'], 'Prestige Customer', [
-                    'ip'         => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
                     'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Web Browser'
                 ]);
 
                 send_json(true, 'Welcome back, ' . htmlspecialchars($cust['name'], ENT_QUOTES, 'UTF-8') . '!', [
                     'customer' => [
-                        'id'                  => $customerId,
-                        'name'                => $cust['name'],
-                        'email'               => $cust['email'],
-                        'phone'               => $cust['phone'],
-                        'coins'               => $coins,
-                        'formatted_coins'     => number_format($coins, 2) . ' Coins',
-                        'conversion_rate'     => $conversionRate,
+                        'id' => $customerId,
+                        'name' => $cust['name'],
+                        'email' => $cust['email'],
+                        'phone' => $cust['phone'],
+                        'coins' => $coins,
+                        'formatted_coins' => number_format($coins, 2) . ' Coins',
+                        'conversion_rate' => $conversionRate,
                         'currency_equivalent' => round($coins * $conversionRate, 2)
                     ]
                 ]);
@@ -2579,7 +2592,7 @@ try {
                     $existingId = $stmtPhone->fetchColumn();
 
                     if ($existingId) {
-                        $customerId = (int)$existingId;
+                        $customerId = (int) $existingId;
                         $stmtUp = $db->prepare("
                             UPDATE customers 
                             SET name = :name, email = :email, password_hash = :hash, 
@@ -2587,10 +2600,10 @@ try {
                             WHERE id = :id
                         ");
                         $stmtUp->execute([
-                            ':name'  => $name,
+                            ':name' => $name,
                             ':email' => $email,
-                            ':hash'  => $passwordHash,
-                            ':id'    => $customerId
+                            ':hash' => $passwordHash,
+                            ':id' => $customerId
                         ]);
                     } else {
                         $stmtIns = $db->prepare("
@@ -2598,13 +2611,13 @@ try {
                             VALUES (:name, :email, :phone, :hash, :bal, NOW(), NOW(), 'active', NOW(), NOW())
                         ");
                         $stmtIns->execute([
-                            ':name'  => $name,
+                            ':name' => $name,
                             ':email' => $email,
                             ':phone' => $phone,
-                            ':hash'  => $passwordHash,
-                            ':bal'   => $initialBonus
+                            ':hash' => $passwordHash,
+                            ':bal' => $initialBonus
                         ]);
-                        $customerId = (int)$db->lastInsertId();
+                        $customerId = (int) $db->lastInsertId();
                     }
 
                     // Create/sync customer wallet
@@ -2630,19 +2643,19 @@ try {
 
                     // Send Welcome & Account Verified Email
                     send_login_welcome_email($email, $name, 'Verified Prestige Customer', [
-                        'ip'         => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                        'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
                         'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Web Browser'
                     ]);
 
                     send_json(true, 'Welcome to Prestige Apple Store! Your account has been verified and created.', [
                         'customer' => [
-                            'id'                  => $customerId,
-                            'name'                => $name,
-                            'email'               => $email,
-                            'phone'               => $phone,
-                            'coins'               => $initialBonus,
-                            'formatted_coins'     => number_format($initialBonus, 2) . ' Coins',
-                            'conversion_rate'     => $conversionRate,
+                            'id' => $customerId,
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'coins' => $initialBonus,
+                            'formatted_coins' => number_format($initialBonus, 2) . ' Coins',
+                            'conversion_rate' => $conversionRate,
                             'currency_equivalent' => round($initialBonus * $conversionRate, 2)
                         ]
                     ], [], 201);
@@ -2669,7 +2682,7 @@ try {
             }
 
             $cooldown = 60;
-            $elapsed = time() - (int)($pending['time'] ?? 0);
+            $elapsed = time() - (int) ($pending['time'] ?? 0);
             if ($elapsed < $cooldown) {
                 $rem = $cooldown - $elapsed;
                 send_json(false, "Please wait {$rem} second(s) before requesting a new code.", null, [
@@ -2680,7 +2693,7 @@ try {
             $email = $pending['email'];
             $name = $pending['name'];
             $purpose = $pending['purpose'];
-            $customerId = (int)($pending['customer_id'] ?? 0);
+            $customerId = (int) ($pending['customer_id'] ?? 0);
 
             $newOtp = sprintf('%06d', random_int(100000, 999999));
             $otpHash = password_hash($newOtp, PASSWORD_BCRYPT);
@@ -2698,23 +2711,180 @@ try {
                     ('customer', :uid, :email, :hash, :plain, :purpose, :expires, :ip, :ua)
             ");
             $stmtOtp->execute([
-                ':uid'     => $customerId,
-                ':email'   => $email,
-                ':hash'    => $otpHash,
-                ':plain'   => $newOtp,
+                ':uid' => $customerId,
+                ':email' => $email,
+                ':hash' => $otpHash,
+                ':plain' => $newOtp,
                 ':purpose' => $purpose,
                 ':expires' => $expiresAt,
-                ':ip'      => $ipAddress,
-                ':ua'      => $userAgent
+                ':ip' => $ipAddress,
+                ':ua' => $userAgent
             ]);
 
             send_otp_email($email, $name, $newOtp, 10);
             $_SESSION['pending_customer_otp']['time'] = time();
 
             send_json(true, 'A fresh 6-digit verification code has been dispatched to your email.', [
-                'dev_otp'      => $newOtp,
+                'dev_otp' => $newOtp,
                 'masked_email' => mask_email($email)
             ]);
+            break;
+
+        // =====================================================================
+        // CUSTOMER FORGOT PASSWORD (REQUEST RESET OTP)
+        // =====================================================================
+        case 'customer_forgot_password':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+
+            $identifier = trim((string)($input['login_identifier'] ?? $input['email'] ?? $input['phone'] ?? ''));
+            if ($identifier === '') {
+                send_json(false, 'Please enter your email or mobile phone number.', null, [
+                    'login_identifier' => 'Email or mobile phone is required'
+                ], 422);
+            }
+
+            $stmtCust = $db->prepare("
+                SELECT id, name, email, phone, status
+                FROM customers
+                WHERE (email = :id OR phone = :id_phone) AND deleted_at IS NULL
+                LIMIT 1
+            ");
+            $stmtCust->execute([':id' => $identifier, ':id_phone' => $identifier]);
+            $cust = $stmtCust->fetch(PDO::FETCH_ASSOC);
+
+            if (!$cust) {
+                send_json(false, 'No Prestige account was found matching that email or phone number.', null, [
+                    'login_identifier' => 'Account not found'
+                ], 404);
+            }
+
+            if (($cust['status'] ?? 'active') !== 'active') {
+                send_json(false, 'This Prestige account is currently suspended. Please contact customer care.', null, [
+                    'status' => 'Account inactive'
+                ], 403);
+            }
+
+            $customerId = (int)$cust['id'];
+            $custEmail = trim((string)($cust['email'] ?? ''));
+
+            if (empty($custEmail)) {
+                send_json(false, 'No email address is linked to this account for password reset. Please contact support@prestigeapple.ph.', null, [], 422);
+            }
+
+            $otpCode = sprintf('%06d', random_int(100000, 999999));
+            $otpHash = password_hash($otpCode, PASSWORD_BCRYPT);
+            $expiresAt = date('Y-m-d H:i:s', time() + 900); // 15 minutes
+            $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Web Browser';
+
+            // Invalidate older unconsumed password_reset OTPs for this customer
+            $stmtInv = $db->prepare("UPDATE auth_otps SET is_used = 1 WHERE user_id = :uid AND user_type = 'customer' AND purpose = 'password_reset' AND is_used = 0");
+            $stmtInv->execute([':uid' => $customerId]);
+
+            $stmtOtp = $db->prepare("
+                INSERT INTO auth_otps 
+                    (user_type, user_id, email, otp_code_hash, otp_code_plain, purpose, expires_at, ip_address, user_agent)
+                VALUES 
+                    ('customer', :uid, :email, :hash, :plain, 'password_reset', :expires, :ip, :ua)
+            ");
+            $stmtOtp->execute([
+                ':uid' => $customerId,
+                ':email' => $custEmail,
+                ':hash' => $otpHash,
+                ':plain' => $otpCode,
+                ':expires' => $expiresAt,
+                ':ip' => $ipAddress,
+                ':ua' => $userAgent
+            ]);
+
+            send_otp_email($custEmail, $cust['name'], $otpCode, 15);
+
+            $_SESSION['pending_password_reset'] = [
+                'customer_id' => $customerId,
+                'email'       => $custEmail,
+                'name'        => $cust['name'],
+                'time'        => time()
+            ];
+
+            send_json(true, 'A 6-digit password reset code has been sent to ' . mask_email($custEmail) . '.', [
+                'masked_email' => mask_email($custEmail),
+                'email'        => $custEmail,
+                'dev_otp'      => $otpCode
+            ]);
+            break;
+
+        // =====================================================================
+        // CUSTOMER RESET PASSWORD WITH OTP
+        // =====================================================================
+        case 'customer_reset_password_with_otp':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+
+            $otpCode = trim((string)($input['otp_code'] ?? ''));
+            $newPassword = (string)($input['new_password'] ?? '');
+            $confirmPassword = (string)($input['confirm_password'] ?? '');
+
+            $pending = $_SESSION['pending_password_reset'] ?? null;
+            if (!$pending || empty($pending['customer_id']) || empty($pending['email'])) {
+                send_json(false, 'Password reset session expired or invalid. Please request a new code.', null, [], 401);
+            }
+
+            if (strlen($otpCode) !== 6 || !ctype_digit($otpCode)) {
+                send_json(false, 'Please provide a valid 6-digit verification code.', null, [
+                    'otp_code' => 'Invalid code'
+                ], 422);
+            }
+
+            if (strlen($newPassword) < 6) {
+                send_json(false, 'New password must be at least 6 characters.', null, [
+                    'new_password' => 'Password too short'
+                ], 422);
+            }
+
+            if ($newPassword !== $confirmPassword) {
+                send_json(false, 'Password confirmation does not match.', null, [
+                    'confirm_password' => 'Passwords do not match'
+                ], 422);
+            }
+
+            $customerId = (int)$pending['customer_id'];
+
+            // Find matching active OTP
+            $stmtFind = $db->prepare("
+                SELECT id, otp_code_hash
+                FROM auth_otps
+                WHERE user_id = :uid
+                  AND user_type = 'customer'
+                  AND purpose = 'password_reset'
+                  AND is_used = 0
+                  AND expires_at > NOW()
+                ORDER BY id DESC
+                LIMIT 1
+            ");
+            $stmtFind->execute([':uid' => $customerId]);
+            $otpRecord = $stmtFind->fetch(PDO::FETCH_ASSOC);
+
+            if (!$otpRecord || !password_verify($otpCode, $otpRecord['otp_code_hash'])) {
+                send_json(false, 'Invalid or expired verification code. Please check the code and try again.', null, [
+                    'otp_code' => 'Invalid code'
+                ], 422);
+            }
+
+            // Mark OTP used
+            $stmtUsed = $db->prepare("UPDATE auth_otps SET is_used = 1 WHERE id = :id");
+            $stmtUsed->execute([':id' => (int)$otpRecord['id']]);
+
+            // Update customer password
+            $newHash = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+            $stmtUp = $db->prepare("UPDATE customers SET password_hash = :hash, updated_at = NOW() WHERE id = :id");
+            $stmtUp->execute([':hash' => $newHash, ':id' => $customerId]);
+
+            unset($_SESSION['pending_password_reset']);
+
+            send_json(true, 'Your password has been successfully reset! You can now sign in with your new password.');
             break;
 
         case 'customer_logout':
@@ -2738,30 +2908,30 @@ try {
         case 'customer_profile':
             $conversionRate = get_coin_conversion_rate($db);
             if (!empty($_SESSION['customer_id'])) {
-                $cid = (int)$_SESSION['customer_id'];
+                $cid = (int) $_SESSION['customer_id'];
                 $stmt = $db->prepare("SELECT id, name, email, phone, wallet_balance, created_at FROM customers WHERE id = :id AND deleted_at IS NULL LIMIT 1");
                 $stmt->execute([':id' => $cid]);
                 $c = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                $coins = (float)($_SESSION['customer_coins'] ?? ($c['wallet_balance'] ?? 0.00));
+                $coins = (float) ($_SESSION['customer_coins'] ?? ($c['wallet_balance'] ?? 0.00));
 
                 send_json(true, 'Customer profile retrieved', [
                     'is_authenticated' => true,
                     'customer' => [
-                        'id'                  => $cid,
-                        'name'                => $c ? $c['name'] : ($_SESSION['customer_name'] ?? 'Prestige Customer'),
-                        'email'               => $c ? $c['email'] : ($_SESSION['customer_email'] ?? ''),
-                        'phone'               => $c ? $c['phone'] : ($_SESSION['customer_phone'] ?? ''),
-                        'coins'               => $coins,
-                        'formatted_coins'     => number_format($coins, 2) . ' Coins',
-                        'conversion_rate'     => $conversionRate,
+                        'id' => $cid,
+                        'name' => $c ? $c['name'] : ($_SESSION['customer_name'] ?? 'Prestige Customer'),
+                        'email' => $c ? $c['email'] : ($_SESSION['customer_email'] ?? ''),
+                        'phone' => $c ? $c['phone'] : ($_SESSION['customer_phone'] ?? ''),
+                        'coins' => $coins,
+                        'formatted_coins' => number_format($coins, 2) . ' Coins',
+                        'conversion_rate' => $conversionRate,
                         'currency_equivalent' => round($coins * $conversionRate, 2)
                     ]
                 ]);
             } else {
                 send_json(true, 'Guest browsing mode', [
                     'is_authenticated' => false,
-                    'customer'         => null
+                    'customer' => null
                 ]);
             }
             break;
@@ -2774,7 +2944,7 @@ try {
                 send_json(false, 'Sign in required to view account details.', ['redirect' => 'login.php?redirect=account.php'], [], 401);
             }
 
-            $cid = (int)$_SESSION['customer_id'];
+            $cid = (int) $_SESSION['customer_id'];
             $stmt = $db->prepare("
                 SELECT id, name, email, phone, wallet_balance, last_login_at, created_at 
                 FROM customers 
@@ -2790,7 +2960,7 @@ try {
 
             // Sync wallet
             $wallet = resolve_customer_wallet($db, $cid);
-            $coins = (float)$wallet['coin_balance'];
+            $coins = (float) $wallet['coin_balance'];
             $_SESSION['customer_coins'] = $coins;
             $conversionRate = get_coin_conversion_rate($db);
 
@@ -2816,21 +2986,21 @@ try {
 
             send_json(true, 'Account details loaded successfully.', [
                 'customer' => [
-                    'id'                  => (int)$customer['id'],
-                    'name'                => $customer['name'],
-                    'email'               => $customer['email'],
-                    'phone'               => $customer['phone'],
-                    'wallet_balance'      => $coins,
-                    'formatted_coins'     => number_format($coins, 2) . ' Coins',
-                    'conversion_rate'     => $conversionRate,
+                    'id' => (int) $customer['id'],
+                    'name' => $customer['name'],
+                    'email' => $customer['email'],
+                    'phone' => $customer['phone'],
+                    'wallet_balance' => $coins,
+                    'formatted_coins' => number_format($coins, 2) . ' Coins',
+                    'conversion_rate' => $conversionRate,
                     'currency_equivalent' => round($coins * $conversionRate, 2),
-                    'last_login_at'       => $customer['last_login_at'] ? date('M d, Y h:i A', strtotime($customer['last_login_at'])) : 'Recent',
-                    'member_since'        => date('M Y', strtotime($customer['created_at'])),
-                    'total_orders'        => (int)$stats['total_orders'],
-                    'delivered_spend'     => $currency . number_format((float)$stats['delivered_spend'], 2)
+                    'last_login_at' => $customer['last_login_at'] ? date('M d, Y h:i A', strtotime($customer['last_login_at'])) : 'Recent',
+                    'member_since' => date('M Y', strtotime($customer['created_at'])),
+                    'total_orders' => (int) $stats['total_orders'],
+                    'delivered_spend' => $currency . number_format((float) $stats['delivered_spend'], 2)
                 ],
                 'default_address' => $defaultAddress,
-                'currency'        => $currency
+                'currency' => $currency
             ]);
             break;
 
@@ -2839,9 +3009,9 @@ try {
                 send_json(false, 'Sign in required to update profile.', ['redirect' => 'login.php'], [], 401);
             }
 
-            $cid = (int)$_SESSION['customer_id'];
-            $name = trim((string)($input['name'] ?? ''));
-            $phone = trim((string)($input['phone'] ?? ''));
+            $cid = (int) $_SESSION['customer_id'];
+            $name = trim((string) ($input['name'] ?? ''));
+            $phone = trim((string) ($input['phone'] ?? ''));
 
             $errors = [];
             if (strlen($name) < 2 || strlen($name) > 100) {
@@ -2858,20 +3028,20 @@ try {
             // Update customers table
             $stmtUp = $db->prepare("UPDATE customers SET name = :name, phone = :phone, updated_at = NOW() WHERE id = :cid");
             $stmtUp->execute([
-                ':name'  => $name,
+                ':name' => $name,
                 ':phone' => $phone,
-                ':cid'   => $cid
+                ':cid' => $cid
             ]);
 
             $_SESSION['customer_name'] = $name;
             $_SESSION['customer_phone'] = $phone;
 
             // Handle default delivery address upsert if provided
-            $line1 = trim((string)($input['address_line1'] ?? ''));
-            $city = trim((string)($input['city'] ?? ''));
-            $province = trim((string)($input['province_state'] ?? ''));
-            $postal = trim((string)($input['postal_code'] ?? ''));
-            $line2 = trim((string)($input['address_line2'] ?? ''));
+            $line1 = trim((string) ($input['address_line1'] ?? ''));
+            $city = trim((string) ($input['city'] ?? ''));
+            $province = trim((string) ($input['province_state'] ?? ''));
+            $postal = trim((string) ($input['postal_code'] ?? ''));
+            $line2 = trim((string) ($input['address_line2'] ?? ''));
 
             if (!empty($line1) && !empty($city) && !empty($province)) {
                 $checkAddr = $db->prepare("SELECT id FROM customer_addresses WHERE customer_id = :cid AND is_default = 1 LIMIT 1");
@@ -2885,12 +3055,12 @@ try {
                         WHERE id = :id
                     ");
                     $updateAddr->execute([
-                        ':l1'   => $line1,
-                        ':l2'   => $line2,
+                        ':l1' => $line1,
+                        ':l2' => $line2,
                         ':city' => $city,
                         ':prov' => $province,
                         ':post' => $postal,
-                        ':id'   => $existingAddr['id']
+                        ':id' => $existingAddr['id']
                     ]);
                 } else {
                     $insertAddr = $db->prepare("
@@ -2898,9 +3068,9 @@ try {
                         VALUES (:cid, :l1, :l2, :city, :prov, :post, 1, NOW())
                     ");
                     $insertAddr->execute([
-                        ':cid'  => $cid,
-                        ':l1'   => $line1,
-                        ':l2'   => $line2,
+                        ':cid' => $cid,
+                        ':l1' => $line1,
+                        ':l2' => $line2,
                         ':city' => $city,
                         ':prov' => $province,
                         ':post' => $postal
@@ -2913,12 +3083,12 @@ try {
                 INSERT INTO audit_logs (user_id, action, module, old_values, new_values)
                 VALUES (1, 'CUSTOMER_PROFILE_UPDATE', 'store_customers', :old, :new)
             ")->execute([
-                ':old' => json_encode(['customer_id' => $cid]),
-                ':new' => json_encode(['name' => $name, 'phone' => $phone, 'city' => $city])
-            ]);
+                        ':old' => json_encode(['customer_id' => $cid]),
+                        ':new' => json_encode(['name' => $name, 'phone' => $phone, 'city' => $city])
+                    ]);
 
             send_json(true, 'Your profile details and delivery address were updated successfully.', [
-                'name'  => $name,
+                'name' => $name,
                 'phone' => $phone
             ]);
             break;
@@ -2928,10 +3098,10 @@ try {
                 send_json(false, 'Sign in required to change password.', ['redirect' => 'login.php'], [], 401);
             }
 
-            $cid = (int)$_SESSION['customer_id'];
-            $currentPass = (string)($input['current_password'] ?? '');
-            $newPass = (string)($input['new_password'] ?? '');
-            $confirmPass = (string)($input['confirm_password'] ?? '');
+            $cid = (int) $_SESSION['customer_id'];
+            $currentPass = (string) ($input['current_password'] ?? '');
+            $newPass = (string) ($input['new_password'] ?? '');
+            $confirmPass = (string) ($input['confirm_password'] ?? '');
 
             $errors = [];
             if (empty($currentPass)) {
@@ -2964,7 +3134,7 @@ try {
             $stmtUp = $db->prepare("UPDATE customers SET password_hash = :hash, updated_at = NOW() WHERE id = :cid");
             $stmtUp->execute([
                 ':hash' => $newHash,
-                ':cid'  => $cid
+                ':cid' => $cid
             ]);
 
             // Audit log
@@ -2972,9 +3142,9 @@ try {
                 INSERT INTO audit_logs (user_id, action, module, old_values, new_values)
                 VALUES (1, 'CUSTOMER_PASSWORD_CHANGE', 'store_customers', :old, :new)
             ")->execute([
-                ':old' => json_encode(['customer_id' => $cid]),
-                ':new' => json_encode(['status' => 'password_updated_successfully'])
-            ]);
+                        ':old' => json_encode(['customer_id' => $cid]),
+                        ':new' => json_encode(['status' => 'password_updated_successfully'])
+                    ]);
 
             send_json(true, 'Your account password has been changed successfully.');
             break;
@@ -2984,8 +3154,8 @@ try {
                 send_json(false, 'Sign in required to view orders.', ['redirect' => 'login.php?redirect=account.php'], [], 401);
             }
 
-            $cid = (int)$_SESSION['customer_id'];
-            $statusFilter = strtolower(trim((string)($input['status'] ?? 'all')));
+            $cid = (int) $_SESSION['customer_id'];
+            $statusFilter = strtolower(trim((string) ($input['status'] ?? 'all')));
 
             $sql = "
                 SELECT o.id, o.order_number, o.customer_name, o.customer_phone, o.delivery_address,
@@ -3013,7 +3183,7 @@ try {
             // Fetch items for each order
             $orders = [];
             foreach ($rawOrders as $ord) {
-                $orderId = (int)$ord['id'];
+                $orderId = (int) $ord['id'];
                 $itemStmt = $db->prepare("
                     SELECT oi.id, oi.product_id, oi.product_name, oi.unit_price, oi.quantity, oi.line_total,
                            COALESCE(p.sku, '') as sku, 
@@ -3034,16 +3204,16 @@ try {
                     $variantSpecs = implode(' • ', $specParts);
 
                     $formattedItems[] = [
-                        'product_id'    => (int)$item['product_id'],
-                        'product_name'  => $item['product_name'],
-                        'sku'           => $item['sku'],
-                        'unit_price'    => (float)$item['unit_price'],
-                        'formatted_unit'=> $currency . number_format((float)$item['unit_price'], 2),
-                        'quantity'      => (int)$item['quantity'],
-                        'line_total'    => (float)$item['line_total'],
-                        'formatted_line'=> $currency . number_format((float)$item['line_total'], 2),
+                        'product_id' => (int) $item['product_id'],
+                        'product_name' => $item['product_name'],
+                        'sku' => $item['sku'],
+                        'unit_price' => (float) $item['unit_price'],
+                        'formatted_unit' => $currency . number_format((float) $item['unit_price'], 2),
+                        'quantity' => (int) $item['quantity'],
+                        'line_total' => (float) $item['line_total'],
+                        'formatted_line' => $currency . number_format((float) $item['line_total'], 2),
                         'variant_specs' => $variantSpecs,
-                        'image_url'     => !empty($item['image_path']) ? '../' . $item['image_path'] : null
+                        'image_url' => !empty($item['image_path']) ? '../' . $item['image_path'] : null
                     ];
                 }
 
@@ -3051,29 +3221,29 @@ try {
                 $isCod = (strtoupper($ord['payment_method']) === 'COD');
 
                 $orders[] = [
-                    'id'               => $orderId,
-                    'order_number'     => $ord['order_number'],
-                    'order_status'     => $ord['order_status'],
-                    'shipping_status'  => $ord['shipping_status'],
-                    'payment_method'   => $ord['payment_method'],
-                    'is_coins_paid'    => $isCoins,
-                    'is_cod'           => $isCod,
-                    'total_amount'     => (float)$ord['total_amount'],
-                    'formatted_total'  => $currency . number_format((float)$ord['total_amount'], 2),
-                    'delivery_fee'     => (float)$ord['delivery_fee'],
-                    'courier_name'     => $ord['courier_name'] ?: 'Prestige Insured Express',
-                    'tracking_number'  => $ord['tracking_number'] ?: '',
-                    'item_count'       => count($formattedItems),
-                    'first_product'    => $formattedItems[0] ?? null,
-                    'items'            => $formattedItems,
-                    'created_at'       => date('M d, Y h:i A', strtotime($ord['created_at'])),
-                    'date_short'       => date('M d, Y', strtotime($ord['created_at'])),
-                    'track_url'        => 'track-order.php?query=' . urlencode($ord['order_number'])
+                    'id' => $orderId,
+                    'order_number' => $ord['order_number'],
+                    'order_status' => $ord['order_status'],
+                    'shipping_status' => $ord['shipping_status'],
+                    'payment_method' => $ord['payment_method'],
+                    'is_coins_paid' => $isCoins,
+                    'is_cod' => $isCod,
+                    'total_amount' => (float) $ord['total_amount'],
+                    'formatted_total' => $currency . number_format((float) $ord['total_amount'], 2),
+                    'delivery_fee' => (float) $ord['delivery_fee'],
+                    'courier_name' => $ord['courier_name'] ?: 'Prestige Insured Express',
+                    'tracking_number' => $ord['tracking_number'] ?: '',
+                    'item_count' => count($formattedItems),
+                    'first_product' => $formattedItems[0] ?? null,
+                    'items' => $formattedItems,
+                    'created_at' => date('M d, Y h:i A', strtotime($ord['created_at'])),
+                    'date_short' => date('M d, Y', strtotime($ord['created_at'])),
+                    'track_url' => 'track-order.php?query=' . urlencode($ord['order_number'])
                 ];
             }
 
             send_json(true, 'Order history retrieved successfully.', [
-                'total'  => count($orders),
+                'total' => count($orders),
                 'orders' => $orders
             ]);
             break;
@@ -3084,7 +3254,7 @@ try {
                 send_json(true, 'Guest mode', ['shipments' => []]);
             }
 
-            $cid = (int)$_SESSION['customer_id'];
+            $cid = (int) $_SESSION['customer_id'];
             $stmt = $db->prepare("
                 SELECT o.id, o.order_number, o.courier_name, o.tracking_number, o.shipping_status, 
                        o.order_status, o.total_amount, o.created_at,
@@ -3103,17 +3273,17 @@ try {
             $shipments = [];
             foreach ($rows as $row) {
                 $shipments[] = [
-                    'order_number'    => $row['order_number'],
+                    'order_number' => $row['order_number'],
                     'first_item_name' => $row['first_item_name'] ?: 'Apple Genuine Device',
-                    'first_item_specs'=> $row['first_item_specs'] ?: '',
-                    'total_items'     => (int)$row['total_items'],
-                    'courier_name'    => $row['courier_name'] ?: 'Prestige Insured Logistics',
+                    'first_item_specs' => $row['first_item_specs'] ?: '',
+                    'total_items' => (int) $row['total_items'],
+                    'courier_name' => $row['courier_name'] ?: 'Prestige Insured Logistics',
                     'tracking_number' => $row['tracking_number'] ?: '',
                     'shipping_status' => $row['shipping_status'],
-                    'order_status'    => $row['order_status'],
-                    'total_amount'    => $currency . number_format((float)$row['total_amount'], 2),
-                    'date_placed'     => date('M d, Y', strtotime($row['created_at'])),
-                    'image_url'       => !empty($row['thumb_path']) ? '../' . $row['thumb_path'] : null
+                    'order_status' => $row['order_status'],
+                    'total_amount' => $currency . number_format((float) $row['total_amount'], 2),
+                    'date_placed' => date('M d, Y', strtotime($row['created_at'])),
+                    'image_url' => !empty($row['thumb_path']) ? '../' . $row['thumb_path'] : null
                 ];
             }
 
