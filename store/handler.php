@@ -2738,25 +2738,31 @@ try {
                 send_json(false, 'Method not allowed. Use POST.', null, [], 405);
             }
 
-            $identifier = trim((string)($input['login_identifier'] ?? $input['email'] ?? $input['phone'] ?? ''));
-            if ($identifier === '') {
-                send_json(false, 'Please enter your email or mobile phone number.', null, [
-                    'login_identifier' => 'Email or mobile phone is required'
+            $email = trim((string)($input['email'] ?? $input['login_identifier'] ?? ''));
+            if ($email === '') {
+                send_json(false, 'Please enter your registered email address.', null, [
+                    'email' => 'Email address is required'
+                ], 422);
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                send_json(false, 'Please enter a valid email address.', null, [
+                    'email' => 'Invalid email address format'
                 ], 422);
             }
 
             $stmtCust = $db->prepare("
                 SELECT id, name, email, phone, status
                 FROM customers
-                WHERE (email = :id OR phone = :id_phone) AND deleted_at IS NULL
+                WHERE email = :email AND deleted_at IS NULL
                 LIMIT 1
             ");
-            $stmtCust->execute([':id' => $identifier, ':id_phone' => $identifier]);
+            $stmtCust->execute([':email' => $email]);
             $cust = $stmtCust->fetch(PDO::FETCH_ASSOC);
 
             if (!$cust) {
-                send_json(false, 'No Prestige account was found matching that email or phone number.', null, [
-                    'login_identifier' => 'Account not found'
+                send_json(false, 'No Prestige account was found matching that email address.', null, [
+                    'email' => 'Account not found'
                 ], 404);
             }
 

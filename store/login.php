@@ -415,13 +415,13 @@ require_once __DIR__ . '/includes/store_header.php';
                 <!-- Step 1: Request Reset Code -->
                 <div id="forgotPwdStep1">
                     <p style="font-size:13.5px; color:#64748b; line-height:1.5; margin-bottom:16px;">
-                        Enter your registered email address or mobile phone. We will send a 6-digit verification code to reset your password.
+                        Enter your registered email address. We will send a 6-digit verification code to reset your password.
                     </p>
                     <div id="forgotPwdAlert1" style="display:none; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px;"></div>
                     <form onsubmit="handleRequestPasswordReset(event)">
                         <div class="auth-form-group" style="margin-bottom:16px;">
-                            <label class="auth-form-label" for="resetIdentifier">Email or Phone</label>
-                            <input type="text" id="resetIdentifier" class="auth-form-input" placeholder="e.g. customer@example.com or 0917XXXXXXX" required>
+                            <label class="auth-form-label" for="resetEmail">Email Address</label>
+                            <input type="email" id="resetEmail" class="auth-form-input" placeholder="e.g. customer@example.com" required autocomplete="email">
                         </div>
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
                             <button type="button" onclick="closeForgotPasswordModal()" style="height:42px; padding:0 16px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Cancel</button>
@@ -925,8 +925,8 @@ function openForgotPasswordModal() {
     if (modal) {
         modal.style.display = 'flex';
         const currentLoginVal = document.getElementById('loginIdentifier')?.value?.trim();
-        const resetInp = document.getElementById('resetIdentifier');
-        if (currentLoginVal && resetInp) {
+        const resetInp = document.getElementById('resetEmail');
+        if (currentLoginVal && resetInp && currentLoginVal.includes('@')) {
             resetInp.value = currentLoginVal;
         }
         backToResetStep1();
@@ -949,11 +949,11 @@ function backToResetStep1() {
 
 async function handleRequestPasswordReset(e) {
     e.preventDefault();
-    const identifier = document.getElementById('resetIdentifier')?.value?.trim();
+    const email = document.getElementById('resetEmail')?.value?.trim();
     const btn = document.getElementById('btnSendResetCode');
     const alert1 = document.getElementById('forgotPwdAlert1');
 
-    if (!identifier) return;
+    if (!email) return;
 
     btn.disabled = true;
     btn.textContent = 'Sending code...';
@@ -966,7 +966,7 @@ async function handleRequestPasswordReset(e) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ login_identifier: identifier })
+            body: JSON.stringify({ email: email })
         });
 
         const data = await res.json();
