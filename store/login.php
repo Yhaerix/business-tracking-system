@@ -260,7 +260,7 @@ require_once __DIR__ . '/includes/store_header.php';
     justify-content: center;
     color: #ffffff;
     margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: none;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 .auth-brand-name {
