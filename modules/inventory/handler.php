@@ -111,8 +111,10 @@ try {
             }
 
             if ($search !== '') {
-                $where[] = '(p.name LIKE :search OR p.sku LIKE :search OR m.notes LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(p.name LIKE :s_name OR p.sku LIKE :s_sku OR m.notes LIKE :s_notes)';
+                $params[':s_name'] = '%' . $search . '%';
+                $params[':s_sku'] = '%' . $search . '%';
+                $params[':s_notes'] = '%' . $search . '%';
             }
 
             $whereSql = implode(' AND ', $where);

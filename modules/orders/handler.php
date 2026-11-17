@@ -403,8 +403,10 @@ try {
             $params = [];
 
             if ($search !== '') {
-                $where[] = '(o.order_number LIKE :search OR o.customer_name LIKE :search OR o.customer_phone LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(o.order_number LIKE :s_num OR o.customer_name LIKE :s_name OR o.customer_phone LIKE :s_phone)';
+                $params[':s_num'] = '%' . $search . '%';
+                $params[':s_name'] = '%' . $search . '%';
+                $params[':s_phone'] = '%' . $search . '%';
             }
 
             if ($orderStatus !== '') {
@@ -415,6 +417,13 @@ try {
             if ($paymentStatus !== '') {
                 $where[] = 'o.payment_status = :payment_status';
                 $params[':payment_status'] = $paymentStatus;
+            }
+
+            $paymentMode = strtoupper(trim((string) ($input['payment_mode'] ?? '')));
+            if ($paymentMode === 'COD') {
+                $where[] = "o.payment_method = 'COD'";
+            } elseif ($paymentMode === 'PRESTIGE_COINS' || $paymentMode === 'COINS') {
+                $where[] = "o.payment_method = 'PRESTIGE_COINS'";
             }
 
             if ($dateFrom !== '') {
@@ -458,6 +467,9 @@ try {
                     o.customer_phone,
                     o.delivery_address,
                     o.delivery_notes,
+                    o.courier_name,
+                    o.tracking_number,
+                    o.shipping_status,
                     o.subtotal,
                     o.discount_amount,
                     o.delivery_fee,
@@ -709,6 +721,40 @@ try {
 
                 // Enforce Valid State Transitions & Specific RBAC Guards
                 switch ($targetStatus) {
+                    // -------------------------------------------------------------
+                    // Transition 0: PENDING -> CONFIRMED
+                    // -------------------------------------------------------------
+                    case ORDER_STATUS_CONFIRMED:
+                        if ($currentStatus !== ORDER_STATUS_PENDING) {
+                            $db->rollBack();
+                            send_json(false, "Cannot confirm order. Current status is '{$currentStatus}'.", null, [], 422);
+                        }
+
+                        if (!has_permission('orders_update_status')) {
+                            $db->rollBack();
+                            send_json(false, 'Access denied: Insufficient permissions (orders_update_status required)', null, [], 403);
+                        }
+
+                        $stmtUpdate = $db->prepare("
+                            UPDATE orders 
+                            SET order_status = :status, updated_at = NOW() 
+                            WHERE id = :id
+                        ");
+                        $stmtUpdate->execute([
+                            ':status' => ORDER_STATUS_CONFIRMED,
+                            ':id'     => $orderId
+                        ]);
+
+                        $staffDisplayName = !empty($currentUser['full_name']) ? $currentUser['full_name'] : $currentUser['username'];
+                        $noteText = 'Order confirmed by ' . $staffDisplayName . '.';
+                        $stmtNote = $db->prepare("INSERT INTO order_notes (order_id, user_id, note, created_at) VALUES (:oid, :uid, :note, NOW())");
+                        $stmtNote->execute([':oid' => $orderId, ':uid' => $currentUser['id'], ':note' => $noteText]);
+
+                        audit_log('orders', 'STATUS_CONFIRMED', $orderId, $order, [
+                            'order_status' => ORDER_STATUS_CONFIRMED
+                        ]);
+                        break;
+
                     // -------------------------------------------------------------
                     // Transition 1: CONFIRMED / PENDING -> DISPATCHED
                     // -------------------------------------------------------------
@@ -1022,6 +1068,104 @@ try {
                 send_json(true, "Order status updated to {$targetStatus} successfully.", [
                     'id'           => $orderId,
                     'order_status' => $targetStatus
+                ]);
+            } catch (Throwable $e) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
+                throw $e;
+            }
+            break;
+
+        // =====================================================================
+        // 4b. ASSIGN COURIER WAYBILL & DISPATCH (PHASE 6)
+        // =====================================================================
+        case 'assign_courier':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+
+            require_csrf($input);
+
+            if (!has_permission('orders_update_status')) {
+                send_json(false, 'Access denied: Insufficient permissions (orders_update_status required)', null, [], 403);
+            }
+
+            $orderId = (int) ($input['id'] ?? $input['order_id'] ?? 0);
+            $courierName = trim((string) ($input['courier_name'] ?? ''));
+            $trackingNumber = trim((string) ($input['tracking_number'] ?? ''));
+            $autoDispatch = !isset($input['auto_dispatch']) || !empty($input['auto_dispatch']);
+
+            if ($orderId <= 0) {
+                send_json(false, 'A valid Order ID is required.', null, ['id' => 'Invalid order ID'], 422);
+            }
+
+            if ($courierName === '') {
+                send_json(false, 'Courier name is required.', null, ['courier_name' => 'Required'], 422);
+            }
+
+            if ($trackingNumber === '') {
+                send_json(false, 'Courier tracking number is required.', null, ['tracking_number' => 'Required'], 422);
+            }
+
+            $db->beginTransaction();
+
+            try {
+                $stmtLock = $db->prepare("SELECT * FROM orders WHERE id = :id AND deleted_at IS NULL FOR UPDATE");
+                $stmtLock->execute([':id' => $orderId]);
+                $order = $stmtLock->fetch();
+
+                if (!$order) {
+                    $db->rollBack();
+                    send_json(false, 'Order not found or has been removed.', null, [], 404);
+                }
+
+                $newStatus = $order['order_status'];
+                $newShipStatus = $order['shipping_status'];
+                $shouldDispatch = ($autoDispatch && in_array($order['order_status'], ['PENDING', 'CONFIRMED'], true));
+
+                if ($shouldDispatch) {
+                    $newStatus = ORDER_STATUS_DISPATCHED;
+                    $newShipStatus = 'IN_TRANSIT';
+                }
+
+                $stmtUpdate = $db->prepare("
+                    UPDATE orders
+                    SET courier_name = :courier_name,
+                        tracking_number = :tracking_number,
+                        order_status = :status,
+                        shipping_status = :ship_status,
+                        dispatched_at = CASE WHEN :dispatched = 1 AND dispatched_at IS NULL THEN NOW() ELSE dispatched_at END,
+                        updated_at = NOW()
+                    WHERE id = :id
+                ");
+                $stmtUpdate->execute([
+                    ':courier_name'    => $courierName,
+                    ':tracking_number' => $trackingNumber,
+                    ':status'          => $newStatus,
+                    ':ship_status'     => $newShipStatus,
+                    ':dispatched'      => ($newStatus === ORDER_STATUS_DISPATCHED ? 1 : 0),
+                    ':id'              => $orderId
+                ]);
+
+                $noteText = "Courier assigned: {$courierName} (Waybill: {$trackingNumber})" . ($shouldDispatch ? " - Order marked as DISPATCHED." : ".") . " by " . $currentUser['username'];
+                $stmtNote = $db->prepare("INSERT INTO order_notes (order_id, user_id, note, created_at) VALUES (:oid, :uid, :note, NOW())");
+                $stmtNote->execute([':oid' => $orderId, ':uid' => $currentUser['id'], ':note' => $noteText]);
+
+                audit_log('orders', 'ASSIGN_COURIER', $orderId, $order, [
+                    'courier_name'    => $courierName,
+                    'tracking_number' => $trackingNumber,
+                    'order_status'    => $newStatus
+                ]);
+
+                $db->commit();
+
+                send_json(true, 'Courier waybill assigned successfully.', [
+                    'id'              => $orderId,
+                    'courier_name'    => $courierName,
+                    'tracking_number' => $trackingNumber,
+                    'order_status'    => $newStatus,
+                    'shipping_status' => $newShipStatus
                 ]);
             } catch (Throwable $e) {
                 if ($db->inTransaction()) {

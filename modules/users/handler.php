@@ -84,8 +84,9 @@ try {
             $params = [];
 
             if ($search !== '') {
-                $where[] = '(u.username LIKE :search OR u.full_name LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(u.username LIKE :s_user OR u.full_name LIKE :s_name)';
+                $params[':s_user'] = '%' . $search . '%';
+                $params[':s_name'] = '%' . $search . '%';
             }
 
             if ($roleId !== null && $roleId > 0) {

@@ -96,8 +96,9 @@ try {
             $params = [];
 
             if ($search !== '') {
-                $where[] = '(e.title LIKE :search OR e.notes LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(e.title LIKE :s_title OR e.notes LIKE :s_notes)';
+                $params[':s_title'] = '%' . $search . '%';
+                $params[':s_notes'] = '%' . $search . '%';
             }
 
             if ($categoryId !== null && $categoryId > 0) {

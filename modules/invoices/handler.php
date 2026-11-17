@@ -61,6 +61,59 @@ function require_csrf(array $input): void
     }
 }
 
+/**
+ * Resolve the full name of the authorized staff member who confirmed or processed the order
+ */
+function get_order_confirmed_by_name(PDO $db, int $orderId): string
+{
+    // 1. Check audit log for status confirmation or transitions
+    $stmt = $db->prepare("
+        SELECT u.full_name, u.username
+        FROM audit_logs a
+        INNER JOIN users u ON a.user_id = u.id
+        WHERE a.module = 'orders'
+          AND a.record_id = :order_id
+          AND a.action IN ('STATUS_CONFIRMED', 'STATUS_DISPATCHED', 'ASSIGN_COURIER', 'STATUS_DELIVERED')
+        ORDER BY a.id ASC
+        LIMIT 1
+    ");
+    $stmt->execute([':order_id' => $orderId]);
+    $row = $stmt->fetch();
+    if ($row && (!empty($row['full_name']) || !empty($row['username']))) {
+        return !empty($row['full_name']) ? trim((string) $row['full_name']) : trim((string) $row['username']);
+    }
+
+    // 2. Check order notes for staff author
+    $stmtNotes = $db->prepare("
+        SELECT u.full_name, u.username
+        FROM order_notes n
+        INNER JOIN users u ON n.user_id = u.id
+        WHERE n.order_id = :order_id
+        ORDER BY n.id ASC
+        LIMIT 1
+    ");
+    $stmtNotes->execute([':order_id' => $orderId]);
+    $row = $stmtNotes->fetch();
+    if ($row && (!empty($row['full_name']) || !empty($row['username']))) {
+        return !empty($row['full_name']) ? trim((string) $row['full_name']) : trim((string) $row['username']);
+    }
+
+    // 3. Check order creator user in orders table
+    $stmtOrder = $db->prepare("
+        SELECT u.full_name, u.username
+        FROM orders o
+        INNER JOIN users u ON o.user_id = u.id
+        WHERE o.id = :order_id
+    ");
+    $stmtOrder->execute([':order_id' => $orderId]);
+    $row = $stmtOrder->fetch();
+    if ($row && (!empty($row['full_name']) || !empty($row['username']))) {
+        return !empty($row['full_name']) ? trim((string) $row['full_name']) : trim((string) $row['username']);
+    }
+
+    return 'Store Manager';
+}
+
 // Ensure caller is authenticated
 if (!is_logged_in()) {
     send_json(false, 'Authentication required.', null, [], 401);
@@ -490,46 +543,50 @@ try {
             $stmtItems->execute([':order_id' => $invoice['order_id']]);
             $items = $stmtItems->fetchAll();
 
+            $confirmedByName = get_order_confirmed_by_name($db, (int) $invoice['order_id']);
+
             $businessProfile = [
                 'name'         => APP_NAME,
-                'tagline'      => 'Small Business Sales & Inventory Hub',
+                'tagline'      => 'Prestige Apple Panel • Official Operations & Billing',
                 'address'      => '123 Commerce Avenue, Business District, Metro Manila',
                 'phone'        => '+63 (02) 8123-4567',
-                'email'        => 'billing@businesstracking.local',
+                'email'        => 'billing@prestigeapple.ph',
                 'currency'     => APP_CURRENCY,
                 'tax_rate'     => '0.00%',
-                'tax_type'     => 'Zero Tax / Tax-Exempt Small Business',
+                'tax_type'     => 'Zero Tax / Tax-Exempt',
                 'tax_note'     => 'All transactions are strictly zero-taxed. Amount Due = Subtotal - Discount + Delivery Fee.'
             ];
 
             send_json(true, 'Invoice details retrieved successfully.', [
                 'invoice'  => [
-                    'id'             => (int) $invoice['id'],
-                    'order_id'       => (int) $invoice['order_id'],
-                    'invoice_number' => $invoice['invoice_number'],
-                    'receipt_number' => $invoice['receipt_number'],
-                    'issued_date'    => $invoice['issued_date'],
-                    'amount_paid'    => (float) $invoice['amount_paid'],
-                    'status'         => $invoice['status'],
-                    'void_reason'    => $invoice['void_reason'],
-                    'created_at'     => $invoice['created_at'],
-                    'updated_at'     => $invoice['updated_at'] ?? $invoice['created_at']
+                    'id'                => (int) $invoice['id'],
+                    'order_id'          => (int) $invoice['order_id'],
+                    'invoice_number'    => $invoice['invoice_number'],
+                    'receipt_number'    => $invoice['receipt_number'],
+                    'issued_date'       => $invoice['issued_date'],
+                    'amount_paid'       => (float) $invoice['amount_paid'],
+                    'status'            => $invoice['status'],
+                    'void_reason'       => $invoice['void_reason'],
+                    'authorized_signer' => $confirmedByName,
+                    'created_at'        => $invoice['created_at'],
+                    'updated_at'        => $invoice['updated_at'] ?? $invoice['created_at']
                 ],
                 'order'    => [
-                    'order_number'     => $invoice['order_number'],
-                    'customer_name'    => $invoice['customer_name'],
-                    'customer_phone'   => $invoice['customer_phone'],
-                    'customer_email'   => $invoice['customer_email'],
-                    'delivery_address' => $invoice['delivery_address'],
-                    'subtotal'         => (float) $invoice['subtotal'],
-                    'discount_amount'  => (float) $invoice['discount_amount'],
-                    'delivery_fee'     => (float) $invoice['delivery_fee'],
-                    'tax_amount'       => 0.00,
-                    'total_amount'     => (float) $invoice['total_amount'],
-                    'payment_method'   => $invoice['payment_method'],
-                    'order_status'     => $invoice['order_status'],
-                    'notes'            => $invoice['order_notes'],
-                    'created_at'       => $invoice['order_created_at']
+                    'order_number'      => $invoice['order_number'],
+                    'customer_name'     => $invoice['customer_name'],
+                    'customer_phone'    => $invoice['customer_phone'],
+                    'customer_email'    => $invoice['customer_email'],
+                    'delivery_address'  => $invoice['delivery_address'],
+                    'subtotal'          => (float) $invoice['subtotal'],
+                    'discount_amount'   => (float) $invoice['discount_amount'],
+                    'delivery_fee'      => (float) $invoice['delivery_fee'],
+                    'tax_amount'        => 0.00,
+                    'total_amount'      => (float) $invoice['total_amount'],
+                    'payment_method'    => $invoice['payment_method'],
+                    'order_status'      => $invoice['order_status'],
+                    'confirmed_by_name' => $confirmedByName,
+                    'notes'             => $invoice['order_notes'],
+                    'created_at'        => $invoice['order_created_at']
                 ],
                 'cod'      => [
                     'status'           => $invoice['cod_status'] ?? 'PENDING',

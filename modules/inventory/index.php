@@ -45,14 +45,7 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
     <!-- Page Header -->
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-        <div>
-            <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Stock Movement Ledger</h1>
-            <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
-                Immutable audit trail of all inventory additions, sales deductions, damages, and returns.
-            </p>
-        </div>
-
+    <div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="<?= BASE_URL ?>/modules/products/" class="btn btn-outline">
                 🏷️ View Products

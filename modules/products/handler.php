@@ -299,8 +299,9 @@ try {
             $params = [];
 
             if ($search !== '') {
-                $where[] = '(p.name LIKE :search OR p.sku LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(p.name LIKE :search_name OR p.sku LIKE :search_sku)';
+                $params[':search_name'] = '%' . $search . '%';
+                $params[':search_sku'] = '%' . $search . '%';
             }
 
             if ($categoryId !== null && $categoryId > 0) {
@@ -331,10 +332,14 @@ try {
             // Product rows
             $query = "
                 SELECT p.id, p.category_id, c.name AS category_name,
-                       p.sku, p.name, p.cost_price, p.selling_price,
+                       p.sku, p.name, p.description, p.specs, p.color, p.storage,
+                       p.condition_type, p.warranty,
+                       p.cost_price, p.selling_price,
                        p.current_stock, p.low_stock_threshold, p.status,
                        ROUND(p.current_stock * p.cost_price, 2) AS stock_value,
                        (p.current_stock <= p.low_stock_threshold) AS is_low_stock,
+                       (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_image,
+                       (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) AS image_count,
                        p.created_at, p.updated_at
                 FROM products p
                 JOIN categories c ON p.category_id = c.id
@@ -375,8 +380,11 @@ try {
 
             $stmt = $db->prepare("
                 SELECT p.id, p.category_id, c.name AS category_name,
-                       p.sku, p.name, p.cost_price, p.selling_price,
+                       p.sku, p.name, p.description, p.specs, p.color, p.storage,
+                       p.condition_type, p.warranty,
+                       p.cost_price, p.selling_price,
                        p.current_stock, p.low_stock_threshold, p.status,
+                       (SELECT image_path FROM product_images WHERE product_id = p.id ORDER BY is_primary DESC, display_order ASC, id ASC LIMIT 1) AS primary_image,
                        p.created_at, p.updated_at
                 FROM products p
                 JOIN categories c ON p.category_id = c.id
@@ -388,6 +396,16 @@ try {
             if (!$product) {
                 send_json(false, 'Product not found', null, [], 404);
             }
+
+            // Retrieve all product images
+            $stmtImages = $db->prepare("
+                SELECT id, product_id, image_path, is_primary, display_order, created_at
+                FROM product_images
+                WHERE product_id = :id
+                ORDER BY is_primary DESC, display_order ASC, id ASC
+            ");
+            $stmtImages->execute([':id' => $id]);
+            $product['images'] = $stmtImages->fetchAll();
 
             send_json(true, 'Product retrieved successfully', $product);
             break;
@@ -404,6 +422,12 @@ try {
             $categoryId = (int) ($input['category_id'] ?? 0);
             $sku = strtoupper(trim((string) ($input['sku'] ?? '')));
             $name = trim((string) ($input['name'] ?? ''));
+            $description = trim((string) ($input['description'] ?? ''));
+            $specs = trim((string) ($input['specs'] ?? ''));
+            $color = trim((string) ($input['color'] ?? ''));
+            $storage = trim((string) ($input['storage'] ?? ''));
+            $conditionType = trim((string) ($input['condition_type'] ?? 'Brand New Sealed'));
+            $warranty = trim((string) ($input['warranty'] ?? '1 Year Official Apple Warranty'));
             $costPrice = (float) ($input['cost_price'] ?? 0.0);
             $sellingPrice = (float) ($input['selling_price'] ?? 0.0);
             $initialStock = max(0, (int) ($input['current_stock'] ?? 0));
@@ -458,17 +482,23 @@ try {
             try {
                 $stmtInsert = $db->prepare("
                     INSERT INTO products (
-                        category_id, sku, name, cost_price, selling_price, 
-                        current_stock, low_stock_threshold, status, created_at
+                        category_id, sku, name, description, specs, color, storage, condition_type, warranty,
+                        cost_price, selling_price, current_stock, low_stock_threshold, status, created_at
                     ) VALUES (
-                        :category_id, :sku, :name, :cost_price, :selling_price, 
-                        :current_stock, :low_stock_threshold, :status, NOW()
+                        :category_id, :sku, :name, :description, :specs, :color, :storage, :condition_type, :warranty,
+                        :cost_price, :selling_price, :current_stock, :low_stock_threshold, :status, NOW()
                     )
                 ");
                 $stmtInsert->execute([
                     ':category_id' => $categoryId,
                     ':sku' => $sku,
                     ':name' => $name,
+                    ':description' => $description !== '' ? $description : null,
+                    ':specs' => $specs !== '' ? $specs : null,
+                    ':color' => $color !== '' ? $color : null,
+                    ':storage' => $storage !== '' ? $storage : null,
+                    ':condition_type' => $conditionType !== '' ? $conditionType : 'Brand New Sealed',
+                    ':warranty' => $warranty !== '' ? $warranty : '1 Year Official Apple Warranty',
                     ':cost_price' => number_format($costPrice, 2, '.', ''),
                     ':selling_price' => number_format($sellingPrice, 2, '.', ''),
                     ':current_stock' => $initialStock,
@@ -514,19 +544,76 @@ try {
                     ]);
                 }
 
+                // Handle optional direct photo upload on creation
+                $uploadedImagePath = null;
+                $uploadFile = null;
+                if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                    $uploadFile = $_FILES['photo'];
+                } elseif (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                    $uploadFile = $_FILES['image'];
+                }
+
+                if ($uploadFile) {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mimeType = finfo_file($finfo, $uploadFile['tmp_name']);
+                    finfo_close($finfo);
+
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+                    $allowedExts  = ['jpg', 'jpeg', 'png', 'webp'];
+                    $ext = strtolower(pathinfo($uploadFile['name'], PATHINFO_EXTENSION));
+                    if ($ext === 'jpeg') $ext = 'jpg';
+
+                    if (in_array($mimeType, $allowedMimes, true) && in_array($ext, $allowedExts, true) && $uploadFile['size'] <= 5 * 1024 * 1024) {
+                        $baseDir = __DIR__ . '/../../uploads/products';
+                        if (!is_dir($baseDir)) {
+                            mkdir($baseDir, 0755, true);
+                        }
+                        $targetDir = realpath($baseDir);
+                        $filename = 'prod_' . $productId . '_' . bin2hex(random_bytes(10)) . '.' . $ext;
+                        $destPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
+                        $relativeDbPath = 'uploads/products/' . $filename;
+
+                        if (move_uploaded_file($uploadFile['tmp_name'], $destPath)) {
+                            $uploadedImagePath = $relativeDbPath;
+                            $stmtImg = $db->prepare("
+                                INSERT INTO product_images (product_id, image_path, is_primary, display_order, created_at)
+                                VALUES (:product_id, :image_path, 1, 0, NOW())
+                            ");
+                            $stmtImg->execute([
+                                ':product_id' => $productId,
+                                ':image_path' => $relativeDbPath
+                            ]);
+                        }
+                    }
+                }
+
                 $db->commit();
             } catch (Throwable $ex) {
                 $db->rollBack();
                 throw $ex;
             }
 
-            audit_log('products', 'CREATE_PRODUCT', $productId, null, [
+            $createAuditValues = [
                 'sku' => $sku,
                 'name' => $name,
                 'category_id' => $categoryId,
+                'cost_price' => $costPrice,
                 'selling_price' => $sellingPrice,
-                'current_stock' => $initialStock
-            ]);
+                'current_stock' => $initialStock,
+                'low_stock_threshold' => $lowStockThreshold,
+                'status' => $status,
+                'color' => $color,
+                'storage' => $storage,
+                'condition_type' => $conditionType,
+                'warranty' => $warranty,
+                'specs' => $specs,
+                'description' => $description
+            ];
+            if ($uploadedImagePath !== null) {
+                $createAuditValues['primary_image'] = $uploadedImagePath;
+            }
+
+            audit_log('products', 'CREATE_PRODUCT', $productId, null, $createAuditValues);
 
             send_json(true, 'Product created successfully', [
                 'id' => $productId,
@@ -549,6 +636,12 @@ try {
             $categoryId = (int) ($input['category_id'] ?? 0);
             $sku = strtoupper(trim((string) ($input['sku'] ?? '')));
             $name = trim((string) ($input['name'] ?? ''));
+            $description = trim((string) ($input['description'] ?? ''));
+            $specs = trim((string) ($input['specs'] ?? ''));
+            $color = trim((string) ($input['color'] ?? ''));
+            $storage = trim((string) ($input['storage'] ?? ''));
+            $conditionType = trim((string) ($input['condition_type'] ?? 'Brand New Sealed'));
+            $warranty = trim((string) ($input['warranty'] ?? '1 Year Official Apple Warranty'));
             $costPrice = (float) ($input['cost_price'] ?? 0.0);
             $sellingPrice = (float) ($input['selling_price'] ?? 0.0);
             $lowStockThreshold = max(0, (int) ($input['low_stock_threshold'] ?? 5));
@@ -564,6 +657,12 @@ try {
             if (!$oldProd) {
                 send_json(false, 'Product not found', null, [], 404);
             }
+
+            // Retrieve current primary image to accurately track image changes in audit logs
+            $stmtOldImg = $db->prepare("SELECT image_path FROM product_images WHERE product_id = :id AND is_primary = 1 LIMIT 1");
+            $stmtOldImg->execute([':id' => $id]);
+            $oldImgPath = $stmtOldImg->fetchColumn();
+            $oldProd['primary_image'] = $oldImgPath ?: null;
 
             $errors = [];
             if ($categoryId <= 0) {
@@ -611,6 +710,12 @@ try {
                 SET category_id = :category_id,
                     sku = :sku,
                     name = :name,
+                    description = :description,
+                    specs = :specs,
+                    color = :color,
+                    storage = :storage,
+                    condition_type = :condition_type,
+                    warranty = :warranty,
                     cost_price = :cost_price,
                     selling_price = :selling_price,
                     low_stock_threshold = :low_stock_threshold,
@@ -622,6 +727,12 @@ try {
                 ':category_id' => $categoryId,
                 ':sku' => $sku,
                 ':name' => $name,
+                ':description' => $description !== '' ? $description : null,
+                ':specs' => $specs !== '' ? $specs : null,
+                ':color' => $color !== '' ? $color : null,
+                ':storage' => $storage !== '' ? $storage : null,
+                ':condition_type' => $conditionType !== '' ? $conditionType : 'Brand New Sealed',
+                ':warranty' => $warranty !== '' ? $warranty : '1 Year Official Apple Warranty',
                 ':cost_price' => number_format($costPrice, 2, '.', ''),
                 ':selling_price' => number_format($sellingPrice, 2, '.', ''),
                 ':low_stock_threshold' => $lowStockThreshold,
@@ -629,15 +740,71 @@ try {
                 ':id' => $id
             ]);
 
-            audit_log('products', 'UPDATE_PRODUCT', $id, $oldProd, [
+            // Handle optional direct photo upload on product update
+            $uploadedImagePath = null;
+            $uploadFile = null;
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $uploadFile = $_FILES['photo'];
+            } elseif (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $uploadFile = $_FILES['image'];
+            }
+
+            if ($uploadFile) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $uploadFile['tmp_name']);
+                finfo_close($finfo);
+
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+                $allowedExts  = ['jpg', 'jpeg', 'png', 'webp'];
+                $ext = strtolower(pathinfo($uploadFile['name'], PATHINFO_EXTENSION));
+                if ($ext === 'jpeg') $ext = 'jpg';
+
+                if (in_array($mimeType, $allowedMimes, true) && in_array($ext, $allowedExts, true) && $uploadFile['size'] <= 5 * 1024 * 1024) {
+                    $baseDir = __DIR__ . '/../../uploads/products';
+                    if (!is_dir($baseDir)) {
+                        mkdir($baseDir, 0755, true);
+                    }
+                    $targetDir = realpath($baseDir);
+                    $filename = 'prod_' . $id . '_' . bin2hex(random_bytes(10)) . '.' . $ext;
+                    $destPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
+                    $relativeDbPath = 'uploads/products/' . $filename;
+
+                    if (move_uploaded_file($uploadFile['tmp_name'], $destPath)) {
+                        $uploadedImagePath = $relativeDbPath;
+                        // Demote old primaries
+                        $stmtReset = $db->prepare("UPDATE product_images SET is_primary = 0 WHERE product_id = :pid");
+                        $stmtReset->execute([':pid' => $id]);
+
+                        $stmtImg = $db->prepare("
+                            INSERT INTO product_images (product_id, image_path, is_primary, display_order, created_at)
+                            VALUES (:product_id, :image_path, 1, 0, NOW())
+                        ");
+                        $stmtImg->execute([
+                            ':product_id' => $id,
+                            ':image_path' => $relativeDbPath
+                        ]);
+                    }
+                }
+            }
+
+            $newProdAudit = [
                 'sku' => $sku,
                 'name' => $name,
                 'category_id' => $categoryId,
                 'cost_price' => $costPrice,
                 'selling_price' => $sellingPrice,
                 'low_stock_threshold' => $lowStockThreshold,
-                'status' => $status
-            ]);
+                'status' => $status,
+                'color' => $color,
+                'storage' => $storage,
+                'condition_type' => $conditionType,
+                'warranty' => $warranty,
+                'specs' => $specs,
+                'description' => $description,
+                'primary_image' => $uploadedImagePath !== null ? $uploadedImagePath : ($oldProd['primary_image'] ?? null)
+            ];
+
+            audit_log('products', 'UPDATE_PRODUCT', $id, $oldProd, $newProdAudit);
 
             send_json(true, 'Product updated successfully', ['id' => $id]);
             break;
@@ -676,6 +843,318 @@ try {
             ]);
 
             send_json(true, 'Product deleted successfully', ['id' => $id]);
+            break;
+
+        // =====================================================================
+        // PRODUCT MEDIA & GALLERY ACTIONS
+        // =====================================================================
+
+        case 'list_product_images':
+            if (!has_permission('products_view')) {
+                send_json(false, 'Access denied: Insufficient permissions (products_view required)', null, [], 403);
+            }
+            $productId = (int) ($input['product_id'] ?? 0);
+            if ($productId <= 0) {
+                send_json(false, 'Valid Product ID is required', null, ['product_id' => 'Invalid product ID'], 422);
+            }
+
+            $stmtImages = $db->prepare("
+                SELECT id, product_id, image_path, is_primary, display_order, created_at
+                FROM product_images
+                WHERE product_id = :product_id
+                ORDER BY is_primary DESC, display_order ASC, id ASC
+            ");
+            $stmtImages->execute([':product_id' => $productId]);
+            $rawImages = $stmtImages->fetchAll();
+
+            $images = [];
+            foreach ($rawImages as $img) {
+                $images[] = [
+                    'id' => (int) $img['id'],
+                    'product_id' => (int) $img['product_id'],
+                    'image_path' => $img['image_path'],
+                    'url' => '../../' . ltrim($img['image_path'], '/'),
+                    'is_primary' => (int) $img['is_primary'],
+                    'display_order' => (int) $img['display_order'],
+                    'created_at' => $img['created_at']
+                ];
+            }
+
+            send_json(true, 'Product images retrieved successfully', $images);
+            break;
+
+        case 'upload_product_images':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+            if (!has_permission('products_manage')) {
+                send_json(false, 'Access denied: Insufficient permissions (products_manage required)', null, [], 403);
+            }
+            require_csrf($input);
+
+            $productId = (int) ($input['product_id'] ?? 0);
+            if ($productId <= 0) {
+                send_json(false, 'Valid Product ID is required', null, ['product_id' => 'Invalid product ID'], 422);
+            }
+
+            // Verify product exists and active
+            $stmtProd = $db->prepare("SELECT id, name FROM products WHERE id = :id AND deleted_at IS NULL");
+            $stmtProd->execute([':id' => $productId]);
+            $prod = $stmtProd->fetch();
+            if (!$prod) {
+                send_json(false, 'Product not found or inactive', null, [], 404);
+            }
+
+            // Normalize $_FILES
+            $filesToProcess = [];
+            if (isset($_FILES['images']) && is_array($_FILES['images']['name'])) {
+                $count = count($_FILES['images']['name']);
+                for ($i = 0; $i < $count; $i++) {
+                    if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK) {
+                        $filesToProcess[] = [
+                            'name'     => $_FILES['images']['name'][$i],
+                            'tmp_name' => $_FILES['images']['tmp_name'][$i],
+                            'size'     => $_FILES['images']['size'][$i],
+                            'error'    => $_FILES['images']['error'][$i]
+                        ];
+                    }
+                }
+            } elseif (isset($_FILES['images']) && !is_array($_FILES['images']['name']) && $_FILES['images']['error'] === UPLOAD_ERR_OK) {
+                $filesToProcess[] = $_FILES['images'];
+            } elseif (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $filesToProcess[] = $_FILES['image'];
+            } elseif (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $filesToProcess[] = $_FILES['photo'];
+            }
+
+            if (empty($filesToProcess)) {
+                send_json(false, 'No valid image files provided for upload.', null, ['images' => 'Please select at least one image file.'], 422);
+            }
+
+            // Destination directory
+            $baseDir = __DIR__ . '/../../uploads/products';
+            if (!is_dir($baseDir)) {
+                mkdir($baseDir, 0755, true);
+            }
+            $targetDir = realpath($baseDir);
+
+            // Check if product currently has any primary image
+            $stmtHasPrimary = $db->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = :pid AND is_primary = 1");
+            $stmtHasPrimary->execute([':pid' => $productId]);
+            $hasPrimary = ((int) $stmtHasPrimary->fetchColumn()) > 0;
+
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            $allowedExts  = ['jpg', 'jpeg', 'png', 'webp'];
+            $maxFileSize  = 5 * 1024 * 1024; // 5MB limit
+
+            $uploadedRecords = [];
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+            $db->beginTransaction();
+            try {
+                foreach ($filesToProcess as $file) {
+                    if ($file['size'] > $maxFileSize) {
+                        throw new RuntimeException("File '{$file['name']}' exceeds the maximum allowed limit of 5MB.");
+                    }
+
+                    $mimeType = finfo_file($finfo, $file['tmp_name']);
+                    if (!in_array($mimeType, $allowedMimes, true)) {
+                        throw new RuntimeException("File '{$file['name']}' has an invalid MIME type ({$mimeType}). Only JPG, PNG, and WebP are allowed.");
+                    }
+
+                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowedExts, true)) {
+                        throw new RuntimeException("File '{$file['name']}' has an untrusted extension.");
+                    }
+                    if ($ext === 'jpeg') {
+                        $ext = 'jpg';
+                    }
+
+                    // Cryptographically secure filename
+                    $filename = 'prod_' . $productId . '_' . bin2hex(random_bytes(10)) . '.' . $ext;
+                    $destPath = $targetDir . DIRECTORY_SEPARATOR . $filename;
+                    $relativeDbPath = 'uploads/products/' . $filename;
+
+                    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+                        throw new RuntimeException("Failed to move uploaded file to disk storage.");
+                    }
+
+                    // Determine if primary
+                    $isPrimary = 0;
+                    if (!$hasPrimary) {
+                        $isPrimary = 1;
+                        $hasPrimary = true;
+                    }
+
+                    $stmtInsertImg = $db->prepare("
+                        INSERT INTO product_images (product_id, image_path, is_primary, display_order, created_at)
+                        VALUES (:product_id, :image_path, :is_primary, 0, NOW())
+                    ");
+                    $stmtInsertImg->execute([
+                        ':product_id' => $productId,
+                        ':image_path' => $relativeDbPath,
+                        ':is_primary' => $isPrimary
+                    ]);
+                    $imageId = (int) $db->lastInsertId();
+
+                    $uploadedRecords[] = [
+                        'id' => $imageId,
+                        'product_id' => $productId,
+                        'image_path' => $relativeDbPath,
+                        'url' => '../../' . $relativeDbPath,
+                        'is_primary' => $isPrimary
+                    ];
+                }
+
+                $db->commit();
+            } catch (Throwable $e) {
+                $db->rollBack();
+                // Clean up any files saved in this transaction
+                foreach ($uploadedRecords as $rec) {
+                    $cleanupPath = __DIR__ . '/../../' . $rec['image_path'];
+                    if (file_exists($cleanupPath)) {
+                        @unlink($cleanupPath);
+                    }
+                }
+                finfo_close($finfo);
+                send_json(false, $e->getMessage(), null, ['upload' => $e->getMessage()], 422);
+            }
+
+            finfo_close($finfo);
+
+            audit_log('products', 'UPLOAD_PRODUCT_IMAGE', $productId, null, [
+                'count' => count($uploadedRecords),
+                'product_name' => $prod['name'],
+                'uploaded_images' => array_column($uploadedRecords, 'image_path')
+            ]);
+
+            send_json(true, 'Product images uploaded successfully', [
+                'uploaded' => $uploadedRecords,
+                'count' => count($uploadedRecords)
+            ], [], 201);
+            break;
+
+        case 'set_primary_image':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+            if (!has_permission('products_manage')) {
+                send_json(false, 'Access denied: Insufficient permissions (products_manage required)', null, [], 403);
+            }
+            require_csrf($input);
+
+            $productId = (int) ($input['product_id'] ?? 0);
+            $imageId = (int) ($input['image_id'] ?? 0);
+
+            if ($productId <= 0 || $imageId <= 0) {
+                send_json(false, 'Valid Product ID and Image ID are required.', null, [], 422);
+            }
+
+            // Verify image belongs to product
+            $stmtCheck = $db->prepare("SELECT id FROM product_images WHERE id = :id AND product_id = :pid");
+            $stmtCheck->execute([':id' => $imageId, ':pid' => $productId]);
+            if (!$stmtCheck->fetch()) {
+                send_json(false, 'Image does not belong to specified product.', null, [], 404);
+            }
+
+            // Fetch previous and new primary image path for comprehensive audit logging
+            $stmtOldPrimary = $db->prepare("SELECT image_path FROM product_images WHERE product_id = :pid AND is_primary = 1 LIMIT 1");
+            $stmtOldPrimary->execute([':pid' => $productId]);
+            $oldPrimaryPath = $stmtOldPrimary->fetchColumn() ?: null;
+
+            $stmtNewPrimary = $db->prepare("SELECT image_path FROM product_images WHERE id = :id");
+            $stmtNewPrimary->execute([':id' => $imageId]);
+            $newPrimaryPath = $stmtNewPrimary->fetchColumn() ?: null;
+
+            $db->beginTransaction();
+            try {
+                // Reset all images of this product
+                $stmtReset = $db->prepare("UPDATE product_images SET is_primary = 0 WHERE product_id = :pid");
+                $stmtReset->execute([':pid' => $productId]);
+
+                // Set target image as primary
+                $stmtSet = $db->prepare("UPDATE product_images SET is_primary = 1 WHERE id = :id AND product_id = :pid");
+                $stmtSet->execute([':id' => $imageId, ':pid' => $productId]);
+
+                $db->commit();
+            } catch (Throwable $e) {
+                $db->rollBack();
+                throw $e;
+            }
+
+            audit_log('products', 'SET_PRIMARY_PRODUCT_IMAGE', $productId, 
+                ['primary_image' => $oldPrimaryPath], 
+                ['primary_image' => $newPrimaryPath]
+            );
+
+            send_json(true, 'Primary image updated successfully', [
+                'product_id' => $productId,
+                'primary_image_id' => $imageId
+            ]);
+            break;
+
+        case 'delete_product_image':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                send_json(false, 'Method not allowed. Use POST.', null, [], 405);
+            }
+            if (!has_permission('products_manage')) {
+                send_json(false, 'Access denied: Insufficient permissions (products_manage required)', null, [], 403);
+            }
+            require_csrf($input);
+
+            $productId = (int) ($input['product_id'] ?? 0);
+            $imageId = (int) ($input['image_id'] ?? 0);
+
+            if ($productId <= 0 || $imageId <= 0) {
+                send_json(false, 'Valid Product ID and Image ID are required.', null, [], 422);
+            }
+
+            $stmtImg = $db->prepare("SELECT id, image_path, is_primary FROM product_images WHERE id = :id AND product_id = :pid");
+            $stmtImg->execute([':id' => $imageId, ':pid' => $productId]);
+            $imageRow = $stmtImg->fetch();
+            if (!$imageRow) {
+                send_json(false, 'Product image not found.', null, [], 404);
+            }
+
+            $db->beginTransaction();
+            try {
+                // Delete record from database
+                $stmtDel = $db->prepare("DELETE FROM product_images WHERE id = :id AND product_id = :pid");
+                $stmtDel->execute([':id' => $imageId, ':pid' => $productId]);
+
+                // If deleted image was primary, promote next available image
+                if ((int)$imageRow['is_primary'] === 1) {
+                    $stmtNext = $db->prepare("SELECT id FROM product_images WHERE product_id = :pid ORDER BY display_order ASC, id ASC LIMIT 1");
+                    $stmtNext->execute([':pid' => $productId]);
+                    $nextId = $stmtNext->fetchColumn();
+                    if ($nextId) {
+                        $stmtPromote = $db->prepare("UPDATE product_images SET is_primary = 1 WHERE id = :id");
+                        $stmtPromote->execute([':id' => $nextId]);
+                    }
+                }
+
+                $db->commit();
+            } catch (Throwable $e) {
+                $db->rollBack();
+                throw $e;
+            }
+
+            // Safely unlink physical file from disk with path traversal guard
+            $allowedBaseDir = realpath(__DIR__ . '/../../uploads/products');
+            $rawFullPath = __DIR__ . '/../../' . $imageRow['image_path'];
+            $realFilePath = realpath($rawFullPath);
+            if ($realFilePath !== false && $allowedBaseDir !== false && str_starts_with($realFilePath, $allowedBaseDir)) {
+                if (file_exists($realFilePath)) {
+                    @unlink($realFilePath);
+                }
+            }
+
+            audit_log('products', 'DELETE_PRODUCT_IMAGE', $productId, $imageRow, null);
+
+            send_json(true, 'Product image deleted successfully', [
+                'product_id' => $productId,
+                'deleted_image_id' => $imageId
+            ]);
             break;
 
         default:

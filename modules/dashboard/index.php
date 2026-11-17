@@ -127,6 +127,43 @@ foreach ($trendData as $idx => $val) {
 }
 $bestDayLabel = $trendLabels[$bestDayIdx] ?? 'N/A';
 
+// 7b. Top 5 Selling Products (by Units Sold & Total Revenue from active/delivered orders)
+$stmtTopProducts = $db->query("
+    SELECT 
+        COALESCE(p.name, oi.product_name) AS product_name,
+        COALESCE(SUM(oi.quantity), 0) AS units_sold,
+        COALESCE(SUM(oi.line_total), 0.00) AS total_revenue
+    FROM order_items oi
+    INNER JOIN orders o ON oi.order_id = o.id
+    LEFT JOIN products p ON oi.product_id = p.id
+    WHERE o.deleted_at IS NULL
+      AND o.order_status NOT IN ('CANCELLED', 'RETURNED')
+    GROUP BY oi.product_id, COALESCE(p.name, oi.product_name)
+    ORDER BY units_sold DESC, total_revenue DESC
+    LIMIT 5
+");
+$topProducts = $stmtTopProducts->fetchAll() ?: [];
+
+if (empty($topProducts)) {
+    $stmtFallbackProducts = $db->query("
+        SELECT name AS product_name, 0 AS units_sold, 0.00 AS total_revenue
+        FROM products
+        WHERE deleted_at IS NULL AND status = 'active'
+        ORDER BY id ASC
+        LIMIT 5
+    ");
+    $topProducts = $stmtFallbackProducts->fetchAll() ?: [];
+}
+
+$topProductNames = [];
+$topProductUnits = [];
+$topProductRevenues = [];
+foreach ($topProducts as $tp) {
+    $topProductNames[] = (string) $tp['product_name'];
+    $topProductUnits[] = (int) $tp['units_sold'];
+    $topProductRevenues[] = (float) $tp['total_revenue'];
+}
+
 // 8. Recent COD Orders (Latest 5)
 $stmtRecentOrders = $db->query("
     SELECT id, order_number, customer_name, total_amount, order_status, created_at
@@ -152,7 +189,57 @@ if (has_permission('expenses_view')) {
 }
 
 include __DIR__ . '/../../includes/header.php';
+
+$showWelcomeBanner = !empty($_SESSION['show_welcome_banner']);
+if ($showWelcomeBanner) {
+    unset($_SESSION['show_welcome_banner']);
+}
 ?>
+
+<?php if ($showWelcomeBanner): ?>
+<!-- Post-Login Welcome Banner & Security Alert Notification -->
+<div class="welcome-banner-card" id="welcomeBannerCard" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); position: relative; overflow: hidden;">
+    <div style="display: flex; align-items: center; gap: 18px; z-index: 2;">
+        <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(255, 255, 255, 0.12); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);">
+            👋
+        </div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap;">
+                <h2 style="font-size: 19px; font-weight: 700; margin: 0; color: #ffffff; letter-spacing: -0.01em;">
+                    Welcome back, <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>!
+                </h2>
+                <span style="background: rgba(33, 96, 204, 0.35); border: 1px solid rgba(96, 165, 250, 0.5); color: #93c5fd; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <?= htmlspecialchars($user['role_label'], ENT_QUOTES, 'UTF-8') ?>
+                </span>
+            </div>
+            <p style="margin: 0; font-size: 13.5px; color: #94a3b8; line-height: 1.4;">
+                You are securely signed in to <strong>Prestige Apple Operations</strong>.
+            </p>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0; z-index: 2;">
+        <button type="button" onclick="dismissWelcomeBanner()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s ease;" title="Dismiss welcome message">
+            &times;
+        </button>
+    </div>
+</div>
+<script>
+    function dismissWelcomeBanner() {
+        const banner = document.getElementById('welcomeBannerCard');
+        if (banner) {
+            banner.style.transition = 'all 0.3s ease';
+            banner.style.opacity = '0';
+            banner.style.transform = 'translateY(-10px)';
+            setTimeout(() => banner.remove(), 300);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.API && window.API.toast) {
+            API.toast('Welcome back, <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>!', 'success');
+        }
+    });
+</script>
+<?php endif; ?>
 
 <!-- 4 Top KPI Stat Cards -->
 <div class="stats-grid">
@@ -246,23 +333,51 @@ include __DIR__ . '/../../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Sales vs Expenses · Last 7 Days (ApexCharts Dual Graph) -->
-<div class="card" id="salesTrendCard" style="margin-bottom: 24px; padding: 22px 24px 20px;">
-    <div style="margin-bottom: 8px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.01em;">Sales vs Expenses · Last 7 Days</h3>
+<!-- Charts Row: Sales vs Expenses · Last 7 Days & Top Selling Products -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; margin-bottom: 24px;">
+    <!-- Left: Sales vs Expenses · Last 7 Days (ApexCharts Dual Graph) -->
+    <div class="card" id="salesTrendCard" style="margin-bottom: 0; padding: 22px 24px 20px;">
+        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.01em;">Sales vs Expenses · Last 7 Days</h3>
+        </div>
+        <div id="salesTrendChart"
+             data-sales="<?= htmlspecialchars(json_encode($trendSales), ENT_QUOTES, 'UTF-8') ?>"
+             data-expenses="<?= htmlspecialchars(json_encode($trendExpenses), ENT_QUOTES, 'UTF-8') ?>"
+             data-labels="<?= htmlspecialchars(json_encode($trendLabels), ENT_QUOTES, 'UTF-8') ?>"
+             data-values="<?= htmlspecialchars(json_encode($trendData), ENT_QUOTES, 'UTF-8') ?>">
+        </div>
     </div>
-    <div id="salesTrendChart"
-         data-sales="<?= htmlspecialchars(json_encode($trendSales), ENT_QUOTES, 'UTF-8') ?>"
-         data-expenses="<?= htmlspecialchars(json_encode($trendExpenses), ENT_QUOTES, 'UTF-8') ?>"
-         data-labels="<?= htmlspecialchars(json_encode($trendLabels), ENT_QUOTES, 'UTF-8') ?>"
-         data-values="<?= htmlspecialchars(json_encode($trendData), ENT_QUOTES, 'UTF-8') ?>">
+
+    <!-- Right: Top Selling Products (ApexCharts Horizontal Bar) -->
+    <div class="card" id="topProductsCard" style="margin-bottom: 0; padding: 22px 24px 20px;">
+        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b; letter-spacing: -0.01em;">Top Selling Products</h3>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Best-performing items by units sold &amp; revenue</div>
+            </div>
+            <a href="<?= BASE_URL ?>/modules/products/" class="btn btn-sm btn-outline" style="font-size: 12px; padding: 4px 10px;">
+                View Catalog
+            </a>
+        </div>
+        <div id="topProductsChart"
+             data-names="<?= htmlspecialchars(json_encode($topProductNames), ENT_QUOTES, 'UTF-8') ?>"
+             data-units="<?= htmlspecialchars(json_encode($topProductUnits), ENT_QUOTES, 'UTF-8') ?>"
+             data-revenues="<?= htmlspecialchars(json_encode($topProductRevenues), ENT_QUOTES, 'UTF-8') ?>">
+        </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    if (window.BTSCharts && document.getElementById('salesTrendChart')) {
-        BTSCharts.renderDashboardDualChart('salesTrendChart');
+    if (window.BTSCharts) {
+        if (document.getElementById('salesTrendChart')) {
+            BTSCharts.renderDashboardDualChart('salesTrendChart');
+        }
+        if (document.getElementById('topProductsChart')) {
+            BTSCharts.renderTopProductsChart('topProductsChart', {
+                currency: '<?= APP_CURRENCY ?>'
+            });
+        }
     }
 });
 </script>
@@ -406,10 +521,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <h3 class="card-title">🚀 Fast Navigation</h3>
             </div>
             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <a href="<?= BASE_URL ?>/modules/orders/create.php" class="btn btn-primary" style="justify-content: flex-start; padding: 12px 16px;">
-                    🛒 Open POS / Create COD Order
-                </a>
-                <a href="<?= BASE_URL ?>/modules/orders/" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 16px;">
+                <a href="<?= BASE_URL ?>/modules/orders/" class="btn btn-primary" style="justify-content: flex-start; padding: 12px 16px;">
                     📦 Check Dispatched &amp; Delivered Orders
                 </a>
                 <a href="<?= BASE_URL ?>/modules/products/" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 16px;">

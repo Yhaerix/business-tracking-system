@@ -228,22 +228,11 @@ include __DIR__ . '/../../includes/header.php';
 </style>
 
 <div class="page-content">
-    <!-- Header Banner -->
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-        <div>
-            <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0 0 4px 0;">Invoices &amp; Receipts</h1>
-            <p style="margin: 0; color: var(--text-muted); font-size: 13.5px;">
-                Sequential document repository, formal A4 customer invoices, and 80mm thermal POS receipts.
-            </p>
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <a href="<?= BASE_URL ?>/modules/orders/" class="btn btn-outline">
-                📦 View Orders
-            </a>
-            <a href="<?= BASE_URL ?>/modules/orders/create.php" class="btn btn-primary">
-                ➕ New Sale / Order
-            </a>
-        </div>
+    <!-- Header Actions -->
+    <div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
+        <a href="<?= BASE_URL ?>/modules/orders/" class="btn btn-outline">
+            📦 View Orders
+        </a>
     </div>
 
     <!-- 4 Top KPI Stat Cards (Design System Standard) -->
@@ -514,7 +503,7 @@ include __DIR__ . '/../../includes/header.php';
                     <!-- Calculations Block -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 220px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px; font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
-                            <strong style="color: var(--text-main); display: block; margin-bottom: 2px;">🛡️ Non-VAT / Small Business Tax-Exempt</strong>
+                            <strong style="color: var(--text-main); display: block; margin-bottom: 2px;">🛡️ Non-VAT / Tax-Exempt</strong>
                             Non-vatable / tax-exempt transaction (0.00% Tax).<br>
                             <strong>Total Due = Subtotal - Discount + Delivery Fee.</strong>
                         </div>

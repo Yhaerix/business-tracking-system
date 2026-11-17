@@ -62,14 +62,7 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <!-- Page Action Header -->
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-    <div>
-        <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Expenses &amp; Disbursements</h1>
-        <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
-            Track operational expenditures, petty cash disbursements, and receipt records.
-        </p>
-    </div>
-
+<div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <a href="<?= BASE_URL ?>/modules/expenses/categories.php" class="btn btn-outline">
             🏷️ Categories
@@ -434,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Currency Formatter Helper
     function formatMoney(amount) {
         const num = parseFloat(amount) || 0;
-        return '₱ ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '₱\u00A0' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Modal Visibility Helpers

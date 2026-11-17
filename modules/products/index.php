@@ -50,14 +50,7 @@ require_once __DIR__ . '/../../includes/header.php';
 ?>
 
     <!-- Page Action Header -->
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-        <div>
-            <h1 style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0;">Product Catalog</h1>
-            <p style="font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0 0;">
-                Track inventory availability, profit margins, cost structures, and replenishment thresholds.
-            </p>
-        </div>
-
+    <div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="<?= BASE_URL ?>/modules/products/categories.php" class="btn btn-outline">
                 📁 Categories
@@ -163,23 +156,20 @@ require_once __DIR__ . '/../../includes/header.php';
     <!-- Product Table Container (.card with padding:0 matching design standard) -->
     <div class="card" style="padding: 0; overflow: hidden;">
         <div class="table-responsive">
-            <table class="table" id="productsTable">
+            <table class="table table-hover" id="productsTable">
                 <thead>
                     <tr>
-                        <th style="width: 120px;">SKU</th>
-                        <th>Product Name</th>
-                        <th>Category</th>
-                        <th class="text-right" style="width: 110px;">Cost Price</th>
-                        <th class="text-right" style="width: 110px;">Selling Price</th>
-                        <th class="text-right" style="width: 130px;">Profit Margin</th>
-                        <th style="width: 140px;">Current Stock</th>
-                        <th style="width: 100px;">Status</th>
-                        <th style="width: 160px; text-align: right;">Actions</th>
+                        <th style="width: 54px; text-align: center;">Photo</th>
+                        <th>Product</th>
+                        <th style="width: 140px;">Category</th>
+                        <th class="text-right" style="width: 140px; white-space: nowrap;">Price</th>
+                        <th style="width: 140px;">Stock</th>
+                        <th style="width: 120px; text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
                             Loading product catalog...
                         </td>
                     </tr>
@@ -203,29 +193,59 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- ============================================================== -->
 <?php if ($canManage): ?>
 <div class="modal-overlay" id="addProductModal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
-    <div class="modal-card" style="max-width: 580px;">
+    <div class="modal-card" style="max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
-            <h3 class="modal-title" id="productModalTitle">Add Product</h3>
+            <div>
+                <h3 class="modal-title" id="productModalTitle">Add New Product</h3>
+                <p id="productModalSubtitle" style="font-size: 12.5px; color: var(--text-muted); margin: 2px 0 0 0;">Prestige Apple Store Device Catalog</p>
+            </div>
             <button type="button" class="modal-close" id="closeAddProductModalBtn">&times;</button>
         </div>
-        <form id="productForm" autocomplete="off">
+        <form id="productForm" autocomplete="off" enctype="multipart/form-data">
             <input type="hidden" name="id" id="prodId" value="0">
-            <div class="modal-body">
+            <div class="modal-body" style="padding-top: 14px;">
                 <div id="prodModalAlert" style="display: none;" class="alert alert-danger"></div>
 
-                <div class="form-group">
-                    <label class="form-label" for="prodName">Product Name <span style="color: var(--color-danger);">*</span></label>
-                    <input type="text" class="form-input" id="prodName" name="name" required maxlength="150" placeholder="e.g. San Miguel Pale Pilsen 330ml">
+                <!-- 1. Integrated Device Photo Upload Section -->
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px;">
+                    <div id="prodPhotoPreviewBox" style="width: 82px; height: 82px; min-width: 82px; border-radius: 10px; border: 2px dashed #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer;" title="Click to choose photo">
+                        <img id="prodPhotoPreviewImg" src="" alt="Preview" style="display: none; width: 100%; height: 100%; object-fit: contain;">
+                        <div id="prodPhotoPlaceholder" style="text-align: center; color: var(--text-muted); padding: 6px;">
+                            <div style="font-size: 26px; line-height: 1;">📷</div>
+                            <div style="font-size: 10.5px; margin-top: 3px; font-weight: 500;">Add Photo</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 13.5px; color: var(--text-main); margin-bottom: 2px;">Product Photo</div>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px 0;">Upload device image (JPG, PNG, or WebP up to 5MB). Displayed as primary photo across POS and storefront.</p>
+                        <input type="file" id="prodPhotoInput" name="photo" accept="image/jpeg,image/png,image/webp" style="display: none;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline btn-sm" id="chooseProdPhotoBtn">
+                                📷 Choose Photo
+                            </button>
+                            <button type="button" class="btn btn-outline btn-sm" id="removeProdPhotoBtn" style="display: none; color: var(--color-danger); border-color: #fca5a5;">
+                                Remove
+                            </button>
+                            <span id="prodPhotoNameText" style="font-size: 11.5px; color: var(--color-primary); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;"></span>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                    <div class="form-group">
+                <!-- 2. Product Name -->
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="prodName">Product Name <span style="color: var(--color-danger);">*</span></label>
+                    <input type="text" class="form-input" id="prodName" name="name" required maxlength="150" placeholder="e.g. iPhone 16 Pro Max 256GB">
+                </div>
+
+                <!-- 3. SKU & Category (Matching clean 2-column layout) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" for="prodSku">SKU (Stock Keeping Unit)</label>
                         <input type="text" class="form-input" id="prodSku" name="sku" placeholder="Auto-generated if blank" maxlength="64" style="font-family: monospace;">
                         <small style="color: var(--text-muted); font-size: 11px;">Leave blank for sequential SKU</small>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" for="prodCategory">Category <span style="color: var(--color-danger);">*</span></label>
                         <select class="form-select" id="prodCategory" name="category_id" required>
                             <option value="">Select Category</option>
@@ -236,45 +256,129 @@ require_once __DIR__ . '/../../includes/header.php';
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                    <div class="form-group">
+                <!-- 4. Cost Price & Selling Price -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px;">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" for="prodCostPrice">Cost Price (₱) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" class="form-input" id="prodCostPrice" name="cost_price" required min="0" step="0.01" value="0.00">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" for="prodSellingPrice">Selling Price (₱) <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" class="form-input" id="prodSellingPrice" name="selling_price" required min="0" step="0.01" value="0.00">
                     </div>
                 </div>
 
-                <!-- Live Margin Estimation Preview -->
-                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center;">
+                <!-- 5. Live Margin Estimation Preview -->
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 9px 14px; margin-bottom: 14px; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center;">
                     <span>Unit Margin: <strong id="marginAmount" style="color: var(--color-success); font-size: 13.5px;">₱ 0.00</strong></span>
                     <span>Markup: <strong id="marginPercent" style="color: var(--color-primary); font-size: 13.5px;">0.0%</strong></span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-                    <div class="form-group" id="initialStockGroup">
+                <!-- 6. Initial Stock & Low Stock Threshold -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group" id="initialStockGroup" style="margin-bottom: 0;">
                         <label class="form-label" for="prodStock">Initial Stock Qty</label>
                         <input type="number" class="form-input" id="prodStock" name="current_stock" min="0" step="1" value="0">
                         <small style="color: var(--text-muted); font-size: 11px;" id="stockHelpText">Starting inventory on shelf</small>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" for="prodThreshold">Low Stock Threshold <span style="color: var(--color-danger);">*</span></label>
                         <input type="number" class="form-input" id="prodThreshold" name="low_stock_threshold" required min="0" step="1" value="5">
                         <small style="color: var(--text-muted); font-size: 11px;">Triggers replenishment alert</small>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
+                <!-- 7. Catalog Status -->
+                <div class="form-group" style="margin-bottom: 16px;">
                     <label class="form-label" for="prodStatus">Catalog Status</label>
                     <select class="form-select" id="prodStatus" name="status">
                         <option value="active">Active (Available for POS &amp; Sales)</option>
-                        <option value="inactive">Inactive (Hidden from POS)</option>
+                        <option value="inactive">Inactive / Archived</option>
                     </select>
                 </div>
+
+                <!-- 8. Apple Device Specifications & Warranty -->
+                <div style="padding-top: 14px; border-top: 1px dashed var(--border-color); margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-primary);">
+                            🍎 DEVICE SPECIFICATIONS &amp; WARRANTY
+                        </span>
+                        <small style="color: var(--text-muted); font-size: 11px;">Prestige Storefront Attributes</small>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodStorage">Storage / Capacity</label>
+                            <input type="text" class="form-input" id="prodStorage" name="storage" list="appleStorageList" placeholder="e.g. 256GB, 512GB, 16GB/256GB">
+                            <datalist id="appleStorageList">
+                                <option value="64GB">
+                                <option value="128GB">
+                                <option value="256GB">
+                                <option value="512GB">
+                                <option value="1TB">
+                                <option value="16GB / 256GB SSD">
+                                <option value="16GB / 512GB SSD">
+                                <option value="18GB / 512GB SSD">
+                                <option value="N/A">
+                            </datalist>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodColor">Color / Finish</label>
+                            <input type="text" class="form-input" id="prodColor" name="color" list="appleColorList" placeholder="e.g. Desert Titanium, Space Black">
+                            <datalist id="appleColorList">
+                                <option value="Desert Titanium">
+                                <option value="Natural Titanium">
+                                <option value="White Titanium">
+                                <option value="Black Titanium">
+                                <option value="Space Black">
+                                <option value="Midnight">
+                                <option value="Starlight">
+                                <option value="Silver">
+                                <option value="Teal">
+                                <option value="Ultramarine">
+                                <option value="Jet Black">
+                                <option value="White">
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodCondition">Device Condition</label>
+                            <select class="form-select" id="prodCondition" name="condition_type">
+                                <option value="Brand New Sealed">Brand New Sealed</option>
+                                <option value="Certified Pre-Owned">Certified Pre-Owned</option>
+                                <option value="Open Box">Open Box</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodWarranty">Warranty Coverage</label>
+                            <input type="text" class="form-input" id="prodWarranty" name="warranty" value="1 Year Official Apple Warranty">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. Optional Hardware Highlights & Storefront Description (Compact) -->
+                <details style="margin-top: 6px; padding: 8px 12px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <summary style="font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; user-select: none;">
+                        Additional Specs &amp; Description (Optional)
+                    </summary>
+                    <div style="padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodSpecs" style="font-size: 11.5px;">Key Specifications (Hardware Highlights)</label>
+                            <textarea class="form-textarea" id="prodSpecs" name="specs" rows="2" placeholder="e.g. Chip: A18 Pro | Display: 6.9-inch Super Retina XDR OLED ProMotion 120Hz | Camera: 48MP Fusion"></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="prodDescription" style="font-size: 11.5px;">Storefront Product Description</label>
+                            <textarea class="form-textarea" id="prodDescription" name="description" rows="2" placeholder="Overview of features, battery life, design finish, and customer inclusions..."></textarea>
+                        </div>
+                    </div>
+                </details>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" id="cancelProductBtn">Cancel</button>
@@ -382,6 +486,67 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 <?php endif; ?>
 
+<!-- ============================================================== -->
+<!-- 4. MODAL: Product Media Gallery (#productGalleryModal)         -->
+<!-- ============================================================== -->
+<div class="modal-overlay" id="productGalleryModal" role="dialog" aria-modal="true" aria-labelledby="galleryModalTitle" style="display: none;">
+    <div class="modal-card" style="max-width: 680px; width: 95%;">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title" id="galleryModalTitle" style="display: flex; align-items: center; gap: 8px;">
+                    <span>📸</span> Product Media Gallery
+                </h3>
+                <p id="galleryModalSubtitle" style="font-size: 12.5px; color: var(--text-muted); margin: 3px 0 0 0;">
+                    Manage high-resolution Apple storefront photos
+                </p>
+            </div>
+            <button type="button" class="modal-close" id="closeGalleryModalBtn">&times;</button>
+        </div>
+        <div class="modal-body" style="padding-top: 16px;">
+            <div id="galleryModalAlert" style="display: none;" class="alert alert-danger"></div>
+            <div id="galleryModalSuccess" style="display: none;" class="alert alert-success"></div>
+
+            <?php if ($canManage): ?>
+            <!-- Multi-Image Upload Box -->
+            <div style="background: #f8fafc; border: 2px dashed var(--border-color); border-radius: var(--radius-md); padding: 18px; text-align: center; margin-bottom: 20px;">
+                <input type="file" id="galleryFileInput" multiple accept="image/jpeg,image/png,image/webp" style="display: none;">
+                <div style="font-size: 28px; margin-bottom: 6px;">🖼️</div>
+                <div style="font-weight: 600; font-size: 13.5px; color: var(--text-main); margin-bottom: 4px;">Upload High-Resolution Device Photos</div>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0;">Supports JPG, PNG, and WebP (up to 5MB each). First image is automatically set as Primary.</p>
+                <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline btn-sm" id="chooseImagesBtn">
+                        📁 Select Photos
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" id="startUploadBtn" style="display: none;">
+                        ⬆️ Upload Selected (<span id="selectedCountText">0</span>)
+                    </button>
+                </div>
+                <div id="selectedFilesSummary" style="font-size: 12px; color: var(--color-primary); font-weight: 500; margin-top: 10px; display: none;"></div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Gallery Images Grid Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-weight: 600; font-size: 13.5px; color: var(--text-main);">
+                    Gallery Images (<span id="galleryImageCount">0</span>)
+                </span>
+                <small style="color: var(--text-muted); font-size: 11.5px;">⭐ Star marks the primary catalog thumbnail</small>
+            </div>
+
+            <!-- Image Grid Container -->
+            <div id="galleryGridContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 12px; max-height: 360px; overflow-y: auto; padding: 4px;">
+                <div style="grid-column: 1 / -1; text-align: center; padding: 32px 16px; color: var(--text-muted);">
+                    Loading images...
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11.5px; color: var(--text-muted);">Prestige Media Engine v2.0</span>
+            <button type="button" class="btn btn-outline" id="doneGalleryBtn">Done</button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const canManage = <?= $canManage ? 'true' : 'false' ?>;
@@ -430,6 +595,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const marginAmount = document.getElementById('marginAmount');
     const marginPercent = document.getElementById('marginPercent');
 
+    // Apple Device Attributes
+    const prodStorage = document.getElementById('prodStorage');
+    const prodColor = document.getElementById('prodColor');
+    const prodCondition = document.getElementById('prodCondition');
+    const prodWarranty = document.getElementById('prodWarranty');
+    const prodSpecs = document.getElementById('prodSpecs');
+    const prodDescription = document.getElementById('prodDescription');
+
+    // Add/Edit Modal Integrated Photo Elements
+    const prodPhotoInput = document.getElementById('prodPhotoInput');
+    const chooseProdPhotoBtn = document.getElementById('chooseProdPhotoBtn');
+    const removeProdPhotoBtn = document.getElementById('removeProdPhotoBtn');
+    const prodPhotoPreviewImg = document.getElementById('prodPhotoPreviewImg');
+    const prodPhotoPlaceholder = document.getElementById('prodPhotoPlaceholder');
+    const prodPhotoNameText = document.getElementById('prodPhotoNameText');
+    let selectedProdPhotoFile = null;
+    let currentExistingPhotoUrl = null;
+
+    // Gallery Modal Elements
+    const productGalleryModal = document.getElementById('productGalleryModal');
+    const closeGalleryModalBtn = document.getElementById('closeGalleryModalBtn');
+    const doneGalleryBtn = document.getElementById('doneGalleryBtn');
+    const galleryModalTitle = document.getElementById('galleryModalTitle');
+    const galleryModalSubtitle = document.getElementById('galleryModalSubtitle');
+    const galleryModalAlert = document.getElementById('galleryModalAlert');
+    const galleryModalSuccess = document.getElementById('galleryModalSuccess');
+    const galleryFileInput = document.getElementById('galleryFileInput');
+    const chooseImagesBtn = document.getElementById('chooseImagesBtn');
+    const startUploadBtn = document.getElementById('startUploadBtn');
+    const selectedCountText = document.getElementById('selectedCountText');
+    const selectedFilesSummary = document.getElementById('selectedFilesSummary');
+    const galleryGridContainer = document.getElementById('galleryGridContainer');
+    const galleryImageCount = document.getElementById('galleryImageCount');
+
+    let activeGalleryProductId = 0;
+    let selectedFilesToUpload = [];
+
     // Manual Stock Adjustment Modal Elements
     const stockAdjustModal = document.getElementById('stockAdjustModal');
     const openHeaderAdjustBtn = document.getElementById('openHeaderAdjustBtn');
@@ -471,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatMoney(amount) {
         const n = parseFloat(amount) || 0;
-        return '₱ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '₱\u00A0' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Modal Control Functions
@@ -505,6 +707,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (prodCostPrice && prodSellingPrice) {
         prodCostPrice.addEventListener('input', updateMarginPreview);
         prodSellingPrice.addEventListener('input', updateMarginPreview);
+    }
+
+    // Integrated Product Photo Upload Handlers
+    const prodPhotoPreviewBox = document.getElementById('prodPhotoPreviewBox');
+    if (prodPhotoPreviewBox && prodPhotoInput) {
+        prodPhotoPreviewBox.addEventListener('click', () => prodPhotoInput.click());
+    }
+    if (chooseProdPhotoBtn && prodPhotoInput) {
+        chooseProdPhotoBtn.addEventListener('click', () => prodPhotoInput.click());
+        prodPhotoInput.addEventListener('change', () => {
+            if (prodPhotoInput.files && prodPhotoInput.files[0]) {
+                const file = prodPhotoInput.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    API.toast('Selected image exceeds the 5MB limit. Please choose a smaller photo.', 'error');
+                    prodPhotoInput.value = '';
+                    return;
+                }
+                selectedProdPhotoFile = file;
+                if (prodPhotoNameText) prodPhotoNameText.textContent = file.name;
+                if (removeProdPhotoBtn) removeProdPhotoBtn.style.display = 'inline-flex';
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (prodPhotoPreviewImg) {
+                        prodPhotoPreviewImg.src = e.target.result;
+                        prodPhotoPreviewImg.style.display = 'block';
+                    }
+                    if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (removeProdPhotoBtn) {
+        removeProdPhotoBtn.addEventListener('click', () => {
+            selectedProdPhotoFile = null;
+            if (prodPhotoInput) prodPhotoInput.value = '';
+            if (prodPhotoNameText) prodPhotoNameText.textContent = '';
+            removeProdPhotoBtn.style.display = 'none';
+
+            if (currentExistingPhotoUrl) {
+                if (prodPhotoPreviewImg) {
+                    prodPhotoPreviewImg.src = currentExistingPhotoUrl;
+                    prodPhotoPreviewImg.style.display = 'block';
+                }
+                if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'none';
+            } else {
+                if (prodPhotoPreviewImg) {
+                    prodPhotoPreviewImg.src = '';
+                    prodPhotoPreviewImg.style.display = 'none';
+                }
+                if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'block';
+            }
+        });
     }
 
     // -------------------------------------------------------------
@@ -714,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = page;
         productTableBody.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <div style="display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-color); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
                     Loading product catalog...
                 </td>
@@ -734,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!res || !res.success || !res.data) {
             productTableBody.innerHTML = `
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--color-danger);">
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--color-danger);">
                         Failed to load products. Please check your network connection and retry.
                     </td>
                 </tr>`;
@@ -767,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!products || products.length === 0) {
             productTableBody.innerHTML = `
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                    <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
                         <div style="font-size: 36px; margin-bottom: 8px;">📦</div>
                         <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">No Products Found</div>
                         <p style="font-size: 13px; margin: 4px 0 0 0;">No catalog entries match your selected search or filter criteria.</p>
@@ -778,10 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
             products.forEach(p => {
                 const stock = parseInt(p.current_stock, 10);
                 const threshold = parseInt(p.low_stock_threshold, 10);
-                const cost = parseFloat(p.cost_price);
                 const sell = parseFloat(p.selling_price);
-                const margin = sell - cost;
-                const marginPct = cost > 0 ? ((margin / cost) * 100).toFixed(1) : '0.0';
 
                 // Stock status tag styling matching design system
                 let stockBadge = '';
@@ -793,47 +1047,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     stockBadge = `<span class="pos-product-stock-tag in-stock">${stock} in stock</span>`;
                 }
 
-                const statusBadge = p.status === 'active' 
-                    ? '<span class="badge badge-active">Active</span>' 
-                    : '<span class="badge badge-inactive">Inactive</span>';
+                // Device Photo Thumbnail
+                let photoHtml = '';
+                if (p.primary_image) {
+                    photoHtml = `<img src="../../${escapeHtml(p.primary_image)}" alt="${escapeHtml(p.name)}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border-color); background: #f8fafc; padding: 2px;" onerror="this.outerHTML='<div style=\'width:42px;height:42px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:18px;\'>📱</div>'">`;
+                } else {
+                    photoHtml = `<div style="width: 42px; height: 42px; border-radius: 6px; border: 1px dashed var(--border-color); background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-muted);" title="No image uploaded">📱</div>`;
+                }
+
+                // Status tag if inactive
+                const inactiveTag = p.status !== 'active' 
+                    ? '<span class="badge badge-inactive" style="font-size: 10.5px; padding: 1px 6px;">Inactive</span>' 
+                    : '';
 
                 html += `
-                    <tr>
-                        <td class="tabular-nums" style="font-family: monospace; font-weight: 600; color: var(--color-primary); font-size: 13px;">
-                            ${escapeHtml(p.sku)}
+                    <tr class="product-row" data-id="${p.id}" style="cursor: pointer;" title="Click row to view / edit in drawer">
+                        <td style="text-align: center; vertical-align: middle; padding: 8px;">
+                            ${photoHtml}
                         </td>
                         <td>
-                            <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">${escapeHtml(p.name)}</div>
-                            <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Threshold: ${threshold} units</div>
+                            <div style="font-weight: 600; color: var(--text-main); font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <span>${escapeHtml(p.name)}</span>
+                                ${inactiveTag}
+                            </div>
+                            <div style="font-family: monospace; font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                                SKU: <span style="color: var(--color-primary); font-weight: 500;">${escapeHtml(p.sku)}</span>
+                            </div>
                         </td>
                         <td>
                             <span class="badge badge-outline">${escapeHtml(p.category_name || 'General')}</span>
                         </td>
-                        <td class="text-right tabular-nums">${formatMoney(cost)}</td>
-                        <td class="text-right tabular-nums" style="font-weight: 600;">${formatMoney(sell)}</td>
-                        <td class="text-right tabular-nums" style="font-weight: 600; color: ${margin >= 0 ? 'var(--color-success)' : 'var(--color-danger)'};">
-                            ${formatMoney(margin)} <small style="font-size: 11px; color: var(--text-muted);">(${marginPct}%)</small>
+                        <td class="text-right tabular-nums" style="font-weight: 600; font-size: 14px; white-space: nowrap;">
+                            ${formatMoney(sell)}
                         </td>
-                        <td>${stockBadge}</td>
-                        <td>${statusBadge}</td>
+                        <td>
+                            ${stockBadge}
+                        </td>
                         <td style="text-align: right; white-space: nowrap;">
-                            <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                ${canAdjust ? `
-                                    <button type="button" class="btn btn-outline btn-sm adjust-product-btn" 
-                                            onclick="openAdjustModalForProduct(${p.id}, '${escapeHtml(p.sku)}', '${escapeHtml(p.name).replace(/'/g, "\\'")}', ${stock})" 
-                                            title="Quick Stock Adjustment">
-                                        ±
-                                    </button>
-                                ` : ''}
+                            <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
                                 ${canManage ? `
-                                    <button type="button" class="btn btn-outline btn-sm edit-product-btn" data-id="${p.id}" title="Edit Product">
+                                    <button type="button" class="btn btn-outline btn-sm edit-product-btn" data-id="${p.id}" title="Edit / View in Drawer">
                                         <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px; vertical-align: -1px;"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>Edit
                                     </button>
                                     <button type="button" class="btn btn-danger btn-sm delete-product-btn" 
                                             data-id="${p.id}" data-name="${escapeHtml(p.name)}" title="Delete Product">
                                         <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px; vertical-align: -1px;"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete
                                     </button>
-                                ` : ''}
+                                ` : `
+                                    <button type="button" class="btn btn-outline btn-sm view-product-btn" data-id="${p.id}" title="View in Drawer">
+                                        <svg viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; margin-right: 4px; vertical-align: -1px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View
+                                    </button>
+                                `}
                             </div>
                         </td>
                     </tr>
@@ -890,6 +1154,27 @@ document.addEventListener('DOMContentLoaded', () => {
             initialStockGroup.style.display = 'block';
             stockHelpText.textContent = 'Starting inventory on shelf';
             prodModalAlert.style.display = 'none';
+
+            // Reset photo preview to clean state
+            selectedProdPhotoFile = null;
+            currentExistingPhotoUrl = null;
+            if (prodPhotoInput) prodPhotoInput.value = '';
+            if (prodPhotoNameText) prodPhotoNameText.textContent = '';
+            if (removeProdPhotoBtn) removeProdPhotoBtn.style.display = 'none';
+            if (prodPhotoPreviewImg) {
+                prodPhotoPreviewImg.src = '';
+                prodPhotoPreviewImg.style.display = 'none';
+            }
+            if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'block';
+
+            // Reset Apple attributes
+            if (prodStorage) prodStorage.value = '';
+            if (prodColor) prodColor.value = '';
+            if (prodCondition) prodCondition.value = 'Brand New Sealed';
+            if (prodWarranty) prodWarranty.value = '1 Year Official Apple Warranty';
+            if (prodSpecs) prodSpecs.value = '';
+            if (prodDescription) prodDescription.value = '';
+
             updateMarginPreview();
             openModal(addProductModal);
             setTimeout(() => prodName.focus(), 50);
@@ -900,13 +1185,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cancelProductBtn) cancelProductBtn.addEventListener('click', () => closeModal(addProductModal));
     if (closeDeleteProductModalBtn) closeDeleteProductModalBtn.addEventListener('click', () => closeModal(deleteProductModal));
     if (cancelDeleteProdBtn) cancelDeleteProdBtn.addEventListener('click', () => closeModal(deleteProductModal));
+    if (closeGalleryModalBtn) closeGalleryModalBtn.addEventListener('click', () => closeModal(productGalleryModal));
+    if (doneGalleryBtn) doneGalleryBtn.addEventListener('click', () => closeModal(productGalleryModal));
 
     // Close when clicking overlay backdrop (only if mousedown also started on backdrop)
     let prodMouseDownTarget = null;
     document.addEventListener('mousedown', (e) => {
         prodMouseDownTarget = e.target;
     });
-    [addProductModal, stockAdjustModal, deleteProductModal].forEach(modal => {
+    [addProductModal, stockAdjustModal, deleteProductModal, productGalleryModal].forEach(modal => {
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal && prodMouseDownTarget === modal) {
@@ -922,49 +1209,101 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal(addProductModal);
             closeModal(stockAdjustModal);
             closeModal(deleteProductModal);
+            closeModal(productGalleryModal);
         }
     });
 
-    // Delegated Edit & Delete Button Clicks
-    productsTable.addEventListener('click', async (e) => {
-        const editBtn = e.target.closest('.edit-product-btn');
-        if (editBtn) {
-            const id = editBtn.dataset.id;
-            productModalTitle.textContent = 'Edit Product';
-            prodModalAlert.style.display = 'none';
+    // Open Slide-Out Drawer Panel with Full Product Details
+    async function openProductDrawer(id) {
+        if (!canManage) return;
+        productModalTitle.textContent = 'Edit Product';
+        prodModalAlert.style.display = 'none';
 
-            const res = await API.get(`handler.php?action=get_product&id=${id}`);
-            if (res && res.success && res.data) {
-                const p = res.data;
-                prodId.value = p.id;
-                prodName.value = p.name;
-                prodSku.value = p.sku;
-                prodCategory.value = p.category_id;
-                prodCostPrice.value = p.cost_price;
-                prodSellingPrice.value = p.selling_price;
-                prodThreshold.value = p.low_stock_threshold;
-                prodStatus.value = p.status;
+        const res = await API.get(`handler.php?action=get_product&id=${id}`);
+        if (res && res.success && res.data) {
+            const p = res.data;
+            prodId.value = p.id;
+            prodName.value = p.name;
+            prodSku.value = p.sku;
+            prodCategory.value = p.category_id;
+            prodCostPrice.value = p.cost_price;
+            prodSellingPrice.value = p.selling_price;
+            prodThreshold.value = p.low_stock_threshold;
+            prodStatus.value = p.status;
 
-                // Disable direct stock edit during product update (must use inventory adjustment)
-                prodStock.value = p.current_stock;
-                prodStock.disabled = true;
-                stockHelpText.textContent = 'Use Manual Stock Adjustment to modify quantities';
+            // Photo preview setup
+            selectedProdPhotoFile = null;
+            if (prodPhotoInput) prodPhotoInput.value = '';
+            if (prodPhotoNameText) prodPhotoNameText.textContent = '';
+            if (removeProdPhotoBtn) removeProdPhotoBtn.style.display = 'none';
 
-                updateMarginPreview();
-                openModal(addProductModal);
-                setTimeout(() => prodName.focus(), 50);
+            if (p.primary_image) {
+                currentExistingPhotoUrl = '../../' + p.primary_image;
+                if (prodPhotoPreviewImg) {
+                    prodPhotoPreviewImg.src = currentExistingPhotoUrl;
+                    prodPhotoPreviewImg.style.display = 'block';
+                }
+                if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'none';
             } else {
-                API.toast('Failed to load product details.', 'error');
+                currentExistingPhotoUrl = null;
+                if (prodPhotoPreviewImg) {
+                    prodPhotoPreviewImg.src = '';
+                    prodPhotoPreviewImg.style.display = 'none';
+                }
+                if (prodPhotoPlaceholder) prodPhotoPlaceholder.style.display = 'block';
             }
+
+            // Populate Apple device specs
+            if (prodStorage) prodStorage.value = p.storage || '';
+            if (prodColor) prodColor.value = p.color || '';
+            if (prodCondition) prodCondition.value = p.condition_type || 'Brand New Sealed';
+            if (prodWarranty) prodWarranty.value = p.warranty || '1 Year Official Apple Warranty';
+            if (prodSpecs) prodSpecs.value = p.specs || '';
+            if (prodDescription) prodDescription.value = p.description || '';
+
+            // Disable direct stock edit during product update (must use inventory adjustment)
+            prodStock.value = p.current_stock;
+            prodStock.disabled = true;
+            stockHelpText.textContent = 'Use Manual Stock Adjustment to modify quantities';
+
+            updateMarginPreview();
+            openModal(addProductModal);
+            setTimeout(() => prodName.focus(), 50);
+        } else {
+            API.toast('Failed to load product details.', 'error');
+        }
+    }
+
+    // Delegated Gallery, Edit, Row Click & Delete Clicks
+    productsTable.addEventListener('click', async (e) => {
+        // 1. Gallery Button Click
+        const galleryBtn = e.target.closest('.gallery-product-btn');
+        if (galleryBtn) {
+            const id = parseInt(galleryBtn.dataset.id, 10);
+            const sku = galleryBtn.dataset.sku;
+            const name = galleryBtn.dataset.name;
+            openGalleryModal(id, sku, name);
             return;
         }
 
+        // 2. Delete Button Click
         const deleteBtn = e.target.closest('.delete-product-btn');
         if (deleteBtn) {
             pendingDeleteProductId = parseInt(deleteBtn.dataset.id, 10);
             deleteProdTargetName.textContent = `"${deleteBtn.dataset.name}"`;
             deleteProdAlert.style.display = 'none';
             openModal(deleteProductModal);
+            return;
+        }
+
+        // 3. Edit / View Button Click or Row Click
+        const editBtn = e.target.closest('.edit-product-btn') || e.target.closest('.view-product-btn');
+        const row = e.target.closest('.product-row');
+        const targetId = editBtn ? editBtn.dataset.id : (row && !e.target.closest('button') && !e.target.closest('a') ? row.dataset.id : null);
+
+        if (targetId) {
+            await openProductDrawer(targetId);
+            return;
         }
     });
 
@@ -980,35 +1319,261 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = parseInt(prodId.value, 10);
             const action = id > 0 ? 'update_product' : 'create_product';
 
-            const payload = {
-                action,
-                name: prodName.value.trim(),
-                sku: prodSku.value.trim(),
-                category_id: parseInt(prodCategory.value, 10),
-                cost_price: parseFloat(prodCostPrice.value) || 0,
-                selling_price: parseFloat(prodSellingPrice.value) || 0,
-                low_stock_threshold: parseInt(prodThreshold.value, 10) || 5,
-                status: prodStatus.value
-            };
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('name', prodName.value.trim());
+            formData.append('sku', prodSku.value.trim());
+            formData.append('category_id', parseInt(prodCategory.value, 10) || 0);
+            formData.append('cost_price', parseFloat(prodCostPrice.value) || 0);
+            formData.append('selling_price', parseFloat(prodSellingPrice.value) || 0);
+            formData.append('low_stock_threshold', parseInt(prodThreshold.value, 10) || 5);
+            formData.append('status', prodStatus.value);
+            formData.append('storage', prodStorage ? prodStorage.value.trim() : '');
+            formData.append('color', prodColor ? prodColor.value.trim() : '');
+            formData.append('condition_type', prodCondition ? prodCondition.value : 'Brand New Sealed');
+            formData.append('warranty', prodWarranty ? prodWarranty.value.trim() : '1 Year Official Apple Warranty');
+            formData.append('specs', prodSpecs ? prodSpecs.value.trim() : '');
+            formData.append('description', prodDescription ? prodDescription.value.trim() : '');
 
             if (id > 0) {
-                payload.id = id;
+                formData.append('id', id);
             } else {
-                payload.current_stock = parseInt(prodStock.value, 10) || 0;
+                formData.append('current_stock', parseInt(prodStock.value, 10) || 0);
             }
 
-            const res = await API.post('handler.php', payload);
-            saveProductBtn.disabled = false;
-            saveProductBtn.textContent = 'Save Product';
+            if (selectedProdPhotoFile) {
+                formData.append('photo', selectedProdPhotoFile);
+            }
 
-            if (res && res.success) {
-                API.toast(res.message || 'Product saved successfully.', 'success');
-                closeModal(addProductModal);
-                loadProducts(currentPage);
-            } else {
-                const msg = (res && res.message) ? res.message : 'Validation error occurred.';
-                prodModalAlert.textContent = msg;
+            try {
+                const res = await API.post('handler.php', formData);
+                if (res && res.success) {
+                    API.toast(res.message || 'Product saved successfully.', 'success');
+                    closeModal(addProductModal);
+                    loadProducts(currentPage);
+                } else {
+                    const msg = (res && res.message) ? res.message : 'Validation error occurred.';
+                    prodModalAlert.textContent = msg;
+                    prodModalAlert.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Save product error:', err);
+                prodModalAlert.textContent = 'Network or server error while saving product.';
                 prodModalAlert.style.display = 'block';
+            } finally {
+                saveProductBtn.disabled = false;
+                saveProductBtn.textContent = 'Save Product';
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // Product Gallery Engine (Multi-Image Upload, Primary, Delete)
+    // -------------------------------------------------------------
+    async function openGalleryModal(productId, sku, name) {
+        activeGalleryProductId = productId;
+        galleryModalTitle.innerHTML = `<span>📸</span> Product Media: <span style="color: var(--color-primary);">${escapeHtml(name)}</span>`;
+        galleryModalSubtitle.textContent = `[${sku}] — Manage high-resolution Apple storefront images`;
+        galleryModalAlert.style.display = 'none';
+        if (galleryModalSuccess) galleryModalSuccess.style.display = 'none';
+        resetGalleryUploadForm();
+        openModal(productGalleryModal);
+        await loadGalleryImages(productId);
+    }
+
+    function resetGalleryUploadForm() {
+        selectedFilesToUpload = [];
+        if (galleryFileInput) galleryFileInput.value = '';
+        if (selectedFilesSummary) {
+            selectedFilesSummary.textContent = '';
+            selectedFilesSummary.style.display = 'none';
+        }
+        if (startUploadBtn) {
+            startUploadBtn.style.display = 'none';
+            startUploadBtn.disabled = false;
+        }
+    }
+
+    async function loadGalleryImages(productId) {
+        galleryGridContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--text-muted);">
+                <div style="display: inline-block; width: 22px; height: 22px; border: 2px solid var(--border-color); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
+                Loading images...
+            </div>`;
+
+        try {
+            const res = await API.get(`handler.php?action=list_product_images&product_id=${productId}`);
+            if (res && res.success && Array.isArray(res.data)) {
+                renderGalleryGrid(res.data);
+            } else {
+                galleryGridContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--color-danger);">
+                        Failed to retrieve gallery photos.
+                    </div>`;
+            }
+        } catch (err) {
+            console.error('Gallery load error:', err);
+            galleryGridContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--color-danger);">
+                    Network error while fetching gallery photos.
+                </div>`;
+        }
+    }
+
+    function renderGalleryGrid(images) {
+        galleryImageCount.textContent = images.length;
+        if (images.length === 0) {
+            galleryGridContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 36px 16px; color: var(--text-muted); background: #fff; border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
+                    <div style="font-size: 34px; margin-bottom: 6px;">📷</div>
+                    <div style="font-weight: 600; font-size: 14px; color: var(--text-main);">No Images Uploaded</div>
+                    <p style="font-size: 12px; margin: 4px 0 0 0;">Select photos above to showcase this device in the storefront.</p>
+                </div>`;
+            return;
+        }
+
+        let html = '';
+        images.forEach(img => {
+            const isPrimary = parseInt(img.is_primary, 10) === 1;
+            html += `
+                <div class="gallery-card" style="border: 2px solid ${isPrimary ? 'var(--color-primary)' : 'var(--border-color)'}; border-radius: var(--radius-md); overflow: hidden; background: #fff; display: flex; flex-direction: column; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="position: relative; width: 100%; height: 115px; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                        <img src="../../${escapeHtml(img.image_path)}" alt="Product Image" style="width: 100%; height: 100%; object-fit: contain;">
+                        ${isPrimary ? `
+                            <span style="position: absolute; top: 6px; left: 6px; background: var(--color-primary); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                ⭐ PRIMARY
+                            </span>
+                        ` : ''}
+                    </div>
+                    <div style="padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: space-between; background: #fff; border-top: 1px solid var(--border-color);">
+                        ${canManage ? `
+                            <div style="display: flex; gap: 4px;">
+                                ${!isPrimary ? `
+                                    <button type="button" class="btn btn-outline btn-sm set-primary-img-btn" data-id="${img.id}" style="flex: 1; padding: 3px 6px; font-size: 10.5px;" title="Set as primary catalog photo">
+                                        ⭐ Primary
+                                    </button>
+                                ` : `
+                                    <span style="flex: 1; text-align: center; font-size: 10.5px; color: var(--color-primary); font-weight: 600; padding: 3px 0;">
+                                        Catalog Main
+                                    </span>
+                                `}
+                                <button type="button" class="btn btn-danger btn-sm delete-img-btn" data-id="${img.id}" style="padding: 3px 6px; font-size: 10.5px;" title="Delete image">
+                                    🗑️
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        galleryGridContainer.innerHTML = html;
+    }
+
+    // Image Upload Controls
+    if (chooseImagesBtn && galleryFileInput) {
+        chooseImagesBtn.addEventListener('click', () => galleryFileInput.click());
+
+        galleryFileInput.addEventListener('change', () => {
+            const files = Array.from(galleryFileInput.files);
+            selectedFilesToUpload = files;
+            if (files.length > 0) {
+                selectedCountText.textContent = files.length;
+                selectedFilesSummary.textContent = `Selected ${files.length} photo(s): ` + files.map(f => f.name).join(', ');
+                selectedFilesSummary.style.display = 'block';
+                startUploadBtn.style.display = 'inline-flex';
+            } else {
+                selectedFilesSummary.style.display = 'none';
+                startUploadBtn.style.display = 'none';
+            }
+        });
+    }
+
+    if (startUploadBtn) {
+        startUploadBtn.addEventListener('click', async () => {
+            if (!activeGalleryProductId || selectedFilesToUpload.length === 0) return;
+
+            galleryModalAlert.style.display = 'none';
+
+            startUploadBtn.disabled = true;
+            startUploadBtn.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('action', 'upload_product_images');
+            formData.append('product_id', activeGalleryProductId);
+
+            selectedFilesToUpload.forEach(file => {
+                formData.append('images[]', file);
+            });
+
+            try {
+                const res = await API.post('handler.php', formData);
+                if (res && res.success) {
+                    API.toast(res.message || 'Photos uploaded successfully!', 'success');
+                    resetGalleryUploadForm();
+                    await loadGalleryImages(activeGalleryProductId);
+                    loadProducts(currentPage); // update thumbnail and count in table
+                } else {
+                    galleryModalAlert.textContent = (res && res.message) ? res.message : 'Photo upload failed.';
+                    galleryModalAlert.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Upload error:', err);
+                galleryModalAlert.textContent = 'Network or server error during image upload.';
+                galleryModalAlert.style.display = 'block';
+            } finally {
+                startUploadBtn.disabled = false;
+                startUploadBtn.textContent = `⬆️ Upload Selected (${selectedFilesToUpload.length})`;
+            }
+        });
+    }
+
+    // Grid Actions: Set Primary & Delete Image
+    if (galleryGridContainer) {
+        galleryGridContainer.addEventListener('click', async (e) => {
+            const primaryBtn = e.target.closest('.set-primary-img-btn');
+            if (primaryBtn) {
+                const imgId = parseInt(primaryBtn.dataset.id, 10);
+                primaryBtn.disabled = true;
+                primaryBtn.textContent = '...';
+
+                const res = await API.post('handler.php', {
+                    action: 'set_primary_image',
+                    product_id: activeGalleryProductId,
+                    image_id: imgId
+                });
+
+                if (res && res.success) {
+                    API.toast('Primary thumbnail updated.', 'success');
+                    await loadGalleryImages(activeGalleryProductId);
+                    loadProducts(currentPage);
+                } else {
+                    API.toast(res && res.message ? res.message : 'Failed to set primary image.', 'error');
+                    primaryBtn.disabled = false;
+                    primaryBtn.textContent = '⭐ Primary';
+                }
+                return;
+            }
+
+            const deleteImgBtn = e.target.closest('.delete-img-btn');
+            if (deleteImgBtn) {
+                const imgId = parseInt(deleteImgBtn.dataset.id, 10);
+                if (!confirm('Are you sure you want to permanently delete this photo?')) return;
+
+                deleteImgBtn.disabled = true;
+                const res = await API.post('handler.php', {
+                    action: 'delete_product_image',
+                    product_id: activeGalleryProductId,
+                    image_id: imgId
+                });
+
+                if (res && res.success) {
+                    API.toast('Photo removed successfully.', 'success');
+                    await loadGalleryImages(activeGalleryProductId);
+                    loadProducts(currentPage);
+                } else {
+                    API.toast(res && res.message ? res.message : 'Failed to delete photo.', 'error');
+                    deleteImgBtn.disabled = false;
+                }
             }
         });
     }

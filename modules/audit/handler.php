@@ -104,8 +104,14 @@ try {
             }
 
             if ($search !== '') {
-                $where[] = '(a.module LIKE :search OR a.action LIKE :search OR a.ip_address LIKE :search OR u.username LIKE :search OR u.full_name LIKE :search OR CAST(a.record_id AS CHAR) LIKE :search)';
-                $params[':search'] = '%' . $search . '%';
+                $where[] = '(a.module LIKE :s_mod OR a.action LIKE :s_act OR a.ip_address LIKE :s_ip OR u.username LIKE :s_user OR u.full_name LIKE :s_name OR CAST(a.record_id AS CHAR) LIKE :s_rec)';
+                $sTerm = '%' . $search . '%';
+                $params[':s_mod'] = $sTerm;
+                $params[':s_act'] = $sTerm;
+                $params[':s_ip'] = $sTerm;
+                $params[':s_user'] = $sTerm;
+                $params[':s_name'] = $sTerm;
+                $params[':s_rec'] = $sTerm;
             }
 
             $whereSql = implode(' AND ', $where);

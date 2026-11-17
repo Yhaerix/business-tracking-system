@@ -26,9 +26,9 @@ if (!function_exists('is_active')) {
 <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-header">
         <a href="<?= BASE_URL ?>/modules/dashboard/" class="sidebar-brand">
-            <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Business Tracker System Logo" class="brand-logo"
+            <img src="<?= BASE_URL ?>/assets/images/logo.png" alt="Prestige Apple Panel Logo" class="brand-logo"
                 width="54" height="54">
-            <span class="brand-text">Business Tracker System</span>
+            <span class="brand-text">Prestige Apple Panel</span>
         </a>
 
         <!-- Button to collapse / expand the sidebar (Icon-Only Mode) placed beside logo/title -->
@@ -54,19 +54,19 @@ if (!function_exists('is_active')) {
             <span>Dashboard</span>
         </a>
 
-        <div class="nav-section-title">Sales & Orders</div>
-
-        <a href="<?= BASE_URL ?>/modules/orders/create.php"
-            class="nav-link <?= is_active('/modules/orders/create.php') ?>" <?= is_active('/modules/orders/create.php') ? 'aria-current="page"' : '' ?> title="POS / New Order (COD)">
+        <a href="<?= BASE_URL ?>/store/?admin_session=1" class="nav-link" target="_blank" title="Open Public Prestige Apple Store">
             <svg class="nav-ico" viewBox="0 0 24 24">
-                <rect x="4" y="3" width="16" height="18" rx="2" />
-                <path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15h0" />
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            <span>POS / New Order (COD)</span>
+            <span>Public Storefront ↗</span>
         </a>
 
+        <div class="nav-section-title">Sales & Orders</div>
+
         <a href="<?= BASE_URL ?>/modules/orders/"
-            class="nav-link <?= is_active('/modules/orders/', '/orders/create.php') ?>" <?= is_active('/modules/orders/', '/orders/create.php') ? 'aria-current="page"' : '' ?> title="Orders & Delivery">
+            class="nav-link <?= is_active('/modules/orders/') ?>" <?= is_active('/modules/orders/') ? 'aria-current="page"' : '' ?> title="Orders & Delivery">
             <svg class="nav-ico" viewBox="0 0 24 24">
                 <path d="M3 7l9-4 9 4-9 4-9-4z" />
                 <path d="M3 7v10l9 4 9-4V7M12 11v10" />
@@ -81,6 +81,17 @@ if (!function_exists('is_active')) {
                 <path d="M9 7h6M9 11h6" />
             </svg>
             <span>Invoices & Receipts</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/modules/customers/"
+            class="nav-link <?= is_active('/modules/customers/') ?>" <?= is_active('/modules/customers/') ? 'aria-current="page"' : '' ?> title="User Management (Store Users)">
+            <svg class="nav-ico" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>User Management</span>
         </a>
 
         <div class="nav-section-title">Inventory & Catalog</div>
@@ -130,30 +141,30 @@ if (!function_exists('is_active')) {
             </a>
         <?php endif; ?>
 
-        <!-- Administration (Admin only) -->
-        <?php if (has_permission('users_manage') || has_permission('audit_view')): ?>
+        <!-- Administration (Admin & Manager) -->
+        <?php if (has_permission('users_manage') || has_permission('audit_view') || has_permission('settings_view')): ?>
             <div class="nav-section-title">System & Security</div>
 
             <?php if (has_permission('users_manage')): ?>
                 <a href="<?= BASE_URL ?>/modules/users/" class="nav-link <?= is_active('/modules/users/') ?>"
-                    <?= is_active('/modules/users/') ? 'aria-current="page"' : '' ?> title="User Management">
+                    <?= is_active('/modules/users/') ? 'aria-current="page"' : '' ?> title="Staff & Operators">
                     <svg class="nav-ico" viewBox="0 0 24 24">
                         <circle cx="9" cy="8" r="3.5" />
                         <path
                             d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M17 4.5a3.5 3.5 0 010 7M21.5 20c0-2.6-1.4-4.6-3.5-5.4" />
                     </svg>
-                    <span>User Management</span>
+                    <span>Staff &amp; Operators</span>
                 </a>
             <?php endif; ?>
 
-            <?php if (has_permission('audit_view')): ?>
-                <a href="<?= BASE_URL ?>/modules/audit/" class="nav-link <?= is_active('/modules/audit/') ?>"
-                    <?= is_active('/modules/audit/') ? 'aria-current="page"' : '' ?> title="Audit Logs">
+            <?php if (has_permission('settings_view')): ?>
+                <a href="<?= BASE_URL ?>/modules/settings/" class="nav-link <?= is_active('/modules/settings/') ?>"
+                    <?= is_active('/modules/settings/') ? 'aria-current="page"' : '' ?> title="System Settings">
                     <svg class="nav-ico" viewBox="0 0 24 24">
-                        <path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6l8-3z" />
-                        <path d="M9 12l2 2 4-4" />
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
-                    <span>Audit Logs</span>
+                    <span>System Settings</span>
                 </a>
             <?php endif; ?>
         <?php endif; ?>

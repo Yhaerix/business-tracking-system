@@ -709,6 +709,171 @@
         }
     };
 
+    // =========================================================================
+    // 5. DASHBOARD TOP SELLING PRODUCTS CHART (APEXCHARTS HORIZONTAL BAR)
+    // =========================================================================
+    BTSCharts.renderTopProductsChart = function (containerId, options = {}) {
+        const container = (typeof containerId === 'string') ? document.getElementById(containerId) : containerId;
+        if (!container) return;
+
+        let names = options.names;
+        let units = options.units;
+        let revenues = options.revenues;
+
+        if (!names && container.dataset.names) {
+            try { names = JSON.parse(container.dataset.names); } catch (e) { names = []; }
+        }
+        if (!units && container.dataset.units) {
+            try { units = JSON.parse(container.dataset.units); } catch (e) { units = []; }
+        }
+        if (!revenues && container.dataset.revenues) {
+            try { revenues = JSON.parse(container.dataset.revenues); } catch (e) { revenues = []; }
+        }
+
+        names = Array.isArray(names) ? names : [];
+        units = Array.isArray(units) ? units.map(v => parseInt(v, 10) || 0) : [];
+        revenues = Array.isArray(revenues) ? revenues.map(v => parseFloat(v) || 0) : [];
+
+        const currency = options.currency || '₱';
+
+        cleanupChartInstance(container);
+        container.innerHTML = '';
+
+        if (names.length === 0) {
+            container.innerHTML = `
+                <div style="height: 295px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13.5px;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
+                    <div>No product sales recorded yet.</div>
+                </div>
+            `;
+            return;
+        }
+
+        const shortLabels = names.map(n => {
+            const str = String(n || '');
+            return str.length > 22 ? str.substring(0, 20) + '…' : str;
+        });
+
+        const palette = ['#1d68e1', '#2563eb', '#0ea5e9', '#6366f1', '#8b5cf6'];
+
+        if (window.ApexCharts) {
+            const apexOptions = {
+                series: [
+                    {
+                        name: 'Units Sold',
+                        data: units
+                    }
+                ],
+                chart: {
+                    type: 'bar',
+                    height: 295,
+                    fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    toolbar: { show: false },
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 550
+                    }
+                },
+                colors: palette,
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        borderRadius: 6,
+                        borderRadiusApplication: 'end',
+                        barHeight: '58%',
+                        distributed: true,
+                        dataLabels: {
+                            position: 'top'
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    textAnchor: 'start',
+                    offsetX: 6,
+                    style: {
+                        fontSize: '11.5px',
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        fontWeight: 700,
+                        colors: ['#1e293b']
+                    },
+                    formatter: function (val) {
+                        return val + (val === 1 ? ' unit' : ' units');
+                    }
+                },
+                stroke: {
+                    show: true,
+                    width: 1,
+                    colors: ['transparent']
+                },
+                grid: {
+                    borderColor: '#e8edf5',
+                    strokeDashArray: 4,
+                    xaxis: { lines: { show: true } },
+                    yaxis: { lines: { show: false } },
+                    padding: {
+                        top: 4,
+                        right: 36,
+                        bottom: 4,
+                        left: 6
+                    }
+                },
+                xaxis: {
+                    categories: shortLabels,
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    labels: {
+                        style: {
+                            colors: '#94a3b8',
+                            fontSize: '11px',
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            fontWeight: 500
+                        },
+                        formatter: function (val) {
+                            return Math.round(val);
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: '#334155',
+                            fontSize: '12px',
+                            fontFamily: "'Plus Jakarta Sans', sans-serif",
+                            fontWeight: 600
+                        },
+                        maxWidth: 155
+                    }
+                },
+                legend: {
+                    show: false
+                },
+                tooltip: {
+                    custom: function ({ series, seriesIndex, dataPointIndex }) {
+                        const fullName = escapeHtml(names[dataPointIndex] || 'Product');
+                        const uVal = (series[seriesIndex] && series[seriesIndex][dataPointIndex] !== undefined)
+                            ? Number(series[seriesIndex][dataPointIndex])
+                            : 0;
+                        const revVal = revenues[dataPointIndex] || 0;
+
+                        return `
+                            <div style="background:#0f172a; border-radius:12px; padding:10px 14px; box-shadow:0 16px 36px rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.12); color:#ffffff; font-family:'Plus Jakarta Sans',sans-serif; min-width:160px; text-align:left;">
+                                <div style="font-weight:700; font-size:12.5px; color:#ffffff; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:4px;">${fullName}</div>
+                                <div style="font-size:12px; color:#93c5fd; margin-bottom:2px;">Units Sold: <strong>${uVal.toLocaleString()}</strong></div>
+                                <div style="font-size:12px; color:#34d399;">Revenue: <strong>${formatCurrency(revVal, currency)}</strong></div>
+                            </div>
+                        `;
+                    }
+                }
+            };
+
+            const chart = new ApexCharts(container, apexOptions);
+            chart.render();
+            container._apexChartInstance = chart;
+        }
+    };
+
     /**
      * Pure SVG Fallback generator in case ApexCharts is ever blocked
      */

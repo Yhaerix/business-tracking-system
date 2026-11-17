@@ -317,6 +317,31 @@
     border: 1px solid #fecaca;
 }
 
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.badge-primary,
+.badge-info {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.badge-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
 .badge-inactive {
     background: #f1f5f9;
     color: #64748b;
@@ -2379,7 +2404,8 @@ body.role-manager .admin-only {
     #inspectDiffModal,
     #remitModal,
     #orderDrawerModal,
-    #invoiceDrawerModal {
+    #invoiceDrawerModal,
+    #customerDrawerModal {
         justify-content: flex-end;
         align-items: stretch;
         padding: 0;
@@ -2393,13 +2419,18 @@ body.role-manager .admin-only {
     #inspectDiffModal .modal-card,
     #remitModal .modal-card,
     #orderDrawerModal .modal-card,
-    #invoiceDrawerModal .modal-card {
+    #invoiceDrawerModal .modal-card,
+    #customerDrawerModal .modal-card {
         height: 100vh;
         max-height: 100vh;
         width: 100%;
         max-width: 520px !important;
         border-radius: 28px 0 0 28px;
         animation: drawerIn .28s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    #customerDrawerModal .modal-card {
+        max-width: 620px !important;
     }
 
     #inspectDiffModal .modal-card {

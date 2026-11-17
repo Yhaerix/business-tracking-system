@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Currency Formatter Helper
     function formatMoney(amount) {
         const num = parseFloat(amount) || 0;
-        return '₱ ' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '₱\u00A0' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Modal Control Functions

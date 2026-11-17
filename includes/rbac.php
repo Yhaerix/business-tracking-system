@@ -23,7 +23,8 @@ function get_role_permissions(): array {
             'invoices_view', 'invoices_manage',
             'reports_view', 'reports_net_income', 'reports_export',
             'audit_view',
-            'users_manage'
+            'users_manage',
+            'settings_view', 'settings_manage'
         ],
         ROLE_MANAGER => [
             // Manager: Store operations, inventory adjustments, and expense entry
@@ -34,7 +35,8 @@ function get_role_permissions(): array {
             'expenses_view', 'expenses_manage',
             'invoices_view',
             'reports_view', 'reports_net_income', 'reports_export',
-            'audit_view'
+            'audit_view',
+            'settings_view'
         ],
         ROLE_CASHIER => [
             // Cashier: Point of sale, COD order creation and dispatch, basic catalog view
@@ -88,4 +90,3 @@ function require_permission(string $permission): void {
         exit;
     }
 }
-

@@ -1,14 +1,14 @@
 <?php
 /**
  * System Global Constants
- * Small Business Sales and Expense Tracking System
+ * Prestige Apple Panel
  */
 
 declare(strict_types=1);
 
 // Application Identity
-define('APP_NAME', 'Business Tracker System');
-define('APP_VERSION', '1.0.0');
+define('APP_NAME', 'Prestige Apple Panel');
+define('APP_VERSION', '2.0.0');
 
 // Currency & Financial Standards (Excludes tax calculations per requirements)
 define('APP_CURRENCY', '₱');

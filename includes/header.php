@@ -103,6 +103,34 @@ try {
         }
     }
 
+    // 3b. Active Incoming Delivery & Scheduled Reminders
+    if (has_permission('settings_view')) {
+        $stmtRem = $db->query("
+            SELECT id, title, type, target_date, notes
+            FROM reminders
+            WHERE is_active = 1
+              AND is_completed = 0
+              AND type IN ('INCOMING_DELIVERY', 'ORDER_DISPATCH')
+            ORDER BY target_date ASC
+            LIMIT 4
+        ");
+        while ($remRow = $stmtRem->fetch(PDO::FETCH_ASSOC)) {
+            $remTimeStr = !empty($remRow['target_date']) ? date('M j, g:i A', strtotime($remRow['target_date'])) : 'Scheduled';
+            $isIncoming = ($remRow['type'] === 'INCOMING_DELIVERY');
+            $allNotifications[] = [
+                'type'      => 'reminder_delivery',
+                'badge'     => $isIncoming ? 'Incoming Delivery' : 'Order Delivery',
+                'badge_cls' => $isIncoming ? 'badge-success' : 'badge-info',
+                'title'     => $remRow['title'],
+                'desc'      => !empty($remRow['notes']) ? $remRow['notes'] : "Scheduled for {$remTimeStr}",
+                'url'       => BASE_URL . '/modules/settings/#reminders',
+                'time'      => $remTimeStr,
+                'dot_cls'   => $isIncoming ? 'notif-dot-success' : 'notif-dot-info',
+                'icon'      => 'truck'
+            ];
+        }
+    }
+
     // 4. Stored System Notifications
     $currentUid = (int)($user['id'] ?? 0);
     $stmtSys = $db->prepare("

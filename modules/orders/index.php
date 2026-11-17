@@ -139,6 +139,14 @@ require_once __DIR__ . '/../../includes/header.php';
         </select>
     </div>
 
+    <div class="filter-group" style="max-width: 170px;">
+        <select id="filterPaymentMode" class="form-select">
+            <option value="">All Payment Modes</option>
+            <option value="COD">Cash on Delivery (COD)</option>
+            <option value="PRESTIGE_COINS">Prestige Coins</option>
+        </select>
+    </div>
+
     <div class="filter-group" style="max-width: 150px;">
         <input type="date" id="filterDateFrom" class="form-input" title="Date From">
     </div>
@@ -154,19 +162,146 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <!-- Orders Data Table Container -->
+<style>
+/* Clean & Scannable Orders Table Styling */
+#ordersTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#ordersTable thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+#ordersTable tbody tr.order-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#ordersTable tbody tr.order-row:hover {
+    background-color: #f8fafc;
+}
+
+#ordersTable tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+.order-num-pill {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--color-primary);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.order-num-pill:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.btn-order-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-order-view:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+/* Status & Payment Pill Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.badge-pending,
+.badge-warning {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
+}
+
+.badge-confirmed,
+.badge-primary,
+.badge-info {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #bae6fd !important;
+}
+
+.badge-dispatched {
+    background: #f3e8ff !important;
+    color: #6b21a8 !important;
+    border: 1px solid #e9d5ff !important;
+}
+
+.badge-delivered,
+.badge-success {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.badge-cancelled,
+.badge-danger {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+}
+</style>
+
 <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
     <div class="table-responsive">
         <table class="table" id="ordersTable">
             <thead>
                 <tr>
-                    <th>Order #</th>
-                    <th>Date &amp; Staff</th>
-                    <th>Customer Details</th>
-                    <th>Line Items</th>
-                    <th class="text-right">Total Due</th>
-                    <th class="text-center">Order Status</th>
-                    <th class="text-center">COD Payment</th>
-                    <th class="text-center">Actions</th>
+                    <th style="width: 140px;">Order #</th>
+                    <th style="width: 125px;">Date</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th class="text-right" style="width: 125px;">Total Due</th>
+                    <th class="text-center" style="width: 130px;">Order Status</th>
+                    <th class="text-center" style="width: 140px;">Payment Status</th>
+                    <th class="text-center" style="width: 90px;">Action</th>
                 </tr>
             </thead>
             <tbody id="ordersTableBody">
@@ -298,6 +433,51 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- 5. MODAL: Assign Courier & Dispatch Waybill (Phase 6 Fulfillment)         -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="assignCourierModal">
+    <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">🚚 Assign Courier &amp; Waybill Tracking</h3>
+            <button type="button" class="modal-close" onclick="window.closeModal('assignCourierModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="assignCourierForm" onsubmit="return false;">
+                <input type="hidden" id="courierOrderId">
+                <div class="alert alert-info" style="margin-bottom: 16px; font-size: 12.5px;">
+                    Enter the logistics partner and tracking code. This will update the customer's live tracking milestone to <strong>DISPATCHED (In Transit)</strong>.
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="courierNameInput">Courier Partner *</label>
+                    <select id="courierNameInput" class="form-select" required>
+                        <option value="J&amp;T Express Philippines">J&amp;T Express Philippines</option>
+                        <option value="LBC Express">LBC Express</option>
+                        <option value="Flash Express">Flash Express</option>
+                        <option value="Standard Insured Delivery">Standard Insured Delivery</option>
+                        <option value="Lalamove Same-Day">Lalamove Same-Day</option>
+                        <option value="GrabExpress">GrabExpress</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="courierTrackingInput">Waybill / Tracking Number *</label>
+                    <input type="text" id="courierTrackingInput" class="form-input" required placeholder="e.g. JT-PH-987654321" style="font-family: monospace; font-weight: 700;">
+                </div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                        <input type="checkbox" id="autoDispatchCheck" checked>
+                        <span>Automatically advance order status to <strong>DISPATCHED</strong></span>
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="window.closeModal('assignCourierModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmAssignCourierBtn">Save Waybill &amp; Dispatch</button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const currency = '<?= APP_CURRENCY ?>';
@@ -314,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterSearch = document.getElementById('filterSearch');
     const filterOrderStatus = document.getElementById('filterOrderStatus');
     const filterPaymentStatus = document.getElementById('filterPaymentStatus');
+    const filterPaymentMode = document.getElementById('filterPaymentMode');
     const filterDateFrom = document.getElementById('filterDateFrom');
     const filterDateTo = document.getElementById('filterDateTo');
     const applyFiltersBtn = document.getElementById('applyFiltersBtn');
@@ -346,6 +527,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const deliverAmountInput = document.getElementById('deliverAmountInput');
     const confirmDeliverBtn = document.getElementById('confirmDeliverBtn');
 
+    // Assign Courier Modal Elements (Phase 6)
+    const assignCourierModal = document.getElementById('assignCourierModal');
+    const courierOrderId = document.getElementById('courierOrderId');
+    const courierNameInput = document.getElementById('courierNameInput');
+    const courierTrackingInput = document.getElementById('courierTrackingInput');
+    const autoDispatchCheck = document.getElementById('autoDispatchCheck');
+    const confirmAssignCourierBtn = document.getElementById('confirmAssignCourierBtn');
+
     // Reason Modal Elements
     const reasonModal = document.getElementById('reasonModal');
     const reasonModalTitle = document.getElementById('reasonModalTitle');
@@ -376,6 +565,33 @@ document.addEventListener('DOMContentLoaded', () => {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+    }
+
+    function formatOrderDate(dateStr) {
+        if (!dateStr) return { date: '-', time: '' };
+        try {
+            const parts = dateStr.trim().split(' ');
+            if (parts.length === 2) {
+                const [y, m, d] = parts[0].split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const monthIndex = parseInt(m, 10) - 1;
+                const formattedDate = (monthIndex >= 0 && monthIndex < 12) 
+                    ? `${monthNames[monthIndex]} ${parseInt(d, 10)}, ${y}` 
+                    : parts[0];
+
+                const [hh, mm] = parts[1].split(':');
+                let hour = parseInt(hh, 10);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                if (hour === 0) hour = 12;
+                const formattedTime = `${hour}:${mm} ${ampm}`;
+
+                return { date: formattedDate, time: formattedTime };
+            }
+            return { date: dateStr, time: '' };
+        } catch (e) {
+            return { date: dateStr, time: '' };
+        }
     }
 
     function getStatusBadge(status) {
@@ -480,6 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
             search: filterSearch.value.trim(),
             order_status: filterOrderStatus.value,
             payment_status: filterPaymentStatus.value,
+            payment_mode: filterPaymentMode.value,
             date_from: filterDateFrom.value,
             date_to: filterDateTo.value
         });
@@ -526,101 +743,81 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersTableBody.innerHTML = '';
             orders.forEach(o => {
                 const tr = document.createElement('tr');
+                tr.className = 'order-row';
                 
-                // Build contextual quick action buttons
-                let quickActionButtonsHtml = `
-                    <button type="button" class="btn btn-outline btn-sm view-details-btn" data-id="${o.id}">
-                        View Details
-                    </button>
-                `;
+                // Formatted Date & Time
+                const dateObj = formatOrderDate(o.created_at);
+                const staffTip = escapeHtml(o.creator_name || o.creator_username || 'Staff');
 
-                if (canUpdateStatusRole && o.order_status === 'CONFIRMED') {
-                    quickActionButtonsHtml += `
-                        <button type="button" class="btn btn-primary btn-sm quick-dispatch-btn" data-id="${o.id}" title="Hand to courier for delivery">
-                            Dispatch
-                        </button>
-                    `;
-                } else if (canUpdateStatusRole && o.order_status === 'DISPATCHED') {
-                    quickActionButtonsHtml += `
-                        <button type="button" class="btn btn-success btn-sm quick-deliver-btn" data-id="${o.id}" data-total="${o.total_amount}" title="Record Delivery & Collection">
-                            Delivered
-                        </button>
-                    `;
-                } else if (canRemitRole && o.order_status === 'DELIVERED' && o.payment_status === 'COLLECTED') {
-                    quickActionButtonsHtml += `
-                        <button type="button" class="btn btn-sm quick-remit-btn" data-id="${o.id}" data-num="${escapeHtml(o.order_number)}" data-total="${o.total_amount}" style="background: #047857; color: #ffffff; font-weight: 600;" title="Remit Cash to Drawer">
-                            Remit
-                        </button>
-                    `;
-                }
+                // Items summary
+                const itemsCount = parseInt(o.items_count, 10) || 1;
+                const countBadgeText = itemsCount === 1 ? '1 item' : `${itemsCount} items`;
 
                 tr.innerHTML = `
                     <td>
-                        <a href="javascript:void(0)" class="view-details-link" data-id="${o.id}" style="font-family: monospace; font-weight: 700; color: var(--color-primary); text-decoration: none;">
+                        <a href="javascript:void(0)" class="order-num-pill view-details-link" data-id="${o.id}">
                             ${escapeHtml(o.order_number)}
                         </a>
                     </td>
                     <td>
-                        <div style="font-size: 13px; font-weight: 500;">${escapeHtml(o.created_at)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted);">Staff: ${escapeHtml(o.creator_name || o.creator_username || 'Staff')}</div>
-                    </td>
-                    <td>
-                        <div style="font-weight: 600; color: var(--text-main); font-size: 13px;">${escapeHtml(o.customer_name)}</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(o.customer_phone)}</div>
-                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(o.delivery_address)}">${escapeHtml(o.delivery_address)}</div>
-                    </td>
-                    <td>
-                        <span class="badge badge-outline" style="font-size: 11px;">
-                            ${o.items_count || 1} item(s)
-                        </span>
-                        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px;" title="${escapeHtml(o.items_summary || '')}">
-                            ${escapeHtml(o.items_summary || '')}
+                        <div style="font-weight: 600; color: var(--text-main); font-size: 13px;" title="Staff: ${staffTip}">
+                            ${dateObj.date}
+                        </div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                            ${dateObj.time}
                         </div>
                     </td>
-                    <td class="text-right tabular-nums" style="font-weight: 700; font-size: 14px;">
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main); font-size: 13.5px;">
+                            ${escapeHtml(o.customer_name)}
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                            ${escapeHtml(o.customer_phone || 'No phone')}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge" style="background:#f1f5f9; color:#334155; font-size:11px; font-weight:600;">
+                            ${countBadgeText}
+                        </span>
+                        ${o.items_summary ? `
+                            <div style="font-size: 11.5px; color: var(--text-muted); max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px;" title="${escapeHtml(o.items_summary)}">
+                                ${escapeHtml(o.items_summary)}
+                            </div>
+                        ` : ''}
+                    </td>
+                    <td class="text-right tabular-nums" style="font-weight: 700; font-size: 14.5px; color: var(--text-main);">
                         ${formatCurrency(o.total_amount)}
                     </td>
-                    <td class="text-center">${getStatusBadge(o.order_status)}</td>
-                    <td class="text-center">${getPaymentBadge(o.payment_status)}</td>
                     <td class="text-center">
-                        <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                            ${quickActionButtonsHtml}
-                        </div>
+                        ${getStatusBadge(o.order_status)}
+                    </td>
+                    <td class="text-center">
+                        ${getPaymentBadge(o.payment_status)}
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn-order-view view-details-btn" data-id="${o.id}" title="Open Full Order Details Drawer">
+                            View
+                        </button>
                     </td>
                 `;
 
+                // Hook row click to open drawer
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('a') || e.target.closest('button')) {
+                        return;
+                    }
+                    openOrderDetails(o.id);
+                });
+
                 // Hook view details
-                tr.querySelector('.view-details-link').addEventListener('click', () => openOrderDetails(o.id));
-                tr.querySelector('.view-details-btn').addEventListener('click', () => openOrderDetails(o.id));
-
-                // Hook quick dispatch
-                const quickDispatchBtn = tr.querySelector('.quick-dispatch-btn');
-                if (quickDispatchBtn) {
-                    quickDispatchBtn.addEventListener('click', () => updateOrderStatus(o.id, 'DISPATCHED'));
-                }
-
-                // Hook quick deliver
-                const quickDeliverBtn = tr.querySelector('.quick-deliver-btn');
-                if (quickDeliverBtn) {
-                    quickDeliverBtn.addEventListener('click', () => {
-                        activeOrderData = { order: o };
-                        deliverCourierInput.value = '';
-                        deliverAmountInput.value = o.total_amount;
-                        window.openModal(deliverModal);
-                    });
-                }
-
-                // Hook quick remit
-                const quickRemitBtn = tr.querySelector('.quick-remit-btn');
-                if (quickRemitBtn) {
-                    quickRemitBtn.addEventListener('click', () => {
-                        activeOrderData = { order: o };
-                        remitOrderNumDisplay.textContent = o.order_number;
-                        remitAmountDisplay.textContent = formatCurrency(o.total_amount);
-                        remitNotesInput.value = '';
-                        window.openModal(remitModal);
-                    });
-                }
+                tr.querySelector('.view-details-link').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openOrderDetails(o.id);
+                });
+                tr.querySelector('.view-details-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openOrderDetails(o.id);
+                });
 
                 ordersTableBody.appendChild(tr);
             });
@@ -757,18 +954,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <div class="detail-info-block">
-                        <div class="detail-info-title">Financial &amp; COD Dispatch</div>
+                        <div class="detail-info-title">Financial &amp; Logistics Dispatch</div>
                         <div class="detail-info-row">
-                            <span class="detail-info-label">Order Total Due:</span>
+                            <span class="detail-info-label">Payment Mode:</span>
+                            <span class="detail-info-val" style="font-weight:700;">${order.payment_method === 'PRESTIGE_COINS' ? '🪙 Prestige Coins' : '💵 Cash on Delivery (COD)'}</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label">Order Total:</span>
                             <span class="detail-info-val" style="font-size: 15px; color: var(--color-primary);">${formatCurrency(order.total_amount)}</span>
                         </div>
                         <div class="detail-info-row">
-                            <span class="detail-info-label">Amount Collected:</span>
-                            <span class="detail-info-val" style="color: var(--color-success); font-weight: 700;">${formatCurrency(cod.amount_collected || 0)}</span>
+                            <span class="detail-info-label">Assigned Courier:</span>
+                            <span class="detail-info-val">${escapeHtml(order.courier_name || cod.collected_by || 'Awaiting Courier')}</span>
                         </div>
                         <div class="detail-info-row">
-                            <span class="detail-info-label">Assigned Courier:</span>
-                            <span class="detail-info-val">${escapeHtml(cod.collected_by || 'Awaiting Courier')}</span>
+                            <span class="detail-info-label">Waybill Tracking #:</span>
+                            <span class="detail-info-val" style="font-family: monospace; font-weight: 700; color: var(--color-primary);">${escapeHtml(order.tracking_number || 'N/A')}</span>
                         </div>
                         <div class="detail-info-row">
                             <span class="detail-info-label">Payment Status:</span>
@@ -881,79 +1082,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Build Footer Actions based on RBAC & Permitted Actions
+            // Build Footer Actions based on RBAC & Permitted Actions (Clean & Non-duplicated)
             drawerModalFooter.innerHTML = '';
+            drawerModalFooter.style.display = 'flex';
+            drawerModalFooter.style.justifyContent = 'space-between';
+            drawerModalFooter.style.alignItems = 'center';
+            drawerModalFooter.style.flexWrap = 'wrap';
+            drawerModalFooter.style.gap = '12px';
+            drawerModalFooter.style.width = '100%';
 
-            // Left Group: Document Links
+            // Left Group: Document Links (Packing Slip & View Invoice only - no duplicate thermal buttons)
             const leftActionWrap = document.createElement('div');
             leftActionWrap.style.display = 'flex';
             leftActionWrap.style.gap = '8px';
-            leftActionWrap.style.flexWrap = 'wrap';
+            leftActionWrap.style.alignItems = 'center';
 
             leftActionWrap.innerHTML = `
-                <a href="<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}" target="_blank" class="btn btn-outline btn-sm">
-                    📄 View Invoice
+                <a href="packing-slip.php?id=${order.id}" target="_blank" class="btn btn-outline btn-sm" style="font-weight: 500; font-size: 12.5px;">
+                    📦 Packing Slip
                 </a>
-                <a href="<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}&format=thermal" target="_blank" class="btn btn-outline btn-sm">
-                    🧾 Print Thermal Receipt
+                <a href="<?= BASE_URL ?>/modules/invoices/view.php?order_id=${order.id}" target="_blank" class="btn btn-outline btn-sm" style="font-weight: 500; font-size: 12.5px;">
+                    📄 View Invoice
                 </a>
             `;
             drawerModalFooter.appendChild(leftActionWrap);
 
-            // Right Group: Contextual Transition Buttons
+            // Right Group: Contextual Operational Buttons
             const rightActionWrap = document.createElement('div');
             rightActionWrap.style.display = 'flex';
             rightActionWrap.style.gap = '8px';
+            rightActionWrap.style.alignItems = 'center';
             rightActionWrap.style.flexWrap = 'wrap';
 
-            // Workflow: CONFIRMED -> DISPATCHED
-            if (actions.includes('dispatch')) {
-                const dispatchBtn = document.createElement('button');
-                dispatchBtn.type = 'button';
-                dispatchBtn.className = 'btn btn-primary btn-sm';
-                dispatchBtn.innerHTML = '🚚 Mark as Dispatched';
-                dispatchBtn.addEventListener('click', () => updateOrderStatus(order.id, 'DISPATCHED'));
-                rightActionWrap.appendChild(dispatchBtn);
-            }
-
-            // Workflow: DISPATCHED -> DELIVERED
-            if (actions.includes('deliver')) {
-                const deliverBtn = document.createElement('button');
-                deliverBtn.type = 'button';
-                deliverBtn.className = 'btn btn-success btn-sm';
-                deliverBtn.innerHTML = '✅ Mark Delivered & Cash Collected';
-                deliverBtn.addEventListener('click', () => {
-                    deliverCourierInput.value = '';
-                    deliverAmountInput.value = order.total_amount;
-                    window.openModal(deliverModal);
-                });
-                rightActionWrap.appendChild(deliverBtn);
-            }
-
-            // Workflow: DELIVERED -> REMITTED (Strict Manager/Admin only!)
-            if (actions.includes('remit') && canRemitRole) {
-                const remitBtn = document.createElement('button');
-                remitBtn.type = 'button';
-                remitBtn.className = 'btn btn-sm';
-                remitBtn.style.background = '#047857';
-                remitBtn.style.color = '#ffffff';
-                remitBtn.style.fontWeight = '600';
-                remitBtn.innerHTML = '💰 Remit Cash to Store';
-                remitBtn.addEventListener('click', () => {
-                    remitOrderNumDisplay.textContent = order.order_number;
-                    remitAmountDisplay.textContent = formatCurrency(order.total_amount);
-                    remitNotesInput.value = '';
-                    window.openModal(remitModal);
-                });
-                rightActionWrap.appendChild(remitBtn);
-            }
-
-            // Workflow: Cancel (Pre-dispatch)
+            // 1. Destructive/Cancel Action (placed subtly on secondary side)
             if (actions.includes('cancel')) {
                 const cancelBtn = document.createElement('button');
                 cancelBtn.type = 'button';
                 cancelBtn.className = 'btn btn-outline btn-sm';
                 cancelBtn.style.color = 'var(--color-danger)';
+                cancelBtn.style.borderColor = '#fca5a5';
+                cancelBtn.style.background = '#fff5f5';
+                cancelBtn.style.fontWeight = '500';
+                cancelBtn.style.fontSize = '12.5px';
                 cancelBtn.innerHTML = '✕ Cancel Order';
                 cancelBtn.addEventListener('click', () => {
                     pendingAction = 'CANCELLED';
@@ -963,6 +1133,65 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.openModal(reasonModal);
                 });
                 rightActionWrap.appendChild(cancelBtn);
+            }
+
+            // 2. Logistics: Assign Courier Waybill
+            if (canUpdateStatusRole && order.order_status !== 'DELIVERED' && order.order_status !== 'CANCELLED') {
+                const assignBtn = document.createElement('button');
+                assignBtn.type = 'button';
+                assignBtn.className = 'btn btn-outline btn-sm';
+                assignBtn.style.fontWeight = '500';
+                assignBtn.style.fontSize = '12.5px';
+                assignBtn.innerHTML = '🚚 Assign Courier';
+                assignBtn.addEventListener('click', () => {
+                    openAssignCourierModal(order.id, order.courier_name, order.tracking_number);
+                });
+                rightActionWrap.appendChild(assignBtn);
+            }
+
+            // 3. Primary State Transitions
+            if (actions.includes('dispatch')) {
+                const dispatchBtn = document.createElement('button');
+                dispatchBtn.type = 'button';
+                dispatchBtn.className = 'btn btn-primary btn-sm';
+                dispatchBtn.style.fontWeight = '600';
+                dispatchBtn.style.fontSize = '12.5px';
+                dispatchBtn.innerHTML = '🚚 Mark as Dispatched';
+                dispatchBtn.addEventListener('click', () => updateOrderStatus(order.id, 'DISPATCHED'));
+                rightActionWrap.appendChild(dispatchBtn);
+            }
+
+            if (actions.includes('deliver')) {
+                const deliverBtn = document.createElement('button');
+                deliverBtn.type = 'button';
+                deliverBtn.className = 'btn btn-success btn-sm';
+                deliverBtn.style.fontWeight = '600';
+                deliverBtn.style.fontSize = '12.5px';
+                deliverBtn.innerHTML = '✅ Mark Delivered';
+                deliverBtn.addEventListener('click', () => {
+                    deliverCourierInput.value = '';
+                    deliverAmountInput.value = order.total_amount;
+                    window.openModal(deliverModal);
+                });
+                rightActionWrap.appendChild(deliverBtn);
+            }
+
+            if (actions.includes('remit') && canRemitRole) {
+                const remitBtn = document.createElement('button');
+                remitBtn.type = 'button';
+                remitBtn.className = 'btn btn-sm';
+                remitBtn.style.background = '#047857';
+                remitBtn.style.color = '#ffffff';
+                remitBtn.style.fontWeight = '600';
+                remitBtn.style.fontSize = '12.5px';
+                remitBtn.innerHTML = '💰 Remit to Store';
+                remitBtn.addEventListener('click', () => {
+                    remitOrderNumDisplay.textContent = order.order_number;
+                    remitAmountDisplay.textContent = formatCurrency(order.total_amount);
+                    remitNotesInput.value = '';
+                    window.openModal(remitModal);
+                });
+                rightActionWrap.appendChild(remitBtn);
             }
 
             drawerModalFooter.appendChild(rightActionWrap);
@@ -1062,12 +1291,77 @@ document.addEventListener('DOMContentLoaded', () => {
         window.closeModal('remitModal');
     });
 
+    // Assign Courier Functions (Phase 6)
+    window.openAssignCourierModal = function(orderId, courierName, trackingNumber) {
+        if (!orderId) return;
+        courierOrderId.value = orderId;
+        courierNameInput.value = courierName || 'J&T Express Philippines';
+        courierTrackingInput.value = trackingNumber || '';
+        autoDispatchCheck.checked = true;
+        window.openModal(assignCourierModal);
+    };
+
+    confirmAssignCourierBtn.addEventListener('click', async () => {
+        const orderId = parseInt(courierOrderId.value, 10);
+        const courierName = courierNameInput.value.trim();
+        const trackingNumber = courierTrackingInput.value.trim();
+        const autoDispatch = autoDispatchCheck.checked;
+
+        if (!orderId) {
+            window.showToast('Invalid order reference.', 'warning');
+            return;
+        }
+        if (!courierName) {
+            window.showToast('Please select or enter the courier name.', 'warning');
+            courierNameInput.focus();
+            return;
+        }
+        if (!trackingNumber) {
+            window.showToast('Please provide a tracking / waybill number.', 'warning');
+            courierTrackingInput.focus();
+            return;
+        }
+
+        confirmAssignCourierBtn.disabled = true;
+        confirmAssignCourierBtn.textContent = 'Assigning & Dispatching...';
+
+        try {
+            const res = await API.post('handler.php?action=assign_courier', {
+                action: 'assign_courier',
+                id: orderId,
+                courier_name: courierName,
+                tracking_number: trackingNumber,
+                auto_dispatch: autoDispatch ? 1 : 0
+            });
+
+            if (res && res.success) {
+                window.showToast(res.message || 'Courier waybill assigned successfully.', 'success');
+                window.closeModal(assignCourierModal);
+                if (activeOrderData && activeOrderData.order && activeOrderData.order.id === orderId) {
+                    openOrderDrawer(orderId);
+                }
+                loadOrders(currentPage);
+            } else {
+                window.showToast(res?.message || 'Failed to assign courier waybill.', 'danger');
+            }
+        } catch (err) {
+            console.error('Assign courier error:', err);
+            window.showToast('Network error while assigning courier.', 'danger');
+        } finally {
+            confirmAssignCourierBtn.disabled = false;
+            confirmAssignCourierBtn.textContent = 'Save Waybill & Dispatch';
+        }
+    });
+
     // Filter Controls
     applyFiltersBtn.addEventListener('click', () => loadOrders(1));
     resetFiltersBtn.addEventListener('click', () => {
         filterSearch.value = '';
         filterOrderStatus.value = '';
         filterPaymentStatus.value = '';
+        if (typeof filterPaymentMode !== 'undefined' && filterPaymentMode) {
+            filterPaymentMode.value = '';
+        }
         filterDateFrom.value = '';
         filterDateTo.value = '';
         loadOrders(1);

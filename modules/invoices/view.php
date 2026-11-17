@@ -173,7 +173,7 @@ include __DIR__ . '/../../includes/header.php';
                             <?= APP_NAME ?>
                         </div>
                         <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5;">
-                            <span id="a4StoreTagline">Small Business Sales &amp; Inventory Hub</span><br>
+                            <span id="a4StoreTagline">Prestige Apple Panel &bull; Official Operations &amp; Billing</span><br>
                             <span id="a4StoreAddress">123 Commercial Avenue, Business District, Metro Manila</span><br>
                             Phone: <span id="a4StorePhone">+63 (02) 8123-4567</span> &bull; VAT Reg. TIN: <span id="a4StoreTin">123-456-789-000</span>
                         </div>
@@ -248,8 +248,8 @@ include __DIR__ . '/../../includes/header.php';
                 <!-- Totals & Calculations Block -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 260px; max-width: 440px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-                        <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">🛡️ Non-VAT / Small Business Tax-Exempt</strong>
-                        This transaction is strictly non-vatable / tax-exempt (0.00% Tax) pursuant to small business tax regulations.<br>
+                        <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">🛡️ Non-VAT / Tax-Exempt</strong>
+                        This transaction is strictly non-vatable / tax-exempt (0.00% Tax).<br>
                         <strong>Total Amount Due = Subtotal - Discount + Delivery Fee.</strong>
                     </div>
 
@@ -279,8 +279,9 @@ include __DIR__ . '/../../includes/header.php';
                         <div style="font-weight: 600; color: var(--text-main); margin-bottom: 2px;">This serves as an official sales invoice.</div>
                         Official receipt issued upon full collection of payment. Thank you for your business!
                     </div>
-                    <div style="text-align: center; min-width: 180px;">
-                        <div style="border-bottom: 1px solid var(--text-main); width: 180px; height: 32px; margin-bottom: 6px;"></div>
+                    <div style="text-align: center; min-width: 200px;">
+                        <div id="a4AuthorizedSignatureName" style="font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 4px; min-height: 22px; letter-spacing: 0.02em;">—</div>
+                        <div style="border-bottom: 1.5px solid var(--text-main); width: 200px; margin-bottom: 6px;"></div>
                         <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em;">
                             Authorized Signature
                         </div>
@@ -633,6 +634,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('a4DeliveryFee').textContent = formatCurrency(order.delivery_fee);
         document.getElementById('a4GrandTotal').textContent = formatCurrency(order.total_amount);
 
+        // Authorized Signature (Confirming user name only)
+        const authorizedSignerName = invoice.authorized_signer || order.confirmed_by_name || 'Store Manager';
+        const a4SigEl = document.getElementById('a4AuthorizedSignatureName');
+        if (a4SigEl) {
+            a4SigEl.textContent = authorizedSignerName;
+        }
+
         // -------------------------------------------------------------
         // Populate 80mm Thermal Receipt Layout
         // -------------------------------------------------------------
@@ -641,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tOrderNo').textContent = order.order_number;
         document.getElementById('tDate').textContent = invoice.issued_date;
         document.getElementById('tCustomerName').textContent = order.customer_name;
+        document.getElementById('tCashier').textContent = authorizedSignerName;
         document.getElementById('tCollectionStatus').textContent = invoice.status;
         document.getElementById('tBarcodeLabel').textContent = `* ${order.order_number} *`;
 

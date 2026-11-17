@@ -12,7 +12,7 @@ require_once __DIR__ . '/includes/auth.php';
 if (is_logged_in()) {
     header('Location: ' . BASE_URL . '/modules/dashboard/');
 } else {
-    header('Location: ' . BASE_URL . '/modules/auth/login.php');
+    header('Location: ' . BASE_URL . '/store/');
 }
 exit;
 

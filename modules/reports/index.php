@@ -24,24 +24,13 @@ include __DIR__ . '/../../includes/header.php';
 ?>
 
     <!-- Header with Export Action -->
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-        <div>
-            <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: var(--text-main); margin: 0 0 4px 0;">
-                Financial Performance Reports
-            </h1>
-            <p style="margin: 0; color: var(--text-muted); font-size: 13.5px;">
-                Monitor daily/monthly net income, realized COD sales, operational cost distribution, and physical cash flow.
-            </p>
+    <?php if ($canExport): ?>
+        <div class="page-header" style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
+            <button type="button" id="btnExportCsv" class="btn btn-primary">
+                📥 Export CSV
+            </button>
         </div>
-
-        <?php if ($canExport): ?>
-            <div>
-                <button type="button" id="btnExportCsv" class="btn btn-primary">
-                    📥 Export CSV
-                </button>
-            </div>
-        <?php endif; ?>
-    </div>
+    <?php endif; ?>
 
     <!-- Date Range Filter Toolbar -->
     <div class="card" style="padding: 18px 20px; margin-bottom: 24px;">
