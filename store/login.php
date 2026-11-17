@@ -136,14 +136,155 @@ require_once __DIR__ . '/includes/store_header.php';
     background: #eff6ff;
     border-color: #93c5fd;
 }
+
+/* Split-Screen Auth Layout Styles */
+.auth-split-container {
+    max-width: 960px !important;
+    padding: 40px 16px 80px 16px !important;
+}
+.auth-card {
+    display: flex !important;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    padding: 0 !important;
+    border: none;
+    min-height: 560px;
+    transition: flex-direction 0.35s ease;
+}
+.auth-card.mode-signin {
+    flex-direction: row !important;
+}
+.auth-card.mode-register {
+    flex-direction: row-reverse !important;
+}
+.auth-col-form {
+    flex: 1.15;
+    padding: 48px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    background: #ffffff;
+}
+.auth-col-brand {
+    flex: 0.85;
+    background: linear-gradient(145deg, #1d1d1f 0%, #000000 100%);
+    color: #ffffff;
+    padding: 48px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.auth-col-brand::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 113, 227, 0.28) 0%, transparent 70%);
+    pointer-events: none;
+}
+.auth-col-brand::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+}
+.auth-brand-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 320px;
+    width: 100%;
+}
+.auth-brand-logo-wrap {
+    width: 76px;
+    height: 76px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.auth-brand-name {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px 0;
+}
+.auth-brand-name span.accent {
+    color: #0071e3;
+}
+.auth-brand-tagline {
+    font-size: 13.5px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+}
+.auth-brand-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+}
+.auth-perk-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+@media (max-width: 768px) {
+    .auth-card.mode-signin,
+    .auth-card.mode-register {
+        flex-direction: column !important;
+    }
+    .auth-col-brand {
+        padding: 32px 20px;
+    }
+    .auth-col-form {
+        padding: 32px 20px;
+    }
+    .auth-brand-perks {
+        display: none;
+    }
+}
 </style>
 
 <main class="store-main">
-    <div class="store-container" style="max-width: 520px; padding: 48px 16px 80px 16px;">
+    <div class="store-container auth-split-container">
         
         <?php if ($isFromCheckout): ?>
         <!-- Checkout Gatekeeper Alert Banner -->
-        <div class="auth-checkout-gate-banner" id="checkoutGateBanner">
+        <div class="auth-checkout-gate-banner" id="checkoutGateBanner" style="max-width: 960px; margin: 0 auto 20px auto;">
             <div class="gate-icon">🛒</div>
             <div class="gate-content">
                 <div class="gate-title">Sign In Required to Checkout</div>
@@ -154,34 +295,31 @@ require_once __DIR__ . '/includes/store_header.php';
         </div>
         <?php endif; ?>
 
-        <!-- Auth Card Container -->
-        <div class="auth-card" id="authCard">
+        <!-- Auth Card Container: Split 2-Column with Alternating Register -->
+        <div class="auth-card mode-signin" id="authCard">
             
-            <!-- Apple-Style Card Header -->
-            <div class="auth-card-header">
-                <div class="auth-apple-logo">
-                    <svg viewBox="0 0 170 170" width="38" height="38">
-                        <path fill="currentColor" d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.56-7.71-11.61-14.01-6.19-9.56-11.07-20.59-14.65-33.09-3.58-12.5-5.37-24.16-5.37-34.98 0-14.28 3.52-26.07 10.57-35.37 7.05-9.3 15.82-14.07 26.31-14.32 5.08 0 10.42 1.25 16.03 3.75 5.6 2.5 9.42 3.81 11.45 3.93 1.8.13 5.86-1.25 12.18-4.14 6.32-2.89 11.75-4.19 16.29-3.9 11.96.98 21.6 5.37 28.91 13.18-10.47 6.38-15.6 15.22-15.39 26.52.22 8.94 3.75 16.51 10.59 22.71 6.84 6.2 14.85 9.77 24.03 10.71-2.22 6.5-4.88 13.06-7.98 19.68zM119.22 31.84c0-7.2 2.66-13.88 7.98-20.04 5.32-6.16 11.77-9.93 19.35-11.31.25 1.15.38 2.21.38 3.19 0 7.37-2.82 14.26-8.46 20.67-5.64 6.41-12.35 10.23-20.13 11.46-.38-1.31-.57-2.64-.57-3.97z"/>
-                    </svg>
+            <!-- Form Column -->
+            <div class="auth-col-form" id="authColForm">
+                <!-- Heading -->
+                <div style="margin-bottom: 22px;">
+                    <h1 class="auth-title" id="authTitle" style="font-size: 26px; text-align: left;">Sign In</h1>
+                    <p class="auth-subtitle" id="authSubtitle" style="text-align: left;">
+                        Sign in to your account.
+                    </p>
                 </div>
-                <h1 class="auth-title" id="authTitle">Sign In</h1>
-                <p class="auth-subtitle" id="authSubtitle">
-                    Sign in to your account.
-                </p>
-            </div>
 
-            <!-- Tab Switcher (Sign In vs Create Account) -->
-            <div class="auth-tabs" role="tablist">
-                <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" onclick="switchAuthTab('signin')" role="tab" aria-selected="true">
-                    Sign In
-                </button>
-                <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')" role="tab" aria-selected="false">
-                    Create Account
-                </button>
-            </div>
+                <!-- Tab Switcher (Sign In vs Create Account) -->
+                <div class="auth-tabs" role="tablist">
+                    <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" onclick="switchAuthTab('signin')" role="tab" aria-selected="true">
+                        Sign In
+                    </button>
+                    <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')" role="tab" aria-selected="false">
+                        Create Account
+                    </button>
+                </div>
 
-            <!-- In-Card Error Notice -->
-            <div id="authAlertBox" class="auth-alert-box" style="display: none;"></div>
+                <!-- In-Card Error Notice -->
+                <div id="authAlertBox" class="auth-alert-box" style="display: none;"></div>
 
             <!-- ============================================================
                  1. SIGN IN FORM
@@ -399,6 +537,37 @@ require_once __DIR__ . '/includes/store_header.php';
                 </div>
             </div>
 
+            </div><!-- /.auth-col-form -->
+
+            <!-- Right / Brand Column (Logo & Name) -->
+            <div class="auth-col-brand" id="authColBrand">
+                <div class="auth-brand-inner">
+                    <div class="auth-brand-logo-wrap">
+                        <svg viewBox="0 0 170 170" width="46" height="46">
+                            <path fill="currentColor" d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.56-7.71-11.61-14.01-6.19-9.56-11.07-20.59-14.65-33.09-3.58-12.5-5.37-24.16-5.37-34.98 0-14.28 3.52-26.07 10.57-35.37 7.05-9.3 15.82-14.07 26.31-14.32 5.08 0 10.42 1.25 16.03 3.75 5.6 2.5 9.42 3.81 11.45 3.93 1.8.13 5.86-1.25 12.18-4.14 6.32-2.89 11.75-4.19 16.29-3.9 11.96.98 21.6 5.37 28.91 13.18-10.47 6.38-15.6 15.22-15.39 26.52.22 8.94 3.75 16.51 10.59 22.71 6.84 6.2 14.85 9.77 24.03 10.71-2.22 6.5-4.88 13.06-7.98 19.68zM119.22 31.84c0-7.2 2.66-13.88 7.98-20.04 5.32-6.16 11.77-9.93 19.35-11.31.25 1.15.38 2.21.38 3.19 0 7.37-2.82 14.26-8.46 20.67-5.64 6.41-12.35 10.23-20.13 11.46-.38-1.31-.57-2.64-.57-3.97z"/>
+                        </svg>
+                    </div>
+                    <h2 class="auth-brand-name">Prestige <span class="accent">Apple</span></h2>
+                    <p class="auth-brand-tagline">
+                        Official Store Experience. Genuine Apple innovations with insured nationwide shipping &amp; local warranty.
+                    </p>
+                    <div class="auth-brand-perks">
+                        <div class="auth-perk-item">
+                            <span>✨</span> 100% Brand New Sealed Devices
+                        </div>
+                        <div class="auth-perk-item">
+                            <span>🛡️</span> 1-Year Official Apple Warranty
+                        </div>
+                        <div class="auth-perk-item">
+                            <span>🚀</span> Insured Nationwide Express Shipping
+                        </div>
+                        <div class="auth-perk-item">
+                            <span>🪙</span> Earn &amp; Redeem Prestige Coins
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- ================================================================
@@ -486,6 +655,7 @@ function switchAuthTab(tab) {
     const alertBox = document.getElementById('authAlertBox');
     const title = document.getElementById('authTitle');
     const subtitle = document.getElementById('authSubtitle');
+    const authCard = document.getElementById('authCard');
 
     alertBox.style.display = 'none';
     currentActiveTab = tab;
@@ -497,6 +667,10 @@ function switchAuthTab(tab) {
         formRegister.style.display = 'none';
         title.textContent = 'Sign In';
         subtitle.textContent = 'Sign in to your account.';
+        if (authCard) {
+            authCard.classList.remove('mode-register');
+            authCard.classList.add('mode-signin');
+        }
     } else {
         tabRegister.classList.add('active');
         tabSignIn.classList.remove('active');
@@ -504,6 +678,10 @@ function switchAuthTab(tab) {
         formSignIn.style.display = 'none';
         title.textContent = 'Create Account';
         subtitle.textContent = 'Enter your details to create an account.';
+        if (authCard) {
+            authCard.classList.remove('mode-signin');
+            authCard.classList.add('mode-register');
+        }
     }
 }
 
